@@ -193,12 +193,11 @@
     .success-title { color:var(--cream); font-size:24px; font-weight:800; margin-bottom:10px; }
     .success-msg { color:var(--muted); font-size:15px; line-height:1.65; margin-bottom:32px; }
     .draft-card { background:var(--card); border:1px solid var(--primary); border-radius:14px; overflow:hidden; margin-bottom:28px; text-align:left; }
-    .draft-photo { height:100px; background:#2A1A12; display:flex; align-items:center; justify-content:center; font-size:32px; opacity:0.4; }
-    .draft-info { padding:12px 14px; }
-    .draft-label { color:var(--primary); font-size:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:4px; }
-    .draft-name { color:var(--white); font-size:17px; font-weight:700; margin-bottom:2px; }
-    .draft-loc { color:var(--muted); font-size:12px; margin-bottom:8px; }
-    .draft-by { color:var(--success); font-size:11px; font-style:italic; }
+    .draft-info { padding:16px 16px 14px; }
+    .draft-label { color:var(--primary); font-size:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:5px; }
+    .draft-name { color:var(--white); font-size:19px; font-weight:800; margin-bottom:4px; letter-spacing:0.1px; }
+    .draft-loc { color:var(--muted); font-size:13px; margin-bottom:8px; }
+    .draft-by { color:var(--success); font-size:12px; font-style:italic; }
     .share-btn { width:100%; background:var(--card); border:1px solid var(--primary); color:var(--primary); border-radius:12px; padding:13px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:12px; }
     .back-to-discover-btn { width:100%; background:var(--primary); color:var(--bg); border:none; border-radius:12px; padding:13px; font-size:14px; font-weight:700; cursor:pointer; }
     .share-toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--success); color:#fff; font-size:13px; font-weight:600; padding:10px 20px; border-radius:20px; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; z-index:999; }
@@ -511,7 +510,6 @@
       <div class="success-title">Nomination sent!</div>
       <p class="success-msg">Pallavi will review it. If it makes the Codex, your name goes on the map.</p>
       <div class="draft-card" id="draft-card">
-        <div class="draft-photo">☕</div>
         <div class="draft-info">
           <div class="draft-label">🤝 Community Nomination</div>
           <div class="draft-name" id="draft-name"></div>
@@ -891,12 +889,24 @@
     }
   }
 
+  function toTitleCase(str) {
+    return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+  }
+  function normalizeCountry(input) {
+    const q = input.toLowerCase().trim();
+    const match = COUNTRIES.find(c => c.name.toLowerCase() === q || c.aliases.includes(q));
+    return match ? match.name : toTitleCase(input);
+  }
+
   function showNominationSuccess(data) {
     document.getElementById('nominate-form-state').style.display = 'none';
+    const displayName    = toTitleCase(data.your_name);
+    const displayCountry = normalizeCountry(data.country);
+    const displayCity    = data.city.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
     document.getElementById('draft-name').textContent = data.cafe_name;
-    document.getElementById('draft-loc').textContent  = `${data.city}${data.neighborhood ? ', ' + data.neighborhood : ''} · ${data.country}`;
-    const handle = data.instagram_handle ? data.instagram_handle.replace('@','') : null;
-    document.getElementById('draft-by').textContent   = `Nominated by ${data.your_name}${handle?' · @'+handle:''}`;
+    document.getElementById('draft-loc').textContent  = `${data.neighborhood ? data.neighborhood + ' · ' : ''}${displayCity}, ${displayCountry}`;
+    const handle = data.instagram_handle ? data.instagram_handle.replace(/^@/,'') : null;
+    document.getElementById('draft-by').textContent   = `Nominated by ${displayName}${handle?' · @'+handle:''}`;
     document.getElementById('nominate-success').classList.add('show');
     document.getElementById('nominate-overlay').scrollTop = 0;
   }
