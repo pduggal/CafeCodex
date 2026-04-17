@@ -6,32 +6,30 @@
   <title>Café Codex — Your Record of the World's Best Cups</title>
   <meta name="description" content="A curated record of the world's best coffee and matcha cafes, by Pallavi Duggal (@honestcoffeestop)." />
   <style>
-    /* ── Reset & Base ─────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:         #1A0F0A;
-      --primary:    #C9973A;
-      --cream:      #FDF6EC;
-      --white:      #FFFFFF;
-      --muted:      #A89080;
-      --card:       #2A1A12;
-      --border:     #3D2415;
-      --tab-bg:     #120A06;
-      --tab-off:    #6B4F3A;
-      --success:    #6B9E6B;
-      --tag-bg:     #221510;
+      --bg:      #1A0F0A;
+      --primary: #C9973A;
+      --cream:   #FDF6EC;
+      --white:   #FFFFFF;
+      --muted:   #A89080;
+      --card:    #2A1A12;
+      --border:  #3D2415;
+      --tab-bg:  #120A06;
+      --tab-off: #6B4F3A;
+      --success: #6B9E6B;
+      --tag-bg:  #221510;
     }
 
     html { scroll-behavior: smooth; }
-
     body {
       background: var(--bg);
       color: var(--cream);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       min-height: 100dvh;
       overflow-x: hidden;
-      padding-bottom: 72px; /* room for tab bar */
+      padding-bottom: 72px;
     }
 
     /* ── Tab Bar ──────────────────────────────────────────────── */
@@ -46,20 +44,12 @@
     }
     .tab-btn {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 3px;
-      padding: 10px 4px 8px;
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--tab-off);
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.2px;
-      transition: color 0.15s;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; padding: 10px 4px 8px;
+      background: none; border: none; cursor: pointer;
+      color: var(--tab-off); font-size: 10px; font-weight: 600;
+      letter-spacing: 0.2px; transition: color 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
     .tab-btn.active { color: var(--primary); }
@@ -71,646 +61,311 @@
 
     /* ── Discover Header ──────────────────────────────────────── */
     .discover-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 20px 20px 12px;
-      position: sticky;
-      top: 0;
-      background: var(--bg);
-      z-index: 10;
+      position: sticky; top: 0;
+      background: var(--bg); z-index: 10;
       border-bottom: 1px solid var(--border);
     }
     .header-logo { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: 0.5px; }
     .header-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
     .header-star {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      border: 1px solid var(--primary);
-      background: var(--card);
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 1px solid var(--primary); background: var(--card);
       display: flex; align-items: center; justify-content: center;
       font-size: 14px; color: var(--primary);
     }
 
     /* ── Search ───────────────────────────────────────────────── */
-    .search-wrap {
-      padding: 12px 20px 0;
-    }
+    .search-wrap { padding: 12px 20px 0; position: relative; }
     .search-box {
-      display: flex;
-      align-items: center;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 0 12px;
-      height: 40px;
-      gap: 8px;
+      display: flex; align-items: center;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 10px; padding: 0 12px; height: 44px; gap: 8px;
+      transition: border-color 0.2s;
     }
+    .search-box.focused { border-color: var(--primary); }
     .search-icon { font-size: 15px; color: var(--muted); flex-shrink: 0; }
     .search-input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      color: var(--white);
-      font-size: 14px;
+      flex: 1; background: none; border: none; outline: none;
+      color: var(--white); font-size: 15px;
     }
     .search-input::placeholder { color: var(--muted); }
     .search-clear {
       background: none; border: none; cursor: pointer;
-      color: var(--muted); font-size: 16px; padding: 0; line-height: 1;
+      color: var(--muted); font-size: 16px; padding: 4px;
     }
 
-    /* ── Filter row ───────────────────────────────────────────── */
+    /* ── Country Dropdown ─────────────────────────────────────── */
+    .country-dropdown {
+      position: absolute; top: calc(100% + 4px); left: 20px; right: 20px;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+      z-index: 50; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      display: none;
+    }
+    .country-dropdown.open { display: block; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; cursor: pointer;
+      transition: background 0.1s;
+      -webkit-tap-highlight-color: transparent;
+      border-bottom: 1px solid var(--border);
+    }
+    .dropdown-item:last-child { border-bottom: none; }
+    .dropdown-item:active { background: rgba(201,151,58,0.08); }
+    .dropdown-flag { font-size: 22px; }
+    .dropdown-info { flex: 1; }
+    .dropdown-country-name { color: var(--cream); font-size: 15px; font-weight: 600; }
+    .dropdown-status { font-size: 11px; margin-top: 1px; }
+    .dropdown-status.visited { color: var(--success); }
+    .dropdown-status.wishlist { color: var(--muted); font-style: italic; }
+    .dropdown-arrow { color: var(--muted); font-size: 14px; }
+
+    /* ── Country Mode Banner ──────────────────────────────────── */
+    .country-banner {
+      display: none;
+      align-items: center; justify-content: space-between;
+      padding: 10px 20px;
+      background: rgba(201,151,58,0.08);
+      border-bottom: 1px solid var(--border);
+    }
+    .country-banner.show { display: flex; }
+    .country-banner-left { display: flex; align-items: center; gap: 8px; }
+    .country-banner-flag { font-size: 20px; }
+    .country-banner-text { font-size: 13px; font-weight: 600; color: var(--cream); }
+    .country-banner-sub { font-size: 11px; color: var(--muted); }
+    .country-back-btn {
+      background: none; border: 1px solid var(--border);
+      color: var(--muted); font-size: 12px; font-weight: 600;
+      padding: 5px 10px; border-radius: 20px; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── City Pills Row ───────────────────────────────────────── */
     .filter-row {
-      display: flex;
-      align-items: center;
+      display: flex; align-items: center;
       padding: 10px 0 10px 20px;
-      gap: 8px;
-      overflow-x: auto;
-      scrollbar-width: none;
+      overflow-x: auto; scrollbar-width: none; gap: 8px;
     }
     .filter-row::-webkit-scrollbar { display: none; }
     .pill {
-      flex-shrink: 0;
-      padding: 6px 14px;
-      border-radius: 20px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.15s;
+      flex-shrink: 0; padding: 6px 14px; border-radius: 20px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--muted); font-size: 13px; font-weight: 500;
+      cursor: pointer; white-space: nowrap; transition: all 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
-    .pill.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: var(--bg);
-      font-weight: 700;
-    }
+    .pill.active { background: var(--primary); border-color: var(--primary); color: var(--bg); font-weight: 700; }
     .filter-btn {
-      flex-shrink: 0;
-      margin-right: 20px;
-      width: 36px; height: 32px;
-      border-radius: 20px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 16px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      gap: 3px;
-      transition: all 0.15s;
-      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0; margin-right: 20px;
+      width: 36px; height: 32px; border-radius: 20px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--muted); font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 3px;
+      transition: all 0.15s; -webkit-tap-highlight-color: transparent;
     }
-    .filter-btn.has-filters {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: var(--bg);
-    }
-    .filter-count {
-      font-size: 11px;
-      font-weight: 700;
-    }
+    .filter-btn.has-filters { background: var(--primary); border-color: var(--primary); color: var(--bg); }
+    .filter-count { font-size: 11px; font-weight: 700; }
 
-    /* ── Count row ────────────────────────────────────────────── */
+    /* ── Count Row ────────────────────────────────────────────── */
     .count-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between;
       padding: 0 20px 10px;
     }
     .count-text { color: var(--muted); font-size: 12px; }
-    .clear-btn {
-      background: none; border: none; cursor: pointer;
-      color: var(--primary); font-size: 12px; font-weight: 600;
+    .clear-btn { background: none; border: none; cursor: pointer; color: var(--primary); font-size: 12px; font-weight: 600; }
+
+    /* ── Not Visited Screen ───────────────────────────────────── */
+    .not-visited-screen {
+      display: none; padding: 40px 24px; text-align: center;
+    }
+    .not-visited-screen.show { display: block; }
+    .nv-globe { font-size: 56px; margin-bottom: 16px; line-height: 1; }
+    .nv-flag { font-size: 36px; margin-bottom: 8px; }
+    .nv-title {
+      color: var(--cream); font-size: 22px; font-weight: 800;
+      margin-bottom: 10px; line-height: 1.3;
+    }
+    .nv-message {
+      color: var(--muted); font-size: 15px; line-height: 1.65;
+      margin-bottom: 28px; max-width: 300px; margin-left: auto; margin-right: auto;
+    }
+    .nv-soon-label {
+      color: var(--primary); font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px;
+    }
+    .nv-cities {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: center; margin-bottom: 32px;
+    }
+    .nv-city-pill {
+      background: var(--card); border: 1px dashed var(--border);
+      color: var(--muted); font-size: 13px; font-weight: 500;
+      padding: 7px 14px; border-radius: 20px; font-style: italic;
+    }
+    .nv-back-btn {
+      background: var(--primary); color: var(--bg);
+      border: none; border-radius: 12px;
+      padding: 13px 28px; font-size: 15px; font-weight: 700;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
 
     /* ── Cafe Cards ───────────────────────────────────────────── */
     .cafe-list { padding: 0 20px 24px; }
-
     .cafe-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      margin-bottom: 12px;
-      overflow: hidden;
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 12px; overflow: hidden;
+      cursor: pointer; transition: transform 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
     .cafe-card:active { transform: scale(0.985); }
-
     .cafe-photo {
-      height: 140px;
-      background: #2A1A12;
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      height: 140px; background: #2A1A12; position: relative;
+      display: flex; align-items: center; justify-content: center;
     }
     .cafe-photo-emoji { font-size: 40px; opacity: 0.3; }
-
-    .cafe-badges {
-      position: absolute;
-      top: 8px; left: 10px;
-      display: flex; gap: 6px;
-    }
-    .badge-pick {
-      background: var(--primary);
-      color: var(--bg);
-      font-size: 10px;
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 20px;
-      letter-spacing: 0.3px;
-    }
-    .badge-trending {
-      background: rgba(26,15,10,0.85);
-      border: 1px solid var(--primary);
-      color: var(--primary);
-      font-size: 10px;
-      font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 20px;
-    }
+    .cafe-badges { position: absolute; top: 8px; left: 10px; display: flex; gap: 6px; }
+    .badge-pick { background: var(--primary); color: var(--bg); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 20px; letter-spacing: 0.3px; }
+    .badge-trending { background: rgba(26,15,10,0.85); border: 1px solid var(--primary); color: var(--primary); font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px; }
     .save-btn {
-      position: absolute;
-      top: 8px; right: 10px;
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: rgba(26,15,10,0.7);
-      border: none;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-      transition: transform 0.1s;
-      -webkit-tap-highlight-color: transparent;
+      position: absolute; top: 8px; right: 10px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(26,15,10,0.7); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+      transition: transform 0.1s; -webkit-tap-highlight-color: transparent;
     }
     .save-btn:active { transform: scale(1.2); }
-
     .cafe-info { padding: 10px 14px 12px; }
-    .cafe-name-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 3px;
-    }
-    .cafe-name {
-      color: var(--white);
-      font-size: 15px;
-      font-weight: 700;
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      margin-right: 8px;
-    }
-    .rating-pill {
-      background: rgba(201,151,58,0.15);
-      padding: 2px 6px;
-      border-radius: 6px;
-      font-size: 10px;
-      color: var(--primary);
-      flex-shrink: 0;
-    }
-    .cafe-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
+    .cafe-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+    .cafe-name { color: var(--white); font-size: 15px; font-weight: 700; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 8px; }
+    .rating-pill { background: rgba(201,151,58,0.15); padding: 2px 6px; border-radius: 6px; font-size: 10px; color: var(--primary); flex-shrink: 0; }
+    .cafe-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .cafe-location { color: var(--muted); font-size: 12px; }
-    .visited-badge {
-      border: 1px solid var(--success);
-      color: var(--success);
-      font-size: 10px;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 20px;
-    }
+    .visited-badge { border: 1px solid var(--success); color: var(--success); font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; }
     .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
-    .tag {
-      background: var(--tag-bg);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 500;
-      padding: 3px 8px;
-      border-radius: 20px;
-    }
+    .tag { background: var(--tag-bg); border: 1px solid var(--border); color: var(--muted); font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 20px; }
 
     /* ── Empty State ──────────────────────────────────────────── */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-    }
+    .empty-state { text-align: center; padding: 60px 20px; }
     .empty-emoji { font-size: 36px; opacity: 0.4; margin-bottom: 12px; }
     .empty-title { color: var(--white); font-size: 16px; font-weight: 600; margin-bottom: 6px; }
     .empty-sub { color: var(--muted); font-size: 13px; }
 
-    /* ── Vibe Filter Sheet ────────────────────────────────────── */
-    .sheet-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.55);
-      z-index: 200;
-    }
+    /* ── Vibe Sheet ───────────────────────────────────────────── */
+    .sheet-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; }
     .sheet-overlay.open { display: block; }
     .sheet {
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: var(--card);
-      border-top: 1px solid var(--border);
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--card); border-top: 1px solid var(--border);
       border-radius: 20px 20px 0 0;
-      padding: 0 20px 36px;
-      z-index: 201;
-      transform: translateY(100%);
+      padding: 0 20px calc(36px + env(safe-area-inset-bottom));
+      z-index: 201; transform: translateY(100%);
       transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-      padding-bottom: calc(36px + env(safe-area-inset-bottom));
     }
     .sheet-overlay.open .sheet { transform: translateY(0); }
-    .sheet-handle {
-      width: 36px; height: 4px;
-      background: var(--border);
-      border-radius: 2px;
-      margin: 12px auto 18px;
-    }
-    .sheet-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
+    .sheet-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 12px auto 18px; }
+    .sheet-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .sheet-title { color: var(--white); font-size: 16px; font-weight: 700; }
-    .sheet-clear {
-      background: none; border: none; cursor: pointer;
-      color: var(--primary); font-size: 12px; font-weight: 600;
-    }
-    .vibe-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 20px;
-    }
-    .vibe-tag {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      padding: 8px 12px;
-      border-radius: 20px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .vibe-tag.active {
-      border-color: var(--primary);
-      background: rgba(201,151,58,0.12);
-      color: var(--primary);
-      font-weight: 600;
-    }
-    .apply-btn {
-      width: 100%;
-      background: var(--primary);
-      color: var(--bg);
-      border: none;
-      border-radius: 12px;
-      padding: 14px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
+    .sheet-clear { background: none; border: none; cursor: pointer; color: var(--primary); font-size: 12px; font-weight: 600; }
+    .vibe-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .vibe-tag { display: flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: 20px; background: var(--bg); border: 1px solid var(--border); color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+    .vibe-tag.active { border-color: var(--primary); background: rgba(201,151,58,0.12); color: var(--primary); font-weight: 600; }
+    .apply-btn { width: 100%; background: var(--primary); color: var(--bg); border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
 
-    /* ── Cafe Detail Modal ────────────────────────────────────── */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 300;
-      overflow-y: auto;
-    }
+    /* ── Detail Modal ─────────────────────────────────────────── */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 300; overflow-y: auto; }
     .modal-overlay.open { display: flex; align-items: flex-end; }
-    @media (min-width: 600px) {
-      .modal-overlay.open { align-items: center; justify-content: center; }
-    }
-    .modal {
-      background: var(--bg);
-      border-radius: 20px 20px 0 0;
-      width: 100%;
-      max-height: 92dvh;
-      overflow-y: auto;
-      padding-bottom: calc(24px + env(safe-area-inset-bottom));
-    }
-    @media (min-width: 600px) {
-      .modal {
-        border-radius: 20px;
-        max-width: 480px;
-        max-height: 88dvh;
-      }
-    }
-    .modal-photo {
-      height: 200px;
-      background: #2A1A12;
-      position: relative;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 20px 20px 0 0;
-      overflow: hidden;
-    }
+    @media (min-width: 600px) { .modal-overlay.open { align-items: center; justify-content: center; } }
+    .modal { background: var(--bg); border-radius: 20px 20px 0 0; width: 100%; max-height: 92dvh; overflow-y: auto; padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+    @media (min-width: 600px) { .modal { border-radius: 20px; max-width: 480px; max-height: 88dvh; } }
+    .modal-photo { height: 200px; background: #2A1A12; position: relative; display: flex; align-items: center; justify-content: center; border-radius: 20px 20px 0 0; overflow: hidden; }
     .modal-photo-emoji { font-size: 60px; opacity: 0.25; }
-    .modal-close {
-      position: absolute;
-      top: 16px; right: 16px;
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: rgba(26,15,10,0.8);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 18px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-    }
+    .modal-close { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; background: rgba(26,15,10,0.8); border: 1px solid var(--border); color: var(--muted); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .modal-body { padding: 20px 20px 0; }
-    .modal-name-row {
-      display: flex; align-items: flex-start;
-      justify-content: space-between; gap: 12px;
-      margin-bottom: 6px;
-    }
-    .modal-name {
-      color: var(--white);
-      font-size: 22px;
-      font-weight: 800;
-      line-height: 1.2;
-    }
-    .modal-save-btn {
-      flex-shrink: 0;
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background: var(--card);
-      border: 1px solid var(--border);
-      font-size: 20px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      -webkit-tap-highlight-color: transparent;
-      transition: transform 0.1s;
-    }
+    .modal-name-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+    .modal-name { color: var(--white); font-size: 22px; font-weight: 800; line-height: 1.2; }
+    .modal-save-btn { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; background: var(--card); border: 1px solid var(--border); font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s; }
     .modal-save-btn:active { transform: scale(1.15); }
-    .modal-location {
-      color: var(--muted); font-size: 13px; margin-bottom: 14px;
-    }
+    .modal-location { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
     .modal-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
-
-    .modal-divider {
-      height: 1px; background: var(--border);
-      margin: 0 -20px 20px;
-    }
-
-    .notes-title {
-      color: var(--primary);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 14px;
-    }
+    .modal-divider { height: 1px; background: var(--border); margin: 0 -20px 20px; }
+    .notes-title { color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 14px; }
     .note-item { margin-bottom: 14px; }
     .note-label { color: var(--muted); font-size: 11px; font-weight: 600; margin-bottom: 4px; }
     .note-value { color: var(--cream); font-size: 14px; line-height: 1.5; }
-
     .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
-    .action-btn {
-      flex: 1;
-      padding: 13px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      transition: opacity 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
+    .action-btn { flex: 1; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; transition: opacity 0.15s; }
     .action-btn:active { opacity: 0.8; }
     .action-primary { background: var(--primary); color: var(--bg); }
-    .action-secondary {
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--cream);
-    }
-    .action-secondary.visited-active {
-      border-color: var(--success);
-      color: var(--success);
-    }
+    .action-secondary { background: var(--card); border: 1px solid var(--border); color: var(--cream); }
+    .action-secondary.visited-active { border-color: var(--success); color: var(--success); }
 
     /* ── City Guides ──────────────────────────────────────────── */
-    .section-header {
-      padding: 20px 20px 4px;
-      position: sticky;
-      top: 0;
-      background: var(--bg);
-      z-index: 10;
-      border-bottom: 1px solid var(--border);
-    }
+    .section-header { padding: 20px 20px 4px; position: sticky; top: 0; background: var(--bg); z-index: 10; border-bottom: 1px solid var(--border); }
     .section-title { font-size: 22px; font-weight: 800; color: var(--primary); letter-spacing: 0.4px; }
     .section-sub { font-size: 12px; color: var(--muted); margin-top: 2px; padding-bottom: 12px; }
-
     .guides-list { padding: 16px 20px 24px; }
-    .guide-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 12px;
-      cursor: pointer;
-      transition: transform 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
+    .guide-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 12px; cursor: pointer; transition: transform 0.15s; -webkit-tap-highlight-color: transparent; }
     .guide-card:active { transform: scale(0.985); }
-    .guide-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
+    .guide-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
     .guide-emoji { font-size: 28px; margin-right: 4px; }
     .guide-title-wrap { flex: 1; }
     .guide-city { color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
     .guide-title { color: var(--white); font-size: 16px; font-weight: 700; line-height: 1.3; }
-    .guide-rating {
-      background: rgba(201,151,58,0.12);
-      border: 1px solid rgba(201,151,58,0.25);
-      color: var(--primary);
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 20px;
-      white-space: nowrap;
-    }
+    .guide-rating { background: rgba(201,151,58,0.12); border: 1px solid rgba(201,151,58,0.25); color: var(--primary); font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
     .guide-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
     .guide-cafes { display: flex; gap: 6px; flex-wrap: wrap; }
-    .guide-cafe-pill {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      color: var(--cream);
-      font-size: 11px;
-      font-weight: 500;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
+    .guide-cafe-pill { background: var(--bg); border: 1px solid var(--border); color: var(--cream); font-size: 11px; font-weight: 500; padding: 4px 10px; border-radius: 20px; }
     .guide-cafe-pill span { color: var(--primary); font-weight: 700; margin-right: 4px; }
 
     /* ── Trending ─────────────────────────────────────────────── */
     .trending-section { padding: 16px 20px 0; }
-    .trending-section-label {
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--muted);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
+    .trending-section-label { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 12px; }
 
-    /* ── Author Page ──────────────────────────────────────────── */
+    /* ── Author ───────────────────────────────────────────────── */
     .author-scroll { padding: 0 0 24px; }
-
-    .author-hero {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 32px 20px 28px;
-    }
-    .author-ring {
-      width: 96px; height: 96px;
-      border-radius: 50%;
-      border: 1.5px solid var(--primary);
-      padding: 3px;
-      margin-bottom: 14px;
-    }
-    .author-photo {
-      width: 100%; height: 100%;
-      border-radius: 50%;
-      background: var(--card);
-      display: flex; align-items: center; justify-content: center;
-    }
+    .author-hero { display: flex; flex-direction: column; align-items: center; padding: 32px 20px 28px; }
+    .author-ring { width: 96px; height: 96px; border-radius: 50%; border: 1.5px solid var(--primary); padding: 3px; margin-bottom: 14px; }
+    .author-photo { width: 100%; height: 100%; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; }
     .author-initial { color: var(--primary); font-size: 34px; font-weight: 700; }
     .author-name { color: var(--cream); font-size: 20px; font-weight: 700; letter-spacing: 0.2px; margin-bottom: 3px; }
     .author-handle { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
-    .social-row { display: flex; gap: 8px; }
-    .social-pill {
-      display: flex; align-items: center; gap: 5px;
-      padding: 7px 12px;
-      border-radius: 20px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      color: var(--primary);
-      font-size: 11px;
-      font-weight: 600;
-      text-decoration: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .social-icon { font-size: 13px; }
-
+    .social-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .social-pill { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 20px; background: var(--card); border: 1px solid var(--border); color: var(--primary); font-size: 11px; font-weight: 600; text-decoration: none; }
     .author-letter { padding: 0 26px; }
-    .author-eyebrow {
-      color: var(--muted); font-size: 12px; font-style: italic;
-      letter-spacing: 0.5px; margin-bottom: 10px;
-    }
-    .author-title {
-      color: var(--cream); font-size: 30px; font-weight: 800;
-      line-height: 1.26; letter-spacing: 0.2px; margin-bottom: 16px;
-    }
-    .author-title-line {
-      width: 40px; height: 2px;
-      background: var(--primary);
-      border-radius: 2px;
-      margin-bottom: 28px;
-    }
-
-    .letter-body p {
-      color: var(--cream);
-      font-size: 16px;
-      line-height: 1.75;
-      margin-bottom: 20px;
-    }
-    .letter-body .opening {
-      font-size: 17px;
-      line-height: 1.76;
-    }
-    .drop-cap {
-      color: var(--primary);
-      font-size: 28px;
-      font-weight: 800;
-      line-height: 1;
-    }
+    .author-eyebrow { color: var(--muted); font-size: 12px; font-style: italic; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .author-title { color: var(--cream); font-size: 30px; font-weight: 800; line-height: 1.26; letter-spacing: 0.2px; margin-bottom: 16px; }
+    .author-title-line { width: 40px; height: 2px; background: var(--primary); border-radius: 2px; margin-bottom: 28px; }
+    .letter-body p { color: var(--cream); font-size: 16px; line-height: 1.75; margin-bottom: 20px; }
+    .letter-body .opening { font-size: 17px; line-height: 1.76; }
+    .drop-cap { color: var(--primary); font-size: 28px; font-weight: 800; line-height: 1; }
     .letter-em { font-style: italic; }
-
-    .pull-quote {
-      text-align: center;
-      margin: 28px 12px;
-    }
-    .pull-quote-text {
-      color: var(--primary);
-      font-size: 19px;
-      font-style: italic;
-      font-weight: 600;
-      line-height: 1.58;
-      letter-spacing: 0.3px;
-    }
-
+    .pull-quote { text-align: center; margin: 28px 12px; }
+    .pull-quote-text { color: var(--primary); font-size: 19px; font-style: italic; font-weight: 600; line-height: 1.58; letter-spacing: 0.3px; }
     .signature { margin-top: 24px; margin-bottom: 36px; }
     .sig-dash { color: var(--muted); font-size: 16px; margin-bottom: 4px; }
-    .sig-name {
-      color: var(--primary);
-      font-size: 26px;
-      font-weight: 800;
-      font-style: italic;
-      letter-spacing: 0.5px;
-    }
-
-    .stats-row {
-      display: flex;
-      align-items: center;
-      margin: 0 26px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 22px 0;
-    }
+    .sig-name { color: var(--primary); font-size: 26px; font-weight: 800; font-style: italic; letter-spacing: 0.5px; }
+    .stats-row { display: flex; align-items: center; margin: 0 26px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px 0; }
     .stat-item { flex: 1; text-align: center; }
     .stat-num { color: var(--primary); font-size: 18px; font-weight: 800; margin-bottom: 4px; }
     .stat-label { color: var(--muted); font-size: 10px; letter-spacing: 0.2px; }
     .stat-div { width: 1px; height: 28px; background: var(--border); }
 
-    /* ── Utility ──────────────────────────────────────────────── */
+    /* ── Utilities ────────────────────────────────────────────── */
     .hide { display: none !important; }
-
     @media (min-width: 600px) {
       .cafe-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
       .cafe-list .cafe-card { margin-bottom: 0; }
       .guides-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
       .guide-card { margin-bottom: 0; }
     }
-    @media (min-width: 900px) {
-      .cafe-list { grid-template-columns: 1fr 1fr 1fr; }
-    }
+    @media (min-width: 900px) { .cafe-list { grid-template-columns: 1fr 1fr 1fr; } }
   </style>
 </head>
 <body>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       DISCOVER SECTION
-  ══════════════════════════════════════════════════════════════ -->
+  <!-- ═══ DISCOVER ════════════════════════════════════════════ -->
   <section id="sec-discover" class="section active">
 
     <div class="discover-header">
@@ -721,30 +376,55 @@
       <div class="header-star">✦</div>
     </div>
 
-    <div class="search-wrap">
-      <div class="search-box">
+    <!-- Search -->
+    <div class="search-wrap" id="search-wrap">
+      <div class="search-box" id="search-box">
         <span class="search-icon">🔍</span>
         <input class="search-input" id="search-input" type="text"
-          placeholder="Search cafes or neighborhoods…"
-          oninput="applyFilters()" />
+          placeholder="Search by country, city, or cafe…"
+          oninput="onSearchInput()"
+          onfocus="onSearchFocus()"
+          onblur="onSearchBlur()" />
         <button class="search-clear hide" id="search-clear" onclick="clearSearch()">✕</button>
       </div>
+      <div class="country-dropdown" id="country-dropdown"></div>
     </div>
 
-    <div class="filter-row" id="city-pills"></div>
-
-    <div class="count-row">
-      <span class="count-text" id="count-text"></span>
-      <button class="clear-btn hide" id="clear-all-btn" onclick="clearAll()">Clear all</button>
+    <!-- Country banner (shown when a country is selected) -->
+    <div class="country-banner" id="country-banner">
+      <div class="country-banner-left">
+        <span class="country-banner-flag" id="banner-flag"></span>
+        <div>
+          <div class="country-banner-text" id="banner-text"></div>
+          <div class="country-banner-sub" id="banner-sub"></div>
+        </div>
+      </div>
+      <button class="country-back-btn" onclick="clearCountry()">✕ Clear</button>
     </div>
 
-    <div class="cafe-list" id="cafe-list"></div>
+    <!-- Not-visited screen -->
+    <div class="not-visited-screen" id="not-visited-screen">
+      <div class="nv-globe">🗺️</div>
+      <div class="nv-flag" id="nv-flag"></div>
+      <div class="nv-title" id="nv-title"></div>
+      <p class="nv-message" id="nv-message"></p>
+      <div id="nv-cities-section"></div>
+      <button class="nv-back-btn" onclick="clearCountry()">← Back to all cafes</button>
+    </div>
+
+    <!-- City/vibe filter row (hidden when not-visited is shown) -->
+    <div id="filter-section">
+      <div class="filter-row" id="city-pills"></div>
+      <div class="count-row">
+        <span class="count-text" id="count-text"></span>
+        <button class="clear-btn hide" id="clear-all-btn" onclick="clearAll()">Clear all</button>
+      </div>
+      <div class="cafe-list" id="cafe-list"></div>
+    </div>
 
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       CITY GUIDES SECTION
-  ══════════════════════════════════════════════════════════════ -->
+  <!-- ═══ CITY GUIDES ══════════════════════════════════════════ -->
   <section id="sec-guides" class="section">
     <div class="section-header">
       <div class="section-title">City Guides</div>
@@ -753,9 +433,7 @@
     <div class="guides-list" id="guides-list"></div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       TRENDING SECTION
-  ══════════════════════════════════════════════════════════════ -->
+  <!-- ═══ TRENDING ════════════════════════════════════════════ -->
   <section id="sec-trending" class="section">
     <div class="section-header">
       <div class="section-title">Trending</div>
@@ -771,135 +449,57 @@
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       AUTHOR SECTION
-  ══════════════════════════════════════════════════════════════ -->
+  <!-- ═══ AUTHOR ═══════════════════════════════════════════════ -->
   <section id="sec-author" class="section">
     <div class="author-scroll">
-
       <div class="author-hero">
-        <div class="author-ring">
-          <div class="author-photo">
-            <span class="author-initial">P</span>
-          </div>
-        </div>
+        <div class="author-ring"><div class="author-photo"><span class="author-initial">P</span></div></div>
         <div class="author-name">Pallavi Duggal</div>
         <div class="author-handle">@honestcoffeestop</div>
         <div class="social-row">
-          <a class="social-pill" href="https://instagram.com/honestcoffeestop" target="_blank" rel="noopener">
-            <span class="social-icon">📷</span> Instagram
-          </a>
-          <a class="social-pill" href="https://tiktok.com/@honestcoffeestop" target="_blank" rel="noopener">
-            <span class="social-icon">🎵</span> TikTok
-          </a>
-          <a class="social-pill" href="https://youtube.com/@honestcoffeestop" target="_blank" rel="noopener">
-            <span class="social-icon">▶</span> YouTube
-          </a>
+          <a class="social-pill" href="https://instagram.com/honestcoffeestop" target="_blank">📷 Instagram</a>
+          <a class="social-pill" href="https://tiktok.com/@honestcoffeestop" target="_blank">🎵 TikTok</a>
+          <a class="social-pill" href="https://youtube.com/@honestcoffeestop" target="_blank">▶ YouTube</a>
         </div>
       </div>
-
       <div class="author-letter">
         <div class="author-eyebrow">a letter from the author</div>
         <div class="author-title">Why I Built<br>Café Codex</div>
         <div class="author-title-line"></div>
-
         <div class="letter-body">
-          <p class="opening"><span class="drop-cap">I </span>don't remember the exact moment I fell in love
-            with coffee. It wasn't a single cup — it was a slow accumulation of mornings,
-            of cities, of quiet conversations held over something warm.</p>
-
-          <p>It started young. Before I understood roast profiles or brew ratios, I
-            understood the <span class="letter-em">feeling</span> — that first sip that
-            made the world slow down for a second. That feeling became a compass.
-            I started chasing it.</p>
-
-          <p>Every city I visited, every trip I planned — there was always a quiet
-            second agenda: find the best cup <span class="letter-em">here.</span> Not the
-            most famous. Not the most photographed. The most honest one. The one where
-            the owner could tell you exactly where the beans came from, and why they
-            opened this place at all.</p>
-
-          <div class="pull-quote">
-            <div class="pull-quote-text">
-              "Every cafe has a story.<br>I love knowing it."
-            </div>
-          </div>
-
-          <p>Then came Japan. I wasn't prepared for what matcha would do to me.
-            Not the powder-in-milk version the world had watered down — a
-            <span class="letter-em">real</span> bowl. Stone-ground. Whisked by hand.
-            Bright, grassy, almost electric. It was the coffee feeling all over again,
-            but ancient. Ceremonial. I've been chasing that too ever since.</p>
-
-          <p>Here's what nobody tells you about traveling for coffee and matcha:
-            the research is exhausting. Every city is a rabbit hole. You spend hours
-            before a trip just trying to answer one question — where do I actually go?</p>
-
-          <div class="pull-quote">
-            <div class="pull-quote-text">
-              "I built Café Codex so you don't<br>have to do that anymore."
-            </div>
-          </div>
-
-          <p>Every cafe in here I've either visited myself or personally vetted.
-            I've ordered the thing. I've sat in the light. I've talked to the person
-            behind the counter. This isn't a review app — it's a record.</p>
-
+          <p class="opening"><span class="drop-cap">I </span>don't remember the exact moment I fell in love with coffee. It wasn't a single cup — it was a slow accumulation of mornings, of cities, of quiet conversations held over something warm.</p>
+          <p>It started young. Before I understood roast profiles or brew ratios, I understood the <span class="letter-em">feeling</span> — that first sip that made the world slow down for a second. That feeling became a compass. I started chasing it.</p>
+          <p>Every city I visited, every trip I planned — there was always a quiet second agenda: find the best cup <span class="letter-em">here.</span> Not the most famous. Not the most photographed. The most honest one.</p>
+          <div class="pull-quote"><div class="pull-quote-text">"Every cafe has a story.<br>I love knowing it."</div></div>
+          <p>Then came Japan. I wasn't prepared for what matcha would do to me. Not the powder-in-milk version the world had watered down — a <span class="letter-em">real</span> bowl. Stone-ground. Whisked by hand. Bright, grassy, almost electric.</p>
+          <p>Here's what nobody tells you about traveling for coffee and matcha: the research is exhausting. Every city is a rabbit hole. You spend hours before a trip just trying to answer one question — where do I actually go?</p>
+          <div class="pull-quote"><div class="pull-quote-text">"I built Café Codex so you don't<br>have to do that anymore."</div></div>
+          <p>Every cafe in here I've either visited myself or personally vetted. I've ordered the thing. I've sat in the light. I've talked to the person behind the counter. This isn't a review app — it's a record.</p>
           <p><strong>My record. And now it's yours to use.</strong></p>
-
-          <div class="signature">
-            <div class="sig-dash">—</div>
-            <div class="sig-name">Pallavi</div>
-          </div>
+          <div class="signature"><div class="sig-dash">—</div><div class="sig-name">Pallavi</div></div>
         </div>
       </div>
-
       <div class="stats-row">
-        <div class="stat-item">
-          <div class="stat-num">7+</div>
-          <div class="stat-label">Countries</div>
-        </div>
+        <div class="stat-item"><div class="stat-num">7+</div><div class="stat-label">Countries</div></div>
         <div class="stat-div"></div>
-        <div class="stat-item">
-          <div class="stat-num">50+</div>
-          <div class="stat-label">Cafes visited</div>
-        </div>
+        <div class="stat-item"><div class="stat-num">50+</div><div class="stat-label">Cafes visited</div></div>
         <div class="stat-div"></div>
-        <div class="stat-item">
-          <div class="stat-num">∞</div>
-          <div class="stat-label">Coffees tried</div>
-        </div>
+        <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">Coffees tried</div></div>
         <div class="stat-div"></div>
-        <div class="stat-item">
-          <div class="stat-num">∞</div>
-          <div class="stat-label">Matchas tried</div>
-        </div>
+        <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">Matchas tried</div></div>
       </div>
-
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       BOTTOM TAB BAR
-  ══════════════════════════════════════════════════════════════ -->
+  <!-- ═══ TAB BAR ══════════════════════════════════════════════ -->
   <nav class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('discover')" id="tab-discover">
-      <span class="tab-icon">🧭</span>Discover
-    </button>
-    <button class="tab-btn" onclick="switchTab('guides')" id="tab-guides">
-      <span class="tab-icon">📖</span>City Guides
-    </button>
-    <button class="tab-btn" onclick="switchTab('trending')" id="tab-trending">
-      <span class="tab-icon">🔥</span>Trending
-    </button>
-    <button class="tab-btn" onclick="switchTab('author')" id="tab-author">
-      <span class="tab-icon">👤</span>Author
-    </button>
+    <button class="tab-btn active" onclick="switchTab('discover')" id="tab-discover"><span class="tab-icon">🧭</span>Discover</button>
+    <button class="tab-btn" onclick="switchTab('guides')" id="tab-guides"><span class="tab-icon">📖</span>City Guides</button>
+    <button class="tab-btn" onclick="switchTab('trending')" id="tab-trending"><span class="tab-icon">🔥</span>Trending</button>
+    <button class="tab-btn" onclick="switchTab('author')" id="tab-author"><span class="tab-icon">👤</span>Author</button>
   </nav>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       VIBE FILTER SHEET
-  ══════════════════════════════════════════════════════════════ -->
+  <!-- ═══ VIBE SHEET ═══════════════════════════════════════════ -->
   <div class="sheet-overlay" id="filter-sheet" onclick="closeSheet(event)">
     <div class="sheet" onclick="event.stopPropagation()">
       <div class="sheet-handle"></div>
@@ -912,26 +512,19 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       CAFE DETAIL MODAL
-  ══════════════════════════════════════════════════════════════ -->
+  <!-- ═══ DETAIL MODAL ══════════════════════════════════════════ -->
   <div class="modal-overlay" id="detail-modal" onclick="closeModal(event)">
     <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-photo">
-        <span class="modal-photo-emoji">☕</span>
-        <button class="modal-close" onclick="closeModal()">✕</button>
-      </div>
+      <div class="modal-photo"><span class="modal-photo-emoji">☕</span><button class="modal-close" onclick="closeModal()">✕</button></div>
       <div class="modal-body" id="modal-body"></div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════
-       JAVASCRIPT
-  ══════════════════════════════════════════════════════════════ -->
   <script>
-  // ── DATA ────────────────────────────────────────────────────
+  // ── DATA ─────────────────────────────────────────────────────
+
   const VIBE_TAGS = [
-    { id: 'viral_aesthetic',  label: 'Viral & Aesthetic',  emoji: '📸' },
+    { id: 'viral_aesthetic',  label: 'Viral & Aesthetic', emoji: '📸' },
     { id: 'matcha_specialist',label: 'Matcha Specialist',  emoji: '🍵' },
     { id: 'specialty_coffee', label: 'Specialty Coffee',   emoji: '☕' },
     { id: 'pour_over',        label: 'Pour-Over',          emoji: '🫖' },
@@ -942,258 +535,370 @@
   ];
 
   const CAFES = [
-    {
-      id: '1', name: 'Elm Coffee Roasters', city: 'Seattle', country: 'US',
-      neighborhood: 'Pioneer Square',
-      vibe_tags: ['specialty_coffee', 'pour_over', 'cozy_quiet'],
-      curator_pick: true, curator_rating: 5,
-      curator_notes: {
-        what_to_order: 'Single-origin pour-over, the cortado',
-        what_to_skip: 'Nothing — everything is excellent',
-        best_time: 'Weekday mornings before 9am',
-        content_tips: 'Natural light floods the bar in the AM. Shoot the pour-over in progress.',
-      },
-      instagram_handle: 'elmcoffeeroasters', is_active: true, trending: false,
-    },
-    {
-      id: '2', name: 'Koda Cafe', city: 'Seattle', country: 'US',
-      neighborhood: 'Capitol Hill',
-      vibe_tags: ['matcha_specialist', 'viral_aesthetic', 'creative_drinks'],
-      curator_pick: true, curator_rating: 5,
-      curator_notes: {
-        what_to_order: 'Ceremonial matcha latte, hojicha soft serve',
-        what_to_skip: 'The drip coffee — not their focus',
-        best_time: 'Late morning on weekdays',
-        content_tips: 'The soft serve is a must-film moment. Green-on-white aesthetic.',
-      },
-      instagram_handle: 'kodacafe', is_active: true, trending: true,
-    },
-    {
-      id: '3', name: 'Broadcast Coffee', city: 'Seattle', country: 'US',
-      neighborhood: 'Roosevelt',
-      vibe_tags: ['specialty_coffee', 'cozy_quiet', 'hidden_gem'],
-      curator_pick: true, curator_rating: 4,
-      curator_notes: {
-        what_to_order: 'The Gibraltar, seasonal latte',
-        what_to_skip: 'Pastries — get them at the bakery next door instead',
-        best_time: 'Sunday mornings',
-        content_tips: 'Low light, moody interior. Bring a prime lens.',
-      },
-      instagram_handle: 'broadcastcoffee', is_active: true, trending: false,
-    },
-    {
-      id: '4', name: 'Ichi-ni-san', city: 'Seattle', country: 'US',
-      neighborhood: 'International District',
-      vibe_tags: ['matcha_specialist', 'hidden_gem', 'cozy_quiet'],
-      curator_pick: true, curator_rating: 5,
-      curator_notes: {
-        what_to_order: 'Thick matcha, wagashi of the day',
-        what_to_skip: 'Nothing — tiny menu, everything is intentional',
-        best_time: 'Weekday afternoons, never crowded',
-        content_tips: 'Ceramic bowls are stunning. The bamboo whisk in frame.',
-      },
-      instagram_handle: 'ichinisanseattle', is_active: true, trending: true,
-    },
-    {
-      id: '5', name: 'Stoneground Matcha', city: 'New York', country: 'US',
-      neighborhood: 'West Village',
-      vibe_tags: ['matcha_specialist', 'viral_aesthetic', 'collab_worthy'],
-      curator_pick: true, curator_rating: 5,
-      curator_notes: {
-        what_to_order: 'Stone-ground ceremonial bowl, iced hojicha',
-        what_to_skip: 'Latte if you want clean matcha flavor — go for the pure bowl',
-        best_time: 'Tuesdays and Wednesdays, minimal wait',
-        content_tips: 'The stone grinding mill in the background makes every shot.',
-      },
-      instagram_handle: 'stonegroundmatcha', is_active: true, trending: true,
-    },
-    {
-      id: '6', name: 'Blue Bottle Coffee', city: 'New York', country: 'US',
-      neighborhood: 'Chelsea',
-      vibe_tags: ['specialty_coffee', 'pour_over', 'viral_aesthetic'],
-      curator_pick: false, curator_rating: 4,
-      curator_notes: {
-        what_to_order: 'New Orleans iced coffee, single-origin pour-over',
-        what_to_skip: 'Espresso drinks — not their strength',
-        best_time: 'Midweek mornings',
-        content_tips: 'Minimal white interior, great for flat lay shots.',
-      },
-      instagram_handle: 'bluebottlecoffee', is_active: true, trending: false,
-    },
-    {
-      id: '7', name: 'Tandem Coffee', city: 'New York', country: 'US',
-      neighborhood: 'Williamsburg',
-      vibe_tags: ['creative_drinks', 'viral_aesthetic', 'collab_worthy'],
-      curator_pick: true, curator_rating: 4,
-      curator_notes: {
-        what_to_order: 'Lavender oat latte, seasonal special',
-        what_to_skip: 'Drip coffee',
-        best_time: 'Golden hour on weekends for content',
-        content_tips: 'Exposed brick + huge windows = perfect content light.',
-      },
-      instagram_handle: 'tandemcoffeenyc', is_active: true, trending: false,
-    },
+    { id:'1', name:'Elm Coffee Roasters', city:'Seattle', country:'United States', neighborhood:'Pioneer Square', vibe_tags:['specialty_coffee','pour_over','cozy_quiet'], curator_pick:true, curator_rating:5, curator_notes:{ what_to_order:'Single-origin pour-over, the cortado', what_to_skip:'Nothing — everything is excellent', best_time:'Weekday mornings before 9am', content_tips:'Natural light floods the bar in the AM. Shoot the pour-over in progress.' }, instagram_handle:'elmcoffeeroasters', trending:false },
+    { id:'2', name:'Koda Cafe', city:'Seattle', country:'United States', neighborhood:'Capitol Hill', vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'], curator_pick:true, curator_rating:5, curator_notes:{ what_to_order:'Ceremonial matcha latte, hojicha soft serve', what_to_skip:'The drip coffee — not their focus', best_time:'Late morning on weekdays', content_tips:'The soft serve is a must-film moment. Green-on-white aesthetic.' }, instagram_handle:'kodacafe', trending:true },
+    { id:'3', name:'Broadcast Coffee', city:'Seattle', country:'United States', neighborhood:'Roosevelt', vibe_tags:['specialty_coffee','cozy_quiet','hidden_gem'], curator_pick:true, curator_rating:4, curator_notes:{ what_to_order:'The Gibraltar, seasonal latte', what_to_skip:'Pastries — get them at the bakery next door instead', best_time:'Sunday mornings', content_tips:'Low light, moody interior. Bring a prime lens.' }, instagram_handle:'broadcastcoffee', trending:false },
+    { id:'4', name:'Ichi-ni-san', city:'Seattle', country:'United States', neighborhood:'International District', vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'], curator_pick:true, curator_rating:5, curator_notes:{ what_to_order:'Thick matcha, wagashi of the day', what_to_skip:'Nothing — tiny menu, everything is intentional', best_time:'Weekday afternoons, never crowded', content_tips:'Ceramic bowls are stunning. The bamboo whisk in frame.' }, instagram_handle:'ichinisanseattle', trending:true },
+    { id:'5', name:'Stoneground Matcha', city:'New York', country:'United States', neighborhood:'West Village', vibe_tags:['matcha_specialist','viral_aesthetic','collab_worthy'], curator_pick:true, curator_rating:5, curator_notes:{ what_to_order:'Stone-ground ceremonial bowl, iced hojicha', what_to_skip:'Latte if you want clean matcha flavor — go for the pure bowl', best_time:'Tuesdays and Wednesdays, minimal wait', content_tips:'The stone grinding mill in the background makes every shot.' }, instagram_handle:'stonegroundmatcha', trending:true },
+    { id:'6', name:'Blue Bottle Coffee', city:'New York', country:'United States', neighborhood:'Chelsea', vibe_tags:['specialty_coffee','pour_over','viral_aesthetic'], curator_pick:false, curator_rating:4, curator_notes:{ what_to_order:'New Orleans iced coffee, single-origin pour-over', what_to_skip:'Espresso drinks — not their strength', best_time:'Midweek mornings', content_tips:'Minimal white interior, great for flat lay shots.' }, instagram_handle:'bluebottlecoffee', trending:false },
+    { id:'7', name:'Tandem Coffee', city:'New York', country:'United States', neighborhood:'Williamsburg', vibe_tags:['creative_drinks','viral_aesthetic','collab_worthy'], curator_pick:true, curator_rating:4, curator_notes:{ what_to_order:'Lavender oat latte, seasonal special', what_to_skip:'Drip coffee', best_time:'Golden hour on weekends for content', content_tips:'Exposed brick + huge windows = perfect content light.' }, instagram_handle:'tandemcoffeenyc', trending:false },
   ];
 
   const CITY_GUIDES = [
+    { id:'cg1', city:'Seattle', title:'Top 5 Matcha Spots in Seattle', description:"Seattle's matcha scene punches well above its weight. Here are the spots I keep coming back to.", curator_rating:'4.8/5 for matcha', cafe_ids:['2','4','3'], emoji:'🍵' },
+    { id:'cg2', city:'Seattle', title:'Best Pour-Over Cafes in Seattle', description:"The Pacific Northwest takes coffee seriously. These are the pour-over bars doing it right.", curator_rating:'4.9/5 for coffee', cafe_ids:['1','3'], emoji:'☕' },
+    { id:'cg3', city:'New York', title:'Top Matcha in NYC', description:"NYC has exploded with matcha spots. These are the ones worth the wait.", curator_rating:'4.7/5 for matcha', cafe_ids:['5','7'], emoji:'🍵' },
+  ];
+
+  // ── COUNTRY KNOWLEDGE BASE ────────────────────────────────────
+  // visited: true = I've been here and have cafes in the database
+  // wishlist: true = on my list, planned cities shown as teaser
+  const COUNTRIES = [
     {
-      id: 'cg1', city: 'Seattle',
-      title: 'Top 5 Matcha Spots in Seattle',
-      description: "Seattle's matcha scene punches well above its weight. Here are the spots I keep coming back to.",
-      curator_rating: '4.8/5 for matcha',
-      cafe_ids: ['2', '4', '3'], emoji: '🍵',
+      name: 'United States', flag: '🇺🇸', visited: true,
+      aliases: ['united states','usa','us','u.s','u.s.a','america','american','states','wa','washington','ny','new york','seattle'],
+      cities: ['New York', 'Seattle'], // auto-pulled from CAFES too
+      fun_label: null
     },
     {
-      id: 'cg2', city: 'Seattle',
-      title: 'Best Pour-Over Cafes in Seattle',
-      description: "The Pacific Northwest takes coffee seriously. These are the pour-over bars doing it right.",
-      curator_rating: '4.9/5 for coffee',
-      cafe_ids: ['1', '3'], emoji: '☕',
+      name: 'Japan', flag: '🇯🇵', visited: false, wishlist: true,
+      aliases: ['japan','jp','ja','jap','nihon','nippon','japanese','tokyo','kyoto','osaka'],
+      planned_cities: ['Kyoto', 'Osaka', 'Tokyo'],
+      fun_messages: [
+        "Still dreaming about Japan — the matcha there is on a completely different level. Tokyo, Kyoto, and Osaka are circled on my map.",
+        "Japan is high on the list. Stone-ground matcha, kissaten coffee culture... I'll get there. Soon."
+      ]
     },
     {
-      id: 'cg3', city: 'New York',
-      title: 'Top Matcha in NYC',
-      description: "NYC has exploded with matcha spots. These are the ones worth the wait.",
-      curator_rating: '4.7/5 for matcha',
-      cafe_ids: ['5', '7'], emoji: '🍵',
+      name: 'India', flag: '🇮🇳', visited: false, wishlist: true,
+      aliases: ['india','in','ind','indian','bangalore','bengaluru','mumbai','delhi','hyderabad','chennai','pune'],
+      planned_cities: ['Bangalore', 'Delhi', 'Hyderabad', 'Mumbai'],
+      fun_messages: [
+        "India's specialty coffee scene is exploding right now — Bangalore especially. I'm coming for it.",
+        "India is on the list and climbing fast. Bangalore's third-wave coffee culture? I need to see it for myself."
+      ]
+    },
+    {
+      name: 'United Kingdom', flag: '🇬🇧', visited: false, wishlist: true,
+      aliases: ['uk','gb','britain','england','british','london','england','scotland','wales'],
+      planned_cities: ['London'],
+      fun_messages: [
+        "London has a brilliant specialty coffee scene. I haven't made it there yet, but Borough Market and Shoreditch are calling.",
+        "Still on my list — London cafes are on a different level and I intend to find out firsthand."
+      ]
+    },
+    {
+      name: 'France', flag: '🇫🇷', visited: false, wishlist: true,
+      aliases: ['france','fr','french','paris','lyon','marseille'],
+      planned_cities: ['Paris'],
+      fun_messages: [
+        "Paris has this incredible new-wave coffee scene hiding behind all the classic brasseries. Haven't been yet — but it's circled.",
+        "I haven't sipped my way through Paris yet, but it's absolutely on the list."
+      ]
+    },
+    {
+      name: 'Netherlands', flag: '🇳🇱', visited: false, wishlist: true,
+      aliases: ['netherlands','nl','holland','dutch','amsterdam'],
+      planned_cities: ['Amsterdam'],
+      fun_messages: [
+        "Amsterdam's café culture is everything. Narrow canal-side spots with incredible pour-overs. I'm going. Eventually.",
+        "The Netherlands is on the list — I hear Amsterdam's coffee scene is quietly one of the best in Europe."
+      ]
+    },
+    {
+      name: 'Denmark', flag: '🇩🇰', visited: false, wishlist: true,
+      aliases: ['denmark','dk','danish','copenhagen'],
+      planned_cities: ['Copenhagen'],
+      fun_messages: [
+        "Copenhagen is where Scandinavian coffee culture was born. Haven't been, but it's circled twice.",
+        "Denmark and specialty coffee go hand in hand. Copenhagen is absolutely on the radar."
+      ]
+    },
+    {
+      name: 'Australia', flag: '🇦🇺', visited: false, wishlist: true,
+      aliases: ['australia','au','aus','aussie','melbourne','sydney','brisbane'],
+      planned_cities: ['Melbourne', 'Sydney'],
+      fun_messages: [
+        "Melbourne basically invented modern flat white culture. I have no excuse for not going yet — it's on the list.",
+        "Australia is calling — Melbourne's coffee scene is legendary and I haven't been yet."
+      ]
+    },
+    {
+      name: 'Canada', flag: '🇨🇦', visited: false, wishlist: true,
+      aliases: ['canada','ca','can','canadian','toronto','vancouver','montreal'],
+      planned_cities: ['Montreal', 'Toronto', 'Vancouver'],
+      fun_messages: [
+        "Canada is closer than most of my list — Vancouver especially has a great third-wave scene. Haven't made it yet!",
+        "Still haven't crossed the border for a proper Canadian coffee crawl. It's coming though."
+      ]
+    },
+    {
+      name: 'South Korea', flag: '🇰🇷', visited: false, wishlist: true,
+      aliases: ['south korea','korea','kr','korean','seoul','busan'],
+      planned_cities: ['Busan', 'Seoul'],
+      fun_messages: [
+        "Seoul's café aesthetic is like nothing else in the world — art installations, specialty beans, and perfectly lit interiors. I need to go.",
+        "South Korea has some of the most visually stunning cafes on the planet. Seoul is very much on the list."
+      ]
     },
   ];
 
-  // ── STATE ────────────────────────────────────────────────────
-  let selectedCity = 'All';
-  let activeVibes  = [];
-  let searchQuery  = '';
-  let saved        = JSON.parse(localStorage.getItem('cc_saved')  || '[]');
-  let visited      = JSON.parse(localStorage.getItem('cc_visited')|| '[]');
-
-  // ── HELPERS ──────────────────────────────────────────────────
-  const cities = ['All', ...new Set(CAFES.map(c => c.city))];
-
-  function vibeLabel(id) {
-    const t = VIBE_TAGS.find(t => t.id === id);
-    return t ? `${t.emoji} ${t.label}` : id;
+  // Flatten all aliases for fast lookup
+  function matchCountry(query) {
+    const q = query.toLowerCase().trim();
+    if (!q || q.length < 2) return [];
+    return COUNTRIES.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      c.aliases.some(a => a.includes(q) || q.includes(a))
+    ).slice(0, 5);
   }
+
+  // ── STATE ─────────────────────────────────────────────────────
+  let selectedCity   = 'All';
+  let activeVibes    = [];
+  let searchQuery    = '';
+  let selectedCountry = null;  // full country object or null
+  let saved   = JSON.parse(localStorage.getItem('cc_saved')  || '[]');
+  let visited = JSON.parse(localStorage.getItem('cc_visited')|| '[]');
+  let dropdownBlurTimer = null;
+
+  // ── HELPERS ───────────────────────────────────────────────────
+  function getCities(countryName) {
+    const fromData = [...new Set(CAFES.filter(c => c.country === countryName).map(c => c.city))].sort();
+    return fromData;
+  }
+
+  function vibeLabel(id) { const t = VIBE_TAGS.find(t=>t.id===id); return t ? `${t.emoji} ${t.label}` : id; }
   function stars(n) { return '★'.repeat(n); }
   function isSaved(id) { return saved.includes(id); }
   function isVisited(id) { return visited.includes(id); }
+  function rand(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 
   function toggleSaved(id, e) {
     e && e.stopPropagation();
-    if (isSaved(id)) saved = saved.filter(s => s !== id);
-    else saved.push(id);
+    if (isSaved(id)) saved = saved.filter(s=>s!==id); else saved.push(id);
     localStorage.setItem('cc_saved', JSON.stringify(saved));
-    renderAll();
-    updateModalActions(id);
+    renderAll(); updateModalActions(id);
   }
-
   function toggleVisited(id) {
-    if (isVisited(id)) visited = visited.filter(v => v !== id);
-    else visited.push(id);
+    if (isVisited(id)) visited = visited.filter(v=>v!==id); else visited.push(id);
     localStorage.setItem('cc_visited', JSON.stringify(visited));
-    renderAll();
-    updateModalActions(id);
+    renderAll(); updateModalActions(id);
   }
 
-  // ── RENDER CARD ───────────────────────────────────────────────
+  // ── SEARCH / COUNTRY LOGIC ────────────────────────────────────
+  function onSearchInput() {
+    const val = document.getElementById('search-input').value;
+    document.getElementById('search-clear').classList.toggle('hide', !val);
+
+    // Show country dropdown suggestions
+    const matches = matchCountry(val);
+    if (val.length >= 2 && matches.length > 0 && !selectedCountry) {
+      renderDropdown(matches);
+      document.getElementById('country-dropdown').classList.add('open');
+    } else {
+      document.getElementById('country-dropdown').classList.remove('open');
+      // Also do regular cafe search
+      searchQuery = val.toLowerCase().trim();
+      renderDiscoverList();
+    }
+  }
+
+  function onSearchFocus() {
+    clearTimeout(dropdownBlurTimer);
+    document.getElementById('search-box').classList.add('focused');
+    const val = document.getElementById('search-input').value;
+    if (val.length >= 2 && !selectedCountry) {
+      const matches = matchCountry(val);
+      if (matches.length > 0) document.getElementById('country-dropdown').classList.add('open');
+    }
+  }
+
+  function onSearchBlur() {
+    document.getElementById('search-box').classList.remove('focused');
+    dropdownBlurTimer = setTimeout(() => {
+      document.getElementById('country-dropdown').classList.remove('open');
+    }, 200);
+  }
+
+  function renderDropdown(countries) {
+    document.getElementById('country-dropdown').innerHTML = countries.map(c => `
+      <div class="dropdown-item" onmousedown="selectCountry('${c.name}')" ontouchstart="selectCountry('${c.name}')">
+        <span class="dropdown-flag">${c.flag}</span>
+        <div class="dropdown-info">
+          <div class="dropdown-country-name">${c.name}</div>
+          <div class="dropdown-status ${c.visited ? 'visited' : 'wishlist'}">
+            ${c.visited ? `✓ Explored — ${getCities(c.name).join(', ')}` : '✈️ On the list'}
+          </div>
+        </div>
+        <span class="dropdown-arrow">›</span>
+      </div>`).join('');
+  }
+
+  function selectCountry(name) {
+    document.getElementById('country-dropdown').classList.remove('open');
+    const country = COUNTRIES.find(c => c.name === name);
+    if (!country) return;
+
+    selectedCountry = country;
+    document.getElementById('search-input').value = `${country.flag} ${country.name}`;
+    document.getElementById('search-clear').classList.remove('hide');
+    searchQuery = '';
+
+    if (country.visited) {
+      showVisitedCountry(country);
+    } else {
+      showNotVisitedCountry(country);
+    }
+  }
+
+  function showVisitedCountry(country) {
+    const cities = getCities(country.name);
+    selectedCity = 'All';
+
+    // Show banner
+    document.getElementById('banner-flag').textContent = country.flag;
+    document.getElementById('banner-text').textContent = country.name;
+    document.getElementById('banner-sub').textContent = `${cities.length} ${cities.length===1?'city':'cities'} explored · ${CAFES.filter(c=>c.country===country.name).length} cafes`;
+    document.getElementById('country-banner').classList.add('show');
+
+    // Hide not-visited, show filter section
+    document.getElementById('not-visited-screen').classList.remove('show');
+    document.getElementById('filter-section').style.display = 'block';
+
+    // Render city pills for this country only
+    renderCityPills(cities);
+    renderDiscoverList();
+  }
+
+  function showNotVisitedCountry(country) {
+    // Hide normal filter section
+    document.getElementById('filter-section').style.display = 'none';
+    document.getElementById('country-banner').classList.remove('show');
+
+    // Show not-visited screen
+    const screen = document.getElementById('not-visited-screen');
+    const msg = rand(country.fun_messages || ["Still on my list — haven't made it here yet, but it's circled on the map."]);
+
+    document.getElementById('nv-flag').textContent = country.flag;
+    document.getElementById('nv-title').textContent = `${country.name} is on my list`;
+    document.getElementById('nv-message').textContent = msg;
+
+    // Planned cities
+    const planned = country.planned_cities || [];
+    document.getElementById('nv-cities-section').innerHTML = planned.length ? `
+      <div class="nv-soon-label">Cities I'm planning to visit</div>
+      <div class="nv-cities">
+        ${planned.map(city => `<span class="nv-city-pill">📍 ${city}</span>`).join('')}
+      </div>` : '';
+
+    screen.classList.add('show');
+  }
+
+  function clearSearch() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('search-clear').classList.add('hide');
+    document.getElementById('country-dropdown').classList.remove('open');
+    searchQuery = '';
+    clearCountry();
+  }
+
+  function clearCountry() {
+    selectedCountry = null;
+    document.getElementById('search-input').value = '';
+    document.getElementById('search-clear').classList.add('hide');
+    document.getElementById('country-banner').classList.remove('show');
+    document.getElementById('not-visited-screen').classList.remove('show');
+    document.getElementById('filter-section').style.display = 'block';
+    selectedCity = 'All';
+    activeVibes = [];
+    searchQuery = '';
+    renderCityPills();
+    renderDiscoverList();
+  }
+
+  // ── FILTER & RENDER ───────────────────────────────────────────
+  function getFiltered() {
+    return CAFES.filter(c => {
+      const countryOk = !selectedCountry || !selectedCountry.visited || c.country === selectedCountry.name;
+      const cityOk    = selectedCity === 'All' || c.city === selectedCity;
+      const vibeOk    = activeVibes.length === 0 || activeVibes.every(v => c.vibe_tags.includes(v));
+      const srchOk    = !searchQuery ||
+        c.name.toLowerCase().includes(searchQuery) ||
+        c.neighborhood.toLowerCase().includes(searchQuery) ||
+        c.city.toLowerCase().includes(searchQuery);
+      return countryOk && cityOk && vibeOk && srchOk;
+    });
+  }
+
+  function renderDiscoverList() {
+    const filtered = getFiltered();
+    const hasFilters = activeVibes.length > 0 || selectedCity !== 'All';
+    document.getElementById('count-text').textContent =
+      `${filtered.length} ${filtered.length===1?'cafe':'cafes'}${hasFilters||searchQuery?' · filtered':''}`;
+    document.getElementById('clear-all-btn').classList.toggle('hide', !hasFilters && !selectedCountry);
+
+    document.getElementById('cafe-list').innerHTML = filtered.length
+      ? filtered.map(cafeCardHTML).join('')
+      : `<div class="empty-state"><div class="empty-emoji">☕</div><div class="empty-title">No cafes match</div><div class="empty-sub">Try adjusting your filters</div></div>`;
+  }
+
+  function renderCityPills(citiesOverride) {
+    const allCities = citiesOverride || [...new Set(CAFES.map(c=>c.city))].sort();
+    const pills = ['All', ...allCities];
+    document.getElementById('city-pills').innerHTML =
+      pills.map(c => `<button class="pill${c===selectedCity?' active':''}" onclick="selectCity('${c}')">${c}</button>`).join('') +
+      `<button class="filter-btn${activeVibes.length>0?' has-filters':''}" id="filter-toggle-btn" onclick="openSheet()">
+        ⚙${activeVibes.length>0?`<span class="filter-count">${activeVibes.length}</span>`:''}
+      </button>`;
+  }
+
+  function selectCity(city) {
+    selectedCity = city;
+    renderCityPills(selectedCountry && selectedCountry.visited ? getCities(selectedCountry.name) : null);
+    renderDiscoverList();
+  }
+
+  function clearAll() {
+    activeVibes = []; selectedCity = 'All';
+    renderCityPills(selectedCountry && selectedCountry.visited ? getCities(selectedCountry.name) : null);
+    renderDiscoverList();
+  }
+
+  // ── CAFE CARD ─────────────────────────────────────────────────
   function cafeCardHTML(cafe) {
-    const sv = isSaved(cafe.id);
-    const vis = isVisited(cafe.id);
-    const tags = cafe.vibe_tags.slice(0,3).map(t => `<span class="tag">${vibeLabel(t)}</span>`).join('');
-    const rating = cafe.curator_rating ? `<span class="rating-pill">${stars(cafe.curator_rating)}</span>` : '';
-    const visitedBadge = vis ? `<span class="visited-badge">✓ Visited</span>` : '';
-    const pickBadge = cafe.curator_pick ? `<span class="badge-pick">✦ Pallavi's Pick</span>` : '';
-    const trendBadge = cafe.trending ? `<span class="badge-trending">🔥 Trending</span>` : '';
+    const sv = isSaved(cafe.id), vis = isVisited(cafe.id);
+    const tags = cafe.vibe_tags.slice(0,3).map(t=>`<span class="tag">${vibeLabel(t)}</span>`).join('');
     return `
       <div class="cafe-card" onclick="openCafe('${cafe.id}')">
         <div class="cafe-photo">
           <span class="cafe-photo-emoji">☕</span>
-          <div class="cafe-badges">${pickBadge}${trendBadge}</div>
-          <button class="save-btn" onclick="toggleSaved('${cafe.id}',event)">${sv ? '❤️' : '🤍'}</button>
+          <div class="cafe-badges">
+            ${cafe.curator_pick?'<span class="badge-pick">✦ Pallavi\'s Pick</span>':''}
+            ${cafe.trending?'<span class="badge-trending">🔥 Trending</span>':''}
+          </div>
+          <button class="save-btn" onclick="toggleSaved('${cafe.id}',event)">${sv?'❤️':'🤍'}</button>
         </div>
         <div class="cafe-info">
           <div class="cafe-name-row">
-            <span class="cafe-name">${cafe.name}</span>${rating}
+            <span class="cafe-name">${cafe.name}</span>
+            ${cafe.curator_rating?`<span class="rating-pill">${stars(cafe.curator_rating)}</span>`:''}
           </div>
           <div class="cafe-meta">
             <span class="cafe-location">${cafe.neighborhood} · ${cafe.city}</span>
-            ${visitedBadge}
+            ${vis?'<span class="visited-badge">✓ Visited</span>':''}
           </div>
           <div class="tag-row">${tags}</div>
         </div>
       </div>`;
   }
 
-  // ── FILTER & RENDER ───────────────────────────────────────────
-  function getFiltered() {
-    return CAFES.filter(c => {
-      const cityOk  = selectedCity === 'All' || c.city === selectedCity;
-      const vibeOk  = activeVibes.length === 0 || activeVibes.every(v => c.vibe_tags.includes(v));
-      const srchOk  = !searchQuery ||
-        c.name.toLowerCase().includes(searchQuery) ||
-        c.neighborhood.toLowerCase().includes(searchQuery);
-      return cityOk && vibeOk && srchOk;
-    });
-  }
-
-  function applyFilters() {
-    searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
-    const clr = document.getElementById('search-clear');
-    clr.classList.toggle('hide', !searchQuery);
-    renderDiscoverList();
-    updateApplyBtn();
-  }
-
-  function renderDiscoverList() {
-    const filtered = getFiltered();
-    const list = document.getElementById('cafe-list');
-    const hasFilters = activeVibes.length > 0 || selectedCity !== 'All';
-    const countEl = document.getElementById('count-text');
-    const clearEl = document.getElementById('clear-all-btn');
-
-    countEl.textContent = `${filtered.length} ${filtered.length === 1 ? 'cafe' : 'cafes'}${hasFilters || searchQuery ? ' · filtered' : ''}`;
-    clearEl.classList.toggle('hide', !hasFilters);
-
-    if (filtered.length === 0) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-emoji">☕</div><div class="empty-title">No cafes match your filters</div><div class="empty-sub">Try adjusting your vibe or city</div></div>`;
-    } else {
-      list.innerHTML = filtered.map(cafeCardHTML).join('');
-    }
-  }
-
-  function renderCityPills() {
-    document.getElementById('city-pills').innerHTML =
-      cities.map(c => `<button class="pill${c===selectedCity?' active':''}" onclick="selectCity('${c}')">${c}</button>`).join('') +
-      `<button class="filter-btn${activeVibes.length>0?' has-filters':''}" id="filter-toggle-btn" onclick="openSheet()">
-        ⚙${activeVibes.length > 0 ? `<span class="filter-count">${activeVibes.length}</span>` : ''}
-       </button>`;
-  }
-
-  function selectCity(city) {
-    selectedCity = city;
-    renderCityPills();
-    renderDiscoverList();
-  }
-
-  function clearSearch() {
-    document.getElementById('search-input').value = '';
-    searchQuery = '';
-    document.getElementById('search-clear').classList.add('hide');
-    renderDiscoverList();
-  }
-
-  function clearAll() {
-    activeVibes = [];
-    selectedCity = 'All';
-    renderCityPills();
-    renderDiscoverList();
-  }
-
   // ── GUIDES ────────────────────────────────────────────────────
   function renderGuides() {
     document.getElementById('guides-list').innerHTML = CITY_GUIDES.map(g => {
-      const cafePills = g.cafe_ids.map((id, i) => {
-        const cafe = CAFES.find(c => c.id === id);
-        return cafe ? `<span class="guide-cafe-pill"><span>#${i+1}</span>${cafe.name}</span>` : '';
+      const cafePills = g.cafe_ids.map((id,i) => {
+        const c = CAFES.find(c=>c.id===id);
+        return c ? `<span class="guide-cafe-pill"><span>#${i+1}</span>${c.name}</span>` : '';
       }).join('');
       return `
         <div class="guide-card" onclick="openGuide('${g.id}')">
@@ -1214,26 +919,21 @@
   }
 
   function openGuide(id) {
-    const g = CITY_GUIDES.find(g => g.id === id);
+    const g = CITY_GUIDES.find(g=>g.id===id);
     if (!g) return;
-    // Show filtered discover for this guide
     switchTab('discover');
+    clearCountry();
     selectedCity = g.city;
-    activeVibes = [];
     renderCityPills();
     renderDiscoverList();
   }
 
   // ── TRENDING ──────────────────────────────────────────────────
   function renderTrending() {
-    const trending = CAFES.filter(c => c.trending);
-    const picks    = CAFES.filter(c => c.curator_pick && c.curator_rating === 5);
-    document.getElementById('trending-list').innerHTML = trending.length
-      ? trending.map(cafeCardHTML).join('')
-      : '<div class="empty-state"><div class="empty-emoji">🔥</div><div class="empty-title">No trending cafes yet</div></div>';
-    document.getElementById('picks-list').innerHTML = picks.length
-      ? picks.map(cafeCardHTML).join('')
-      : '<div class="empty-state"><div class="empty-emoji">✦</div><div class="empty-title">No picks yet</div></div>';
+    const tr = CAFES.filter(c=>c.trending);
+    const pk = CAFES.filter(c=>c.curator_pick && c.curator_rating===5);
+    document.getElementById('trending-list').innerHTML = tr.length ? tr.map(cafeCardHTML).join('') : '<div class="empty-state"><div class="empty-emoji">🔥</div><div class="empty-title">No trending cafes yet</div></div>';
+    document.getElementById('picks-list').innerHTML   = pk.length ? pk.map(cafeCardHTML).join('') : '<div class="empty-state"><div class="empty-emoji">✦</div><div class="empty-title">No picks yet</div></div>';
   }
 
   // ── VIBE SHEET ────────────────────────────────────────────────
@@ -1242,131 +942,80 @@
       <button class="vibe-tag${activeVibes.includes(t.id)?' active':''}" onclick="toggleVibe('${t.id}')">
         <span>${t.emoji}</span>${t.label}
       </button>`).join('');
-    document.getElementById('sheet-clear-btn').classList.toggle('hide', activeVibes.length === 0);
+    document.getElementById('sheet-clear-btn').classList.toggle('hide', activeVibes.length===0);
     updateApplyBtn();
   }
-
   function toggleVibe(id) {
-    if (activeVibes.includes(id)) activeVibes = activeVibes.filter(v => v !== id);
-    else activeVibes.push(id);
-    renderVibeGrid();
-    renderCityPills();
-    renderDiscoverList();
+    if (activeVibes.includes(id)) activeVibes = activeVibes.filter(v=>v!==id); else activeVibes.push(id);
+    renderVibeGrid(); renderCityPills(selectedCountry&&selectedCountry.visited?getCities(selectedCountry.name):null); renderDiscoverList();
   }
-
-  function clearVibes() {
-    activeVibes = [];
-    renderVibeGrid();
-    renderCityPills();
-    renderDiscoverList();
-  }
-
+  function clearVibes() { activeVibes=[]; renderVibeGrid(); renderCityPills(); renderDiscoverList(); }
   function updateApplyBtn() {
-    const filtered = getFiltered();
     const btn = document.getElementById('apply-btn');
-    if (btn) btn.textContent = `Show ${filtered.length} ${filtered.length === 1 ? 'cafe' : 'cafes'}`;
+    const n = getFiltered().length;
+    if (btn) btn.textContent = `Show ${n} ${n===1?'cafe':'cafes'}`;
   }
-
-  function openSheet() {
-    renderVibeGrid();
-    document.getElementById('filter-sheet').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-
+  function openSheet() { renderVibeGrid(); document.getElementById('filter-sheet').classList.add('open'); document.body.style.overflow='hidden'; }
   function closeSheet(e) {
     if (e && e.target !== document.getElementById('filter-sheet')) return;
-    document.getElementById('filter-sheet').classList.remove('open');
-    document.body.style.overflow = '';
-    renderCityPills();
+    document.getElementById('filter-sheet').classList.remove('open'); document.body.style.overflow='';
+    renderCityPills(selectedCountry&&selectedCountry.visited?getCities(selectedCountry.name):null);
   }
 
   // ── DETAIL MODAL ──────────────────────────────────────────────
   let currentCafeId = null;
-
   function openCafe(id) {
     currentCafeId = id;
-    const cafe = CAFES.find(c => c.id === id);
+    const cafe = CAFES.find(c=>c.id===id);
     if (!cafe) return;
     renderModalBody(cafe);
     document.getElementById('detail-modal').classList.add('open');
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow='hidden';
   }
-
   function renderModalBody(cafe) {
-    const sv  = isSaved(cafe.id);
-    const vis = isVisited(cafe.id);
-    const tags = cafe.vibe_tags.map(t => `<span class="tag">${vibeLabel(t)}</span>`).join('');
-    const notes = cafe.curator_notes;
+    const sv=isSaved(cafe.id), vis=isVisited(cafe.id);
+    const tags = cafe.vibe_tags.map(t=>`<span class="tag">${vibeLabel(t)}</span>`).join('');
+    const n = cafe.curator_notes;
     document.getElementById('modal-body').innerHTML = `
       <div class="modal-name-row">
         <div class="modal-name">${cafe.name}</div>
-        <button class="modal-save-btn" id="modal-save-${cafe.id}" onclick="toggleSaved('${cafe.id}')">${sv ? '❤️' : '🤍'}</button>
+        <button class="modal-save-btn" id="modal-save-${cafe.id}" onclick="toggleSaved('${cafe.id}')">${sv?'❤️':'🤍'}</button>
       </div>
       <div class="modal-location">${cafe.neighborhood} · ${cafe.city}</div>
       <div class="modal-tags">${tags}</div>
       <div class="modal-divider"></div>
       <div class="notes-title">Curator Notes</div>
-      <div class="note-item">
-        <div class="note-label">ORDER THIS</div>
-        <div class="note-value">${notes.what_to_order}</div>
-      </div>
-      <div class="note-item">
-        <div class="note-label">SKIP THIS</div>
-        <div class="note-value">${notes.what_to_skip}</div>
-      </div>
-      <div class="note-item">
-        <div class="note-label">BEST TIME TO GO</div>
-        <div class="note-value">${notes.best_time}</div>
-      </div>
-      <div class="note-item">
-        <div class="note-label">CONTENT TIPS</div>
-        <div class="note-value">${notes.content_tips}</div>
-      </div>
+      <div class="note-item"><div class="note-label">ORDER THIS</div><div class="note-value">${n.what_to_order}</div></div>
+      <div class="note-item"><div class="note-label">SKIP THIS</div><div class="note-value">${n.what_to_skip}</div></div>
+      <div class="note-item"><div class="note-label">BEST TIME TO GO</div><div class="note-value">${n.best_time}</div></div>
+      <div class="note-item"><div class="note-label">CONTENT TIPS</div><div class="note-value">${n.content_tips}</div></div>
       <div class="modal-actions">
-        <a class="action-btn action-primary" href="https://instagram.com/${cafe.instagram_handle}" target="_blank" rel="noopener"
-           style="text-decoration:none;text-align:center;">Instagram</a>
-        <button class="action-btn action-secondary${vis?' visited-active':''}" id="modal-visited-${cafe.id}"
-           onclick="toggleVisited('${cafe.id}')">${vis ? '✓ Visited' : 'Mark Visited'}</button>
-      </div>
-    `;
+        <a class="action-btn action-primary" href="https://instagram.com/${cafe.instagram_handle}" target="_blank" style="text-decoration:none;text-align:center;">Instagram</a>
+        <button class="action-btn action-secondary${vis?' visited-active':''}" id="modal-visited-${cafe.id}" onclick="toggleVisited('${cafe.id}')">${vis?'✓ Visited':'Mark Visited'}</button>
+      </div>`;
   }
-
   function updateModalActions(id) {
-    if (currentCafeId !== id) return;
-    const cafe = CAFES.find(c => c.id === id);
-    if (!cafe) return;
-    const saveBtn = document.getElementById(`modal-save-${id}`);
-    const visitBtn = document.getElementById(`modal-visited-${id}`);
-    if (saveBtn) saveBtn.textContent = isSaved(id) ? '❤️' : '🤍';
-    if (visitBtn) {
-      visitBtn.textContent = isVisited(id) ? '✓ Visited' : 'Mark Visited';
-      visitBtn.classList.toggle('visited-active', isVisited(id));
-    }
+    if (currentCafeId!==id) return;
+    const s=document.getElementById(`modal-save-${id}`), v=document.getElementById(`modal-visited-${id}`);
+    if (s) s.textContent=isSaved(id)?'❤️':'🤍';
+    if (v) { v.textContent=isVisited(id)?'✓ Visited':'Mark Visited'; v.classList.toggle('visited-active',isVisited(id)); }
   }
-
   function closeModal(e) {
-    if (e && e.target !== document.getElementById('detail-modal')) return;
-    document.getElementById('detail-modal').classList.remove('open');
-    document.body.style.overflow = '';
-    currentCafeId = null;
+    if (e && e.target!==document.getElementById('detail-modal')) return;
+    document.getElementById('detail-modal').classList.remove('open'); document.body.style.overflow=''; currentCafeId=null;
   }
 
-  // ── TAB SWITCHING ─────────────────────────────────────────────
-  const TABS = ['discover', 'guides', 'trending', 'author'];
-
+  // ── TABS ──────────────────────────────────────────────────────
+  const TABS = ['discover','guides','trending','author'];
   function switchTab(tab) {
     TABS.forEach(t => {
-      document.getElementById(`sec-${t}`).classList.toggle('active', t === tab);
-      document.getElementById(`tab-${t}`).classList.toggle('active', t === tab);
+      document.getElementById(`sec-${t}`).classList.toggle('active', t===tab);
+      document.getElementById(`tab-${t}`).classList.toggle('active', t===tab);
     });
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    window.scrollTo({top:0,behavior:'instant'});
   }
 
-  // ── RENDER ALL (after save/visited changes) ───────────────────
-  function renderAll() {
-    renderDiscoverList();
-    renderTrending();
-  }
+  function renderAll() { renderDiscoverList(); renderTrending(); }
 
   // ── INIT ──────────────────────────────────────────────────────
   renderCityPills();
@@ -1374,6 +1023,5 @@
   renderGuides();
   renderTrending();
   </script>
-
 </body>
 </html>
