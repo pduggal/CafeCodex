@@ -15,6 +15,7 @@ import CityGuidesScreen from './screens/CityGuidesScreen';
 import TrendingScreen from './screens/TrendingScreen';
 import MySipsScreen from './screens/MySipsScreen';
 import CafeDetailScreen from './screens/CafeDetailScreen';
+import AuthorScreen from './screens/AuthorScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -62,6 +63,7 @@ const TAB_ICONS = {
   'City Guides': 'book-outline',
   Trending: 'flame-outline',
   'My Sips': 'heart-outline',
+  Author: 'person-outline',
 };
 
 export default function App() {
@@ -100,6 +102,7 @@ export default function App() {
           <Tab.Screen name="City Guides" component={CityGuidesStack} />
           <Tab.Screen name="Trending" component={TrendingStack} />
           <Tab.Screen name="My Sips" component={MySipsStack} />
+          <Tab.Screen name="Author" component={AuthorScreen} />
         </Tab.Navigator>
       </NavigationContainer>
     </CafeProvider>
