@@ -21,22 +21,6 @@
     .tab-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:10px 2px 8px; background:none; border:none; cursor:pointer; color:var(--tab-off); font-size:10px; font-weight:600; letter-spacing:0.2px; transition:color 0.15s; -webkit-tap-highlight-color:transparent; }
     .tab-btn.active { color:var(--primary); }
     .tab-icon { font-size:20px; line-height:1; }
-    .tab-nominate {
-      flex:0 0 60px; display:flex; align-items:center; justify-content:center;
-      background:none; border:none; cursor:pointer; padding:6px;
-      -webkit-tap-highlight-color:transparent;
-    }
-    .nominate-circle {
-      width:48px; height:48px; border-radius:50%;
-      background:var(--primary); color:var(--bg);
-      display:flex; align-items:center; justify-content:center;
-      font-size:26px; font-weight:300; line-height:1;
-      box-shadow:0 4px 16px rgba(201,151,58,0.4);
-      transition:transform 0.15s, box-shadow 0.15s;
-      margin-top:-18px;
-      border:3px solid var(--tab-bg);
-    }
-    .tab-nominate:active .nominate-circle { transform:scale(0.92); box-shadow:0 2px 8px rgba(201,151,58,0.3); }
 
     /* ── Sections ── */
     .section { display:none; } .section.active { display:block; }
@@ -45,7 +29,8 @@
     .discover-header { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 12px; position:sticky; top:0; background:var(--bg); z-index:10; border-bottom:1px solid var(--border); }
     .header-logo { font-size:22px; font-weight:800; color:var(--primary); letter-spacing:0.5px; }
     .header-sub { font-size:11px; color:var(--muted); margin-top:1px; }
-    .header-star { width:36px; height:36px; border-radius:50%; border:1px solid var(--primary); background:var(--card); display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--primary); }
+    .nominate-btn { display:flex; align-items:center; gap:5px; padding:7px 13px; border-radius:20px; background:var(--card); border:1px solid var(--primary); color:var(--primary); font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; -webkit-tap-highlight-color:transparent; transition:background 0.15s; letter-spacing:0.1px; }
+    .nominate-btn:active { background:rgba(201,151,58,0.12); }
 
     /* ── Search ── */
     .search-wrap { padding:12px 20px 0; position:relative; }
@@ -297,7 +282,7 @@
   <section id="sec-discover" class="section active">
     <div class="discover-header">
       <div><div class="header-logo">Café Codex</div><div class="header-sub">Your record of the world's best cups</div></div>
-      <div class="header-star">✦</div>
+      <button class="nominate-btn" onclick="openNominate()">✦ Recommend</button>
     </div>
 
     <div class="search-wrap" id="search-wrap">
@@ -405,9 +390,6 @@
   <nav class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('discover')" id="tab-discover"><span class="tab-icon">🧭</span>Discover</button>
     <button class="tab-btn" onclick="switchTab('guides')" id="tab-guides"><span class="tab-icon">📖</span>Guides</button>
-    <button class="tab-nominate" onclick="openNominate()" title="Nominate a café">
-      <div class="nominate-circle">+</div>
-    </button>
     <button class="tab-btn" onclick="switchTab('trending')" id="tab-trending"><span class="tab-icon">🔥</span>Trending</button>
     <button class="tab-btn" onclick="switchTab('author')" id="tab-author"><span class="tab-icon">👤</span>Author</button>
   </nav>
