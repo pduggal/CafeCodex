@@ -3,350 +3,372 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Café Codex — Your Record of the World's Best Cups</title>
-  <meta name="description" content="A curated record of the world's best coffee and matcha cafes, by Pallavi Duggal (@honestcoffeestop)." />
+  <title>Café Codex</title>
+  <meta name="description" content="Swipe your way to the world's best cups. By @honestcoffeestop." />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:      #1A0F0A; --primary: #C9973A; --cream: #FDF6EC;
-      --white:   #FFFFFF; --muted:   #A89080; --card:   #2A1A12;
-      --border:  #3D2415; --tab-bg:  #120A06; --tab-off:#6B4F3A;
-      --success: #6B9E6B; --tag-bg:  #221510;
+      --bg: #1A0F0A; --primary: #C9973A; --cream: #FDF6EC;
+      --white: #FFFFFF; --muted: #A89080; --card: #2A1A12;
+      --border: #3D2415; --tab-bg: #120A06; --tab-off: #6B4F3A;
+      --success: #6B9E6B; --tag-bg: #221510;
     }
-    html { scroll-behavior: smooth; }
-    body { background:var(--bg); color:var(--cream); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; min-height:100dvh; overflow-x:hidden; padding-bottom:72px; }
+    html, body { height: 100%; overflow: hidden; }
+    body { background: var(--bg); color: var(--cream); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; }
 
-    /* ── Tab Bar ── */
-    .tab-bar { position:fixed; bottom:0; left:0; right:0; background:var(--tab-bg); border-top:1px solid var(--border); display:flex; align-items:stretch; z-index:100; padding-bottom:env(safe-area-inset-bottom); }
-    .tab-btn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:10px 2px 8px; background:none; border:none; cursor:pointer; color:var(--tab-off); font-size:10px; font-weight:600; letter-spacing:0.2px; transition:color 0.15s; -webkit-tap-highlight-color:transparent; }
-    .tab-btn.active { color:var(--primary); }
-    .tab-icon { font-size:20px; line-height:1; }
+    /* ── Screens ── */
+    .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .screen.active { display: flex; }
 
-    /* ── Sections ── */
-    .section { display:none; } .section.active { display:block; }
-
-    /* ── Discover Header ── */
-    .discover-header { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 12px; position:sticky; top:0; background:var(--bg); z-index:10; border-bottom:1px solid var(--border); }
-    .header-logo { font-size:22px; font-weight:800; color:var(--primary); letter-spacing:0.5px; }
-    .header-sub { font-size:11px; color:var(--muted); margin-top:1px; }
-    .nominate-btn { display:flex; align-items:center; gap:5px; padding:7px 13px; border-radius:20px; background:var(--card); border:1px solid var(--primary); color:var(--primary); font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; -webkit-tap-highlight-color:transparent; transition:background 0.15s; letter-spacing:0.1px; }
-    .nominate-btn:active { background:rgba(201,151,58,0.12); }
-
-    /* ── Search ── */
-    .search-wrap { padding:12px 20px 0; position:relative; }
-    .search-box { display:flex; align-items:center; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:0 12px; height:44px; gap:8px; transition:border-color 0.2s; }
-    .search-box.focused { border-color:var(--primary); }
-    .search-icon { font-size:15px; color:var(--muted); flex-shrink:0; }
-    .search-input { flex:1; background:none; border:none; outline:none; color:var(--white); font-size:15px; }
-    .search-input::placeholder { color:var(--muted); }
-    .search-clear { background:none; border:none; cursor:pointer; color:var(--muted); font-size:16px; padding:4px; }
-
-    /* ── Country Dropdown ── */
-    .country-dropdown { position:absolute; top:calc(100% + 4px); left:20px; right:20px; background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,0.4); display:none; }
-    .country-dropdown.open { display:block; }
-    .dropdown-item { display:flex; align-items:center; gap:12px; padding:12px 16px; cursor:pointer; transition:background 0.1s; border-bottom:1px solid var(--border); -webkit-tap-highlight-color:transparent; }
-    .dropdown-item:last-child { border-bottom:none; }
-    .dropdown-item:active { background:rgba(201,151,58,0.08); }
-    .dropdown-flag { font-size:22px; }
-    .dropdown-info { flex:1; }
-    .dropdown-country-name { color:var(--cream); font-size:15px; font-weight:600; }
-    .dropdown-status { font-size:11px; margin-top:1px; }
-    .dropdown-status.visited { color:var(--success); }
-    .dropdown-status.wishlist { color:var(--muted); font-style:italic; }
-    .dropdown-arrow { color:var(--muted); font-size:14px; }
-
-    /* ── Country Banner ── */
-    .country-banner { display:none; align-items:center; justify-content:space-between; padding:10px 20px; background:rgba(201,151,58,0.08); border-bottom:1px solid var(--border); }
-    .country-banner.show { display:flex; }
-    .country-banner-left { display:flex; align-items:center; gap:8px; }
-    .country-banner-flag { font-size:20px; }
-    .country-banner-text { font-size:13px; font-weight:600; color:var(--cream); }
-    .country-banner-sub { font-size:11px; color:var(--muted); }
-    .country-back-btn { background:none; border:1px solid var(--border); color:var(--muted); font-size:12px; font-weight:600; padding:5px 10px; border-radius:20px; cursor:pointer; }
-
-    /* ── Filter Row ── */
-    .filter-row { display:flex; align-items:center; padding:10px 0 10px 20px; overflow-x:auto; scrollbar-width:none; gap:8px; }
-    .filter-row::-webkit-scrollbar { display:none; }
-    .pill { flex-shrink:0; padding:6px 14px; border-radius:20px; background:var(--card); border:1px solid var(--border); color:var(--muted); font-size:13px; font-weight:500; cursor:pointer; white-space:nowrap; transition:all 0.15s; -webkit-tap-highlight-color:transparent; }
-    .pill.active { background:var(--primary); border-color:var(--primary); color:var(--bg); font-weight:700; }
-    .filter-btn { flex-shrink:0; margin-right:20px; width:36px; height:32px; border-radius:20px; background:var(--card); border:1px solid var(--border); color:var(--muted); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:3px; -webkit-tap-highlight-color:transparent; }
-    .filter-btn.has-filters { background:var(--primary); border-color:var(--primary); color:var(--bg); }
-    .filter-count { font-size:11px; font-weight:700; }
-
-    /* ── Count Row ── */
-    .count-row { display:flex; align-items:center; justify-content:space-between; padding:0 20px 10px; }
-    .count-text { color:var(--muted); font-size:12px; }
-    .clear-btn { background:none; border:none; cursor:pointer; color:var(--primary); font-size:12px; font-weight:600; }
-
-    /* ── Not Visited ── */
-    .not-visited-screen { display:none; padding:40px 24px; text-align:center; }
-    .not-visited-screen.show { display:block; }
-    .nv-globe { font-size:56px; margin-bottom:16px; }
-    .nv-flag { font-size:36px; margin-bottom:8px; }
-    .nv-title { color:var(--cream); font-size:22px; font-weight:800; margin-bottom:10px; line-height:1.3; }
-    .nv-message { color:var(--muted); font-size:15px; line-height:1.65; margin-bottom:28px; max-width:300px; margin-left:auto; margin-right:auto; }
-    .nv-soon-label { color:var(--primary); font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }
-    .nv-cities { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-bottom:32px; }
-    .nv-city-pill { background:var(--card); border:1px dashed var(--border); color:var(--muted); font-size:13px; font-weight:500; padding:7px 14px; border-radius:20px; font-style:italic; }
-    .nv-back-btn { background:var(--primary); color:var(--bg); border:none; border-radius:12px; padding:13px 28px; font-size:15px; font-weight:700; cursor:pointer; }
-
-    /* ── Community Section ── */
-    .community-section { padding:20px 20px 0; }
-    .community-label { font-size:13px; font-weight:700; color:var(--muted); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
-    .community-dot { width:6px; height:6px; border-radius:50%; background:var(--success); }
-
-    /* ── Cafe Cards ── */
-    .cafe-list { padding:0 20px 24px; }
-    .cafe-card { background:var(--card); border:1px solid var(--border); border-radius:14px; margin-bottom:12px; overflow:hidden; cursor:pointer; transition:transform 0.15s; -webkit-tap-highlight-color:transparent; }
-    .cafe-card:active { transform:scale(0.985); }
-    .cafe-photo { height:140px; background:#2A1A12; position:relative; display:flex; align-items:center; justify-content:center; }
-    .cafe-photo-emoji { font-size:40px; opacity:0.3; }
-    .cafe-badges { position:absolute; top:8px; left:10px; display:flex; gap:6px; flex-wrap:wrap; max-width:calc(100% - 50px); }
-    .badge-pick { background:var(--primary); color:var(--bg); font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; }
-    .badge-trending { background:rgba(26,15,10,0.85); border:1px solid var(--primary); color:var(--primary); font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; }
-    .badge-community { background:rgba(107,158,107,0.15); border:1px solid var(--success); color:var(--success); font-size:10px; font-weight:600; padding:3px 8px; border-radius:20px; }
-    .save-btn { position:absolute; top:8px; right:10px; width:32px; height:32px; border-radius:50%; background:rgba(26,15,10,0.7); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:16px; transition:transform 0.1s; -webkit-tap-highlight-color:transparent; }
-    .save-btn:active { transform:scale(1.2); }
-    .cafe-info { padding:10px 14px 12px; }
-    .cafe-name-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:3px; }
-    .cafe-name { color:var(--white); font-size:15px; font-weight:700; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-right:8px; }
-    .rating-pill { background:rgba(201,151,58,0.15); padding:2px 6px; border-radius:6px; font-size:10px; color:var(--primary); flex-shrink:0; }
-    .cafe-meta { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
-    .cafe-location { color:var(--muted); font-size:12px; }
-    .visited-badge { border:1px solid var(--success); color:var(--success); font-size:10px; font-weight:600; padding:2px 7px; border-radius:20px; }
-    .shared-by { color:var(--success); font-size:11px; font-style:italic; margin-top:2px; }
-    .tag-row { display:flex; flex-wrap:wrap; gap:6px; }
-    .tag { background:var(--tag-bg); border:1px solid var(--border); color:var(--muted); font-size:10px; font-weight:500; padding:3px 8px; border-radius:20px; }
-
-    /* ── Empty State ── */
-    .empty-state { text-align:center; padding:60px 20px; }
-    .empty-emoji { font-size:36px; opacity:0.4; margin-bottom:12px; }
-    .empty-title { color:var(--white); font-size:16px; font-weight:600; margin-bottom:6px; }
-    .empty-sub { color:var(--muted); font-size:13px; }
-
-    /* ── Vibe Sheet ── */
-    .sheet-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:200; }
-    .sheet-overlay.open { display:block; }
-    .sheet { position:fixed; bottom:0; left:0; right:0; background:var(--card); border-top:1px solid var(--border); border-radius:20px 20px 0 0; padding:0 20px calc(36px + env(safe-area-inset-bottom)); z-index:201; transform:translateY(100%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); }
-    .sheet-overlay.open .sheet { transform:translateY(0); }
-    .sheet-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:12px auto 18px; }
-    .sheet-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-    .sheet-title { color:var(--white); font-size:16px; font-weight:700; }
-    .sheet-clear { background:none; border:none; cursor:pointer; color:var(--primary); font-size:12px; font-weight:600; }
-    .vibe-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
-    .vibe-tag { display:flex; align-items:center; gap:5px; padding:8px 12px; border-radius:20px; background:var(--bg); border:1px solid var(--border); color:var(--muted); font-size:13px; font-weight:500; cursor:pointer; transition:all 0.15s; -webkit-tap-highlight-color:transparent; }
-    .vibe-tag.active { border-color:var(--primary); background:rgba(201,151,58,0.12); color:var(--primary); font-weight:600; }
-    .apply-btn { width:100%; background:var(--primary); color:var(--bg); border:none; border-radius:12px; padding:14px; font-size:15px; font-weight:700; cursor:pointer; }
-
-    /* ── Nominate Modal (full screen) ── */
-    .nominate-overlay { display:none; position:fixed; inset:0; background:var(--bg); z-index:400; overflow-y:auto; }
-    .nominate-overlay.open { display:block; }
-    .nominate-header { display:flex; align-items:center; justify-content:space-between; padding:20px 20px 16px; position:sticky; top:0; background:var(--bg); border-bottom:1px solid var(--border); z-index:1; }
-    .nominate-title { font-size:18px; font-weight:800; color:var(--cream); }
-    .nominate-close { background:none; border:none; color:var(--muted); font-size:22px; cursor:pointer; padding:4px; line-height:1; }
-    .nominate-body { padding:24px 20px 40px; }
-    .nominate-intro { margin-bottom:28px; }
-    .nominate-intro-headline { color:var(--primary); font-size:22px; font-weight:800; line-height:1.3; margin-bottom:8px; }
-    .nominate-intro-sub { color:var(--muted); font-size:14px; line-height:1.6; }
-    .form-group { margin-bottom:20px; }
-    .form-row { display:flex; gap:12px; }
-    .form-row .form-group { flex:1; }
-    .form-label { color:var(--primary); font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:8px; display:block; }
-    .form-label span { color:var(--muted); font-weight:400; text-transform:none; letter-spacing:0; font-size:10px; }
-    .form-input, .form-textarea, .form-select {
-      width:100%; background:var(--card); border:1px solid var(--border);
-      border-radius:10px; padding:12px 14px; color:var(--cream);
-      font-size:15px; font-family:inherit; outline:none;
-      transition:border-color 0.2s; -webkit-appearance:none;
+    /* ══════════════════════════════════════════
+       ONBOARDING
+    ══════════════════════════════════════════ */
+    .ob-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 28px; gap: 0; }
+    .ob-logo { color: var(--primary); font-size: 26px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .ob-tagline { color: var(--muted); font-size: 13px; margin-bottom: 40px; }
+    .ob-question { color: var(--cream); font-size: 22px; font-weight: 800; text-align: center; line-height: 1.3; margin-bottom: 28px; }
+    .ob-cards { display: flex; gap: 14px; width: 100%; max-width: 340px; }
+    .ob-choice {
+      flex: 1; background: var(--card); border: 1.5px solid var(--border);
+      border-radius: 18px; padding: 28px 16px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      transition: border-color 0.2s, background 0.2s; -webkit-tap-highlight-color: transparent;
     }
-    .form-input:focus, .form-textarea:focus, .form-select:focus { border-color:var(--primary); }
-    .form-input::placeholder, .form-textarea::placeholder { color:var(--muted); }
-    .form-textarea { resize:vertical; min-height:90px; line-height:1.5; }
-    .form-select { cursor:pointer; }
-    .form-select option { background:var(--card); }
-    .form-divider { height:1px; background:var(--border); margin:28px 0; }
-    .form-section-label { color:var(--muted); font-size:11px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:16px; }
-    .submit-btn { width:100%; background:var(--primary); color:var(--bg); border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:800; cursor:pointer; margin-top:8px; letter-spacing:0.3px; transition:opacity 0.15s; }
-    .submit-btn:active { opacity:0.85; }
-    .submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
-    .submit-note { text-align:center; color:var(--muted); font-size:12px; margin-top:12px; line-height:1.5; }
+    .ob-choice:active { background: rgba(201,151,58,0.08); border-color: var(--primary); }
+    .ob-choice-icon { font-size: 44px; line-height: 1; }
+    .ob-choice-label { color: var(--cream); font-size: 16px; font-weight: 700; }
+    .ob-choice-sub { color: var(--muted); font-size: 11px; text-align: center; line-height: 1.4; }
 
-    /* ── Thank You / Success State ── */
-    .nominate-success { display:none; padding:40px 24px; text-align:center; }
-    .nominate-success.show { display:block; }
-    .success-icon { font-size:56px; margin-bottom:20px; }
-    .success-title { color:var(--cream); font-size:24px; font-weight:800; margin-bottom:10px; }
-    .success-msg { color:var(--muted); font-size:15px; line-height:1.65; margin-bottom:32px; }
-    .draft-card { background:var(--card); border:1px solid var(--primary); border-radius:14px; overflow:hidden; margin-bottom:28px; text-align:left; }
-    .draft-info { padding:16px 16px 14px; }
-    .draft-label { color:var(--primary); font-size:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:5px; }
-    .draft-name { color:var(--white); font-size:19px; font-weight:800; margin-bottom:4px; letter-spacing:0.1px; }
-    .draft-loc { color:var(--muted); font-size:13px; margin-bottom:8px; }
-    .draft-by { color:var(--success); font-size:12px; font-style:italic; }
-    .share-btn { width:100%; background:var(--card); border:1px solid var(--primary); color:var(--primary); border-radius:12px; padding:13px; font-size:14px; font-weight:700; cursor:pointer; margin-bottom:12px; }
-    .back-to-discover-btn { width:100%; background:var(--primary); color:var(--bg); border:none; border-radius:12px; padding:13px; font-size:14px; font-weight:700; cursor:pointer; }
-    .share-toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--success); color:#fff; font-size:13px; font-weight:600; padding:10px 20px; border-radius:20px; opacity:0; transition:opacity 0.3s; pointer-events:none; white-space:nowrap; z-index:999; }
-    .share-toast.show { opacity:1; }
-
-    /* ── Detail Modal ── */
-    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:300; overflow-y:auto; }
-    .modal-overlay.open { display:flex; align-items:flex-end; }
-    @media (min-width:600px) { .modal-overlay.open { align-items:center; justify-content:center; } }
-    .modal { background:var(--bg); border-radius:20px 20px 0 0; width:100%; max-height:92dvh; overflow-y:auto; padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
-    @media (min-width:600px) { .modal { border-radius:20px; max-width:480px; max-height:88dvh; } }
-    .modal-photo { height:200px; background:#2A1A12; position:relative; display:flex; align-items:center; justify-content:center; border-radius:20px 20px 0 0; overflow:hidden; }
-    .modal-photo-emoji { font-size:60px; opacity:0.25; }
-    .modal-close { position:absolute; top:16px; right:16px; width:32px; height:32px; border-radius:50%; background:rgba(26,15,10,0.8); border:1px solid var(--border); color:var(--muted); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-    .modal-body { padding:20px 20px 0; }
-    .modal-name-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:6px; }
-    .modal-name { color:var(--white); font-size:22px; font-weight:800; line-height:1.2; }
-    .modal-save-btn { flex-shrink:0; width:40px; height:40px; border-radius:50%; background:var(--card); border:1px solid var(--border); font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-    .modal-location { color:var(--muted); font-size:13px; margin-bottom:6px; }
-    .modal-shared-by { color:var(--success); font-size:12px; font-style:italic; margin-bottom:14px; }
-    .modal-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px; }
-    .modal-divider { height:1px; background:var(--border); margin:0 -20px 20px; }
-    .notes-title { color:var(--primary); font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:14px; }
-    .note-item { margin-bottom:14px; }
-    .note-label { color:var(--muted); font-size:11px; font-weight:600; margin-bottom:4px; }
-    .note-value { color:var(--cream); font-size:14px; line-height:1.5; }
-    .modal-actions { display:flex; gap:10px; margin-top:20px; }
-    .action-btn { flex:1; padding:13px; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; border:none; }
-    .action-primary { background:var(--primary); color:var(--bg); text-decoration:none; text-align:center; }
-    .action-secondary { background:var(--card); border:1px solid var(--border); color:var(--cream); }
-    .action-secondary.visited-active { border-color:var(--success); color:var(--success); }
-
-    /* ── Guides ── */
-    .section-header { padding:20px 20px 4px; position:sticky; top:0; background:var(--bg); z-index:10; border-bottom:1px solid var(--border); }
-    .section-title { font-size:22px; font-weight:800; color:var(--primary); letter-spacing:0.4px; }
-    .section-sub { font-size:12px; color:var(--muted); margin-top:2px; padding-bottom:12px; }
-    .guides-list { padding:16px 20px 24px; }
-    .guide-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:12px; cursor:pointer; transition:transform 0.15s; -webkit-tap-highlight-color:transparent; }
-    .guide-card:active { transform:scale(0.985); }
-    .guide-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:8px; }
-    .guide-emoji { font-size:28px; margin-right:4px; }
-    .guide-title-wrap { flex:1; }
-    .guide-city { color:var(--muted); font-size:11px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:4px; }
-    .guide-title { color:var(--white); font-size:16px; font-weight:700; line-height:1.3; }
-    .guide-rating { background:rgba(201,151,58,0.12); border:1px solid rgba(201,151,58,0.25); color:var(--primary); font-size:11px; font-weight:600; padding:4px 10px; border-radius:20px; white-space:nowrap; }
-    .guide-desc { color:var(--muted); font-size:13px; line-height:1.5; margin-bottom:14px; }
-    .guide-cafes { display:flex; gap:6px; flex-wrap:wrap; }
-    .guide-cafe-pill { background:var(--bg); border:1px solid var(--border); color:var(--cream); font-size:11px; font-weight:500; padding:4px 10px; border-radius:20px; }
-    .guide-cafe-pill span { color:var(--primary); font-weight:700; margin-right:4px; }
-
-    /* ── Trending ── */
-    .trending-section { padding:16px 20px 0; }
-    .trending-section-label { font-size:13px; font-weight:700; color:var(--muted); letter-spacing:0.5px; text-transform:uppercase; margin-bottom:12px; }
-
-    /* ── Author ── */
-    .author-scroll { padding:0 0 24px; }
-    .author-hero { display:flex; flex-direction:column; align-items:center; padding:32px 20px 28px; }
-    .author-ring { width:96px; height:96px; border-radius:50%; border:1.5px solid var(--primary); padding:3px; margin-bottom:14px; }
-    .author-photo { width:100%; height:100%; border-radius:50%; background:var(--card); display:flex; align-items:center; justify-content:center; }
-    .author-initial { color:var(--primary); font-size:34px; font-weight:700; }
-    .author-name { color:var(--cream); font-size:20px; font-weight:700; margin-bottom:3px; }
-    .author-handle { color:var(--muted); font-size:13px; margin-bottom:16px; }
-    .social-row { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
-    .social-pill { display:flex; align-items:center; gap:5px; padding:7px 12px; border-radius:20px; background:var(--card); border:1px solid var(--border); color:var(--primary); font-size:11px; font-weight:600; text-decoration:none; }
-    .author-letter { padding:0 26px; }
-    .author-eyebrow { color:var(--muted); font-size:12px; font-style:italic; letter-spacing:0.5px; margin-bottom:10px; }
-    .author-title { color:var(--cream); font-size:30px; font-weight:800; line-height:1.26; margin-bottom:16px; }
-    .author-title-line { width:40px; height:2px; background:var(--primary); border-radius:2px; margin-bottom:28px; }
-    .letter-body p { color:var(--cream); font-size:16px; line-height:1.75; margin-bottom:20px; }
-    .letter-body .opening { font-size:17px; }
-    .drop-cap { color:var(--primary); font-size:28px; font-weight:800; line-height:1; }
-    .letter-em { font-style:italic; }
-    .pull-quote { text-align:center; margin:28px 12px; }
-    .pull-quote-text { color:var(--primary); font-size:19px; font-style:italic; font-weight:600; line-height:1.58; letter-spacing:0.3px; }
-    .signature { margin-top:24px; margin-bottom:36px; }
-    .sig-dash { color:var(--muted); font-size:16px; margin-bottom:4px; }
-    .sig-name { color:var(--primary); font-size:26px; font-weight:800; font-style:italic; letter-spacing:0.5px; }
-    .stats-row { display:flex; align-items:center; margin:0 26px; background:var(--card); border:1px solid var(--border); border-radius:14px; padding:22px 0; }
-    .stat-item { flex:1; text-align:center; }
-    .stat-num { color:var(--primary); font-size:18px; font-weight:800; margin-bottom:4px; }
-    .stat-label { color:var(--muted); font-size:10px; letter-spacing:0.2px; }
-    .stat-div { width:1px; height:28px; background:var(--border); }
-
-    .hide { display:none !important; }
-    @media (min-width:600px) {
-      .cafe-list { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-      .cafe-list .cafe-card { margin-bottom:0; }
-      .guides-list { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-      .guide-card { margin-bottom:0; }
+    .ob-vibe-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 340px; }
+    .ob-vibe {
+      background: var(--card); border: 1.5px solid var(--border); border-radius: 14px;
+      padding: 18px 14px; cursor: pointer; display: flex; flex-direction: column;
+      align-items: flex-start; gap: 6px; transition: all 0.15s; -webkit-tap-highlight-color: transparent;
     }
-    @media (min-width:900px) { .cafe-list { grid-template-columns:1fr 1fr 1fr; } }
+    .ob-vibe.selected { border-color: var(--primary); background: rgba(201,151,58,0.08); }
+    .ob-vibe-icon { font-size: 24px; }
+    .ob-vibe-label { color: var(--cream); font-size: 14px; font-weight: 700; line-height: 1.2; }
+    .ob-vibe-sub { color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .ob-skip { color: var(--muted); font-size: 13px; text-decoration: underline; cursor: pointer; margin-top: 20px; }
+    .ob-cta {
+      width: 100%; max-width: 340px; background: var(--primary); color: var(--bg);
+      border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 800;
+      cursor: pointer; margin-top: 24px; letter-spacing: 0.2px;
+      transition: opacity 0.15s; -webkit-tap-highlight-color: transparent;
+    }
+    .ob-cta:active { opacity: 0.85; }
+    .ob-back { color: var(--muted); font-size: 13px; cursor: pointer; margin-top: 14px; }
+
+    /* ══════════════════════════════════════════
+       SWIPE SCREEN
+    ══════════════════════════════════════════ */
+    .swipe-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 12px; flex-shrink: 0;
+    }
+    .swipe-logo { color: var(--primary); font-size: 20px; font-weight: 800; }
+    .swipe-filter-pill {
+      display: flex; align-items: center; gap: 5px; padding: 6px 12px;
+      border-radius: 20px; background: var(--card); border: 1px solid var(--border);
+      color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .swipe-filter-pill span { color: var(--cream); }
+
+    .swipe-area { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0 16px; }
+
+    /* Stack */
+    .card-stack { position: relative; width: 100%; max-width: 400px; height: 100%; }
+
+    .swipe-card {
+      position: absolute; inset: 8px 0;
+      background: var(--card); border: 1px solid var(--border); border-radius: 22px;
+      overflow: hidden; cursor: grab; user-select: none; touch-action: none;
+      will-change: transform; transition: transform 0.08s ease;
+      display: flex; flex-direction: column;
+    }
+    .swipe-card.animating { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s; }
+    .swipe-card.is-next { transform: scale(0.94) translateY(12px); pointer-events: none; transition: transform 0.3s ease; }
+    .swipe-card.is-next-2 { transform: scale(0.88) translateY(24px); pointer-events: none; transition: transform 0.3s ease; }
+
+    .card-photo { height: 52%; background: #2A1A12; position: relative; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .card-photo-emoji { font-size: 64px; opacity: 0.2; }
+    .card-pick-badge { position: absolute; top: 14px; left: 14px; background: var(--primary); color: var(--bg); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+    .card-trending-badge { position: absolute; top: 14px; left: 14px; background: rgba(26,15,10,0.85); border: 1px solid var(--primary); color: var(--primary); font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+
+    /* Swipe overlays */
+    .swipe-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; border-radius: 22px; opacity: 0; transition: opacity 0.1s; pointer-events: none; }
+    .swipe-overlay.right { background: rgba(107,158,107,0.18); }
+    .swipe-overlay.left  { background: rgba(201,151,58,0.12); }
+    .overlay-label { font-size: 28px; font-weight: 800; border: 3px solid; border-radius: 10px; padding: 8px 18px; letter-spacing: 1px; transform: rotate(-12deg); }
+    .swipe-overlay.right .overlay-label { color: var(--success); border-color: var(--success); transform: rotate(-12deg); }
+    .swipe-overlay.left  .overlay-label { color: var(--primary); border-color: var(--primary); transform: rotate(12deg); }
+
+    .card-body { flex: 1; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+    .card-name { color: var(--white); font-size: 22px; font-weight: 800; line-height: 1.15; }
+    .card-location { color: var(--muted); font-size: 13px; }
+    .card-note { background: var(--bg); border-radius: 10px; padding: 10px 12px; margin-top: 2px; }
+    .card-note-label { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
+    .card-note-value { color: var(--cream); font-size: 13px; line-height: 1.4; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; padding-top: 4px; }
+    .card-tag { background: var(--tag-bg); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+
+    /* Action buttons */
+    .swipe-actions { display: flex; align-items: center; justify-content: center; gap: 20px; padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); flex-shrink: 0; }
+    .action-circle {
+      width: 60px; height: 60px; border-radius: 50%; border: 2px solid; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 1px; transition: transform 0.15s; -webkit-tap-highlight-color: transparent;
+      background: var(--card);
+    }
+    .action-circle:active { transform: scale(0.92); }
+    .action-circle.been { border-color: var(--primary); }
+    .action-circle.been .ac-icon { color: var(--primary); font-size: 20px; }
+    .action-circle.been .ac-label { color: var(--primary); font-size: 8px; font-weight: 700; letter-spacing: 0.3px; }
+    .action-circle.want { border-color: var(--success); width: 72px; height: 72px; }
+    .action-circle.want .ac-icon { color: var(--success); font-size: 26px; }
+    .action-circle.want .ac-label { color: var(--success); font-size: 8px; font-weight: 700; letter-spacing: 0.3px; }
+
+    /* Progress dots */
+    .progress-dots { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 0 2px; flex-shrink: 0; }
+    .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border); transition: background 0.2s, transform 0.2s; }
+    .dot.active { background: var(--primary); transform: scale(1.4); }
+
+    /* Empty state */
+    .swipe-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 40px; }
+    .swipe-empty-icon { font-size: 52px; opacity: 0.4; }
+    .swipe-empty-title { color: var(--cream); font-size: 20px; font-weight: 700; }
+    .swipe-empty-sub { color: var(--muted); font-size: 14px; line-height: 1.55; max-width: 260px; }
+    .swipe-empty-btn { background: var(--primary); color: var(--bg); border: none; border-radius: 12px; padding: 13px 28px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+
+    /* ── Bottom Nav ── */
+    .bottom-nav {
+      display: flex; align-items: stretch; background: var(--tab-bg);
+      border-top: 1px solid var(--border); flex-shrink: 0;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 10px 4px 8px; background: none; border: none; cursor: pointer;
+      color: var(--tab-off); font-size: 10px; font-weight: 600; letter-spacing: 0.2px;
+      transition: color 0.15s; -webkit-tap-highlight-color: transparent;
+    }
+    .nav-btn.active { color: var(--primary); }
+    .nav-icon { font-size: 20px; line-height: 1; }
+    .nav-recommend {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 10px 4px 8px; background: none; border: none; cursor: pointer;
+      color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: 0.2px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ══════════════════════════════════════════
+       MY LIST SCREEN
+    ══════════════════════════════════════════ */
+    .list-header { padding: 20px 20px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .list-title { color: var(--primary); font-size: 22px; font-weight: 800; }
+    .list-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+    .list-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .list-tab { flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
+    .list-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .list-scroll { flex: 1; overflow-y: auto; padding: 16px 16px 24px; }
+    .list-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; }
+    .list-card-icon { font-size: 28px; flex-shrink: 0; }
+    .list-card-info { flex: 1; }
+    .list-card-name { color: var(--white); font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .list-card-loc { color: var(--muted); font-size: 12px; }
+    .list-card-badge { font-size: 18px; flex-shrink: 0; }
+    .list-empty { text-align: center; padding: 60px 20px; }
+    .list-empty-icon { font-size: 40px; opacity: 0.3; margin-bottom: 12px; }
+    .list-empty-title { color: var(--cream); font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .list-empty-sub { color: var(--muted); font-size: 13px; }
+
+    /* ══════════════════════════════════════════
+       AUTHOR SCREEN
+    ══════════════════════════════════════════ */
+    .author-scroll-wrap { flex: 1; overflow-y: auto; }
+    .author-hero { display: flex; flex-direction: column; align-items: center; padding: 32px 20px 24px; }
+    .author-ring { width: 88px; height: 88px; border-radius: 50%; border: 1.5px solid var(--primary); padding: 3px; margin-bottom: 12px; }
+    .author-photo { width: 100%; height: 100%; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; }
+    .author-initial { color: var(--primary); font-size: 32px; font-weight: 700; }
+    .author-name { color: var(--cream); font-size: 19px; font-weight: 700; margin-bottom: 2px; }
+    .author-handle { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
+    .social-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .social-pill { display: flex; align-items: center; gap: 5px; padding: 7px 12px; border-radius: 20px; background: var(--card); border: 1px solid var(--border); color: var(--primary); font-size: 11px; font-weight: 600; text-decoration: none; }
+    .author-letter { padding: 8px 24px 0; }
+    .author-eyebrow { color: var(--muted); font-size: 12px; font-style: italic; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .author-title { color: var(--cream); font-size: 28px; font-weight: 800; line-height: 1.26; margin-bottom: 14px; }
+    .author-line { width: 40px; height: 2px; background: var(--primary); border-radius: 2px; margin-bottom: 26px; }
+    .letter-body p { color: var(--cream); font-size: 15px; line-height: 1.75; margin-bottom: 18px; }
+    .drop-cap { color: var(--primary); font-size: 26px; font-weight: 800; line-height: 1; }
+    .letter-em { font-style: italic; }
+    .pull-quote { text-align: center; margin: 24px 8px; }
+    .pull-quote-text { color: var(--primary); font-size: 18px; font-style: italic; font-weight: 600; line-height: 1.55; }
+    .signature { margin-top: 20px; margin-bottom: 32px; }
+    .sig-dash { color: var(--muted); font-size: 15px; margin-bottom: 3px; }
+    .sig-name { color: var(--primary); font-size: 24px; font-weight: 800; font-style: italic; }
+    .stats-row { display: flex; align-items: center; margin: 0 20px 32px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 0; }
+    .stat-item { flex: 1; text-align: center; }
+    .stat-num { color: var(--primary); font-size: 17px; font-weight: 800; margin-bottom: 3px; }
+    .stat-lbl { color: var(--muted); font-size: 9px; letter-spacing: 0.2px; }
+    .stat-div { width: 1px; height: 26px; background: var(--border); }
+
+    /* ══════════════════════════════════════════
+       NOMINATE MODAL
+    ══════════════════════════════════════════ */
+    .nominate-overlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 400; overflow-y: auto; flex-direction: column; }
+    .nominate-overlay.open { display: flex; }
+    .nominate-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 16px; position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 1; }
+    .nominate-title { font-size: 18px; font-weight: 800; color: var(--cream); }
+    .nominate-close { background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; padding: 4px; line-height: 1; }
+    .nominate-body { padding: 24px 20px 40px; }
+    .nominate-intro-headline { color: var(--primary); font-size: 20px; font-weight: 800; line-height: 1.3; margin-bottom: 8px; }
+    .nominate-intro-sub { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
+    .form-group { margin-bottom: 18px; }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+    .form-label { color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 7px; display: block; }
+    .form-label span { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 10px; }
+    .form-input, .form-textarea { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--cream); font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+    .form-input:focus, .form-textarea:focus { border-color: var(--primary); }
+    .form-input::placeholder, .form-textarea::placeholder { color: var(--muted); }
+    .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+    .form-divider { height: 1px; background: var(--border); margin: 24px 0; }
+    .form-section-label { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 14px; }
+    .submit-btn { width: 100%; background: var(--primary); color: var(--bg); border: none; border-radius: 14px; padding: 15px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 6px; transition: opacity 0.15s; }
+    .submit-btn:active { opacity: 0.85; }
+    .submit-note { text-align: center; color: var(--muted); font-size: 12px; margin-top: 10px; line-height: 1.5; }
+
+    /* Success */
+    .nominate-success { display: none; padding: 40px 24px; text-align: center; }
+    .nominate-success.show { display: block; }
+    .success-icon { font-size: 52px; margin-bottom: 18px; }
+    .success-title { color: var(--cream); font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .success-msg { color: var(--muted); font-size: 14px; line-height: 1.65; margin-bottom: 28px; }
+    .draft-card { background: var(--card); border: 1px solid var(--primary); border-radius: 14px; margin-bottom: 24px; text-align: left; }
+    .draft-info { padding: 16px 16px 14px; }
+    .draft-label { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .draft-name { color: var(--white); font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+    .draft-loc { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .draft-by { color: var(--success); font-size: 12px; font-style: italic; }
+    .share-btn { width: 100%; background: var(--card); border: 1px solid var(--primary); color: var(--primary); border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
+    .back-btn { width: 100%; background: var(--primary); color: var(--bg); border: none; border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .share-toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--success); color: #fff; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 999; }
+    .share-toast.show { opacity: 1; }
   </style>
 </head>
 <body>
 
-  <!-- ═══ DISCOVER ═══════════════════════════════════════════════ -->
-  <section id="sec-discover" class="section active">
-    <div class="discover-header">
-      <div><div class="header-logo">Café Codex</div><div class="header-sub">Your record of the world's best cups</div></div>
-      <button class="nominate-btn" onclick="openNominate()">✦ Recommend</button>
-    </div>
-
-    <div class="search-wrap" id="search-wrap">
-      <div class="search-box" id="search-box">
-        <span class="search-icon">🔍</span>
-        <input class="search-input" id="search-input" type="text"
-          placeholder="Search by country, city, or cafe…"
-          oninput="onSearchInput()" onfocus="onSearchFocus()" onblur="onSearchBlur()" />
-        <button class="search-clear hide" id="search-clear" onclick="clearSearch()">✕</button>
-      </div>
-      <div class="country-dropdown" id="country-dropdown"></div>
-    </div>
-
-    <div class="country-banner" id="country-banner">
-      <div class="country-banner-left">
-        <span class="country-banner-flag" id="banner-flag"></span>
-        <div><div class="country-banner-text" id="banner-text"></div><div class="country-banner-sub" id="banner-sub"></div></div>
-      </div>
-      <button class="country-back-btn" onclick="clearCountry()">✕ Clear</button>
-    </div>
-
-    <div class="not-visited-screen" id="not-visited-screen">
-      <div class="nv-globe">🗺️</div>
-      <div class="nv-flag" id="nv-flag"></div>
-      <div class="nv-title" id="nv-title"></div>
-      <p class="nv-message" id="nv-message"></p>
-      <div id="nv-cities-section"></div>
-      <button class="nv-back-btn" onclick="clearCountry()">← Back to all cafes</button>
-    </div>
-
-    <div id="filter-section">
-      <div class="filter-row" id="city-pills"></div>
-      <div class="count-row">
-        <span class="count-text" id="count-text"></span>
-        <button class="clear-btn hide" id="clear-all-btn" onclick="clearAll()">Clear all</button>
-      </div>
-      <div class="cafe-list" id="cafe-list"></div>
-
-      <!-- Community Finds -->
-      <div id="community-section" class="hide">
-        <div class="community-section">
-          <div class="community-label"><span class="community-dot"></span>Community Finds · Approved by Pallavi</div>
+  <!-- ══ SCREEN 1: Pick drink ══════════════════════════ -->
+  <div class="screen active" id="screen-drink">
+    <div class="ob-wrap">
+      <div class="ob-logo">Café Codex</div>
+      <div class="ob-tagline">Your record of the world's best cups</div>
+      <div class="ob-question">What are you in the mood for?</div>
+      <div class="ob-cards">
+        <div class="ob-choice" onclick="pickDrink('coffee')">
+          <div class="ob-choice-icon">☕</div>
+          <div class="ob-choice-label">Coffee</div>
+          <div class="ob-choice-sub">Pour-overs, espresso, creative lattes</div>
         </div>
-        <div class="cafe-list" id="community-list" style="padding-top:0;"></div>
+        <div class="ob-choice" onclick="pickDrink('matcha')">
+          <div class="ob-choice-icon">🍵</div>
+          <div class="ob-choice-label">Matcha</div>
+          <div class="ob-choice-sub">Ceremonial bowls, lattes, hojicha</div>
+        </div>
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- ═══ CITY GUIDES ════════════════════════════════════════════ -->
-  <section id="sec-guides" class="section">
-    <div class="section-header"><div class="section-title">City Guides</div><div class="section-sub">Curated collections by city &amp; vibe</div></div>
-    <div class="guides-list" id="guides-list"></div>
-  </section>
+  <!-- ══ SCREEN 2: Pick vibe ═══════════════════════════ -->
+  <div class="screen" id="screen-vibe">
+    <div class="ob-wrap">
+      <div class="ob-logo">Café Codex</div>
+      <div class="ob-tagline" id="vibe-sub"></div>
+      <div class="ob-question">What kind of place?</div>
+      <div class="ob-vibe-grid" id="vibe-grid">
+        <div class="ob-vibe" data-vibe="trending" onclick="toggleVibe(this)">
+          <div class="ob-vibe-icon">🔥</div>
+          <div class="ob-vibe-label">Trending</div>
+          <div class="ob-vibe-sub">Everyone's talking about it</div>
+        </div>
+        <div class="ob-vibe" data-vibe="picks" onclick="toggleVibe(this)">
+          <div class="ob-vibe-icon">✦</div>
+          <div class="ob-vibe-label">Pallavi's Picks</div>
+          <div class="ob-vibe-sub">Personally vetted top 5-star spots</div>
+        </div>
+        <div class="ob-vibe" data-vibe="aesthetic" onclick="toggleVibe(this)">
+          <div class="ob-vibe-icon">📸</div>
+          <div class="ob-vibe-label">Aesthetic</div>
+          <div class="ob-vibe-sub">Gorgeous, content-worthy spaces</div>
+        </div>
+        <div class="ob-vibe" data-vibe="hidden" onclick="toggleVibe(this)">
+          <div class="ob-vibe-icon">✨</div>
+          <div class="ob-vibe-label">Hidden Gems</div>
+          <div class="ob-vibe-sub">Off the radar, worth the detour</div>
+        </div>
+      </div>
+      <button class="ob-cta" onclick="startSwiping()">Show me cafes →</button>
+      <div class="ob-back" onclick="goBack()">← Change my drink</div>
+    </div>
+  </div>
 
-  <!-- ═══ TRENDING ══════════════════════════════════════════════ -->
-  <section id="sec-trending" class="section">
-    <div class="section-header"><div class="section-title">Trending</div><div class="section-sub">What everyone's sipping right now</div></div>
-    <div class="trending-section"><div class="trending-section-label">🔥 Trending Now</div><div class="cafe-list" id="trending-list" style="padding:0 0 24px;"></div></div>
-    <div class="trending-section" style="padding-top:0;"><div class="trending-section-label">✦ Pallavi's All-Time Picks</div><div class="cafe-list" id="picks-list" style="padding:0 0 24px;"></div></div>
-  </section>
+  <!-- ══ SCREEN 3: Swipe ═══════════════════════════════ -->
+  <div class="screen" id="screen-swipe">
+    <div class="swipe-header">
+      <div class="swipe-logo">Café Codex</div>
+      <div class="swipe-filter-pill" onclick="goBack()">
+        <span id="active-filter-label">☕ All</span> · change
+      </div>
+    </div>
 
-  <!-- ═══ AUTHOR ═════════════════════════════════════════════════ -->
-  <section id="sec-author" class="section">
-    <div class="author-scroll">
+    <div class="progress-dots" id="progress-dots"></div>
+
+    <div class="swipe-area">
+      <div class="card-stack" id="card-stack"></div>
+    </div>
+
+    <div class="swipe-actions">
+      <div class="action-circle been" onclick="swipeAction('left')" title="Been there">
+        <div class="ac-icon">✓</div>
+        <div class="ac-label">Been there</div>
+      </div>
+      <div class="action-circle want" onclick="swipeAction('right')" title="Want to go">
+        <div class="ac-icon">❤️</div>
+        <div class="ac-label">Want to go</div>
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+      <button class="nav-btn active" id="nav-swipe" onclick="showSwipeScreen()"><span class="nav-icon">🃏</span>Discover</button>
+      <button class="nav-btn" id="nav-list" onclick="showListScreen()"><span class="nav-icon">📋</span>My List</button>
+      <button class="nav-btn" id="nav-author" onclick="showAuthorScreen()"><span class="nav-icon">👤</span>Author</button>
+      <button class="nav-recommend" onclick="openNominate()"><span class="nav-icon">✦</span>Recommend</button>
+    </nav>
+  </div>
+
+  <!-- ══ SCREEN: My List ══════════════════════════════ -->
+  <div class="screen" id="screen-list">
+    <div class="list-header">
+      <div class="list-title">My List</div>
+      <div class="list-sub">Your swiped cafes</div>
+    </div>
+    <div class="list-tabs">
+      <div class="list-tab active" id="lt-wishlist" onclick="showListTab('wishlist')">❤️ Want to Go</div>
+      <div class="list-tab" id="lt-visited" onclick="showListTab('visited')">✓ Been There</div>
+    </div>
+    <div class="list-scroll" id="list-scroll"></div>
+    <nav class="bottom-nav">
+      <button class="nav-btn" id="nav-swipe2" onclick="showSwipeScreen()"><span class="nav-icon">🃏</span>Discover</button>
+      <button class="nav-btn active" id="nav-list2" onclick="showListScreen()"><span class="nav-icon">📋</span>My List</button>
+      <button class="nav-btn" id="nav-author2" onclick="showAuthorScreen()"><span class="nav-icon">👤</span>Author</button>
+      <button class="nav-recommend" onclick="openNominate()"><span class="nav-icon">✦</span>Recommend</button>
+    </nav>
+  </div>
+
+  <!-- ══ SCREEN: Author ═══════════════════════════════ -->
+  <div class="screen" id="screen-author">
+    <div class="author-scroll-wrap">
       <div class="author-hero">
         <div class="author-ring"><div class="author-photo"><span class="author-initial">P</span></div></div>
         <div class="author-name">Pallavi Duggal</div>
@@ -360,9 +382,9 @@
       <div class="author-letter">
         <div class="author-eyebrow">a letter from the author</div>
         <div class="author-title">Why I Built<br>Café Codex</div>
-        <div class="author-title-line"></div>
+        <div class="author-line"></div>
         <div class="letter-body">
-          <p class="opening"><span class="drop-cap">I </span>don't remember the exact moment I fell in love with coffee. It wasn't a single cup — it was a slow accumulation of mornings, of cities, of quiet conversations held over something warm.</p>
+          <p><span class="drop-cap">I </span>don't remember the exact moment I fell in love with coffee. It wasn't a single cup — it was a slow accumulation of mornings, of cities, of quiet conversations held over something warm.</p>
           <p>It started young. Before I understood roast profiles or brew ratios, I understood the <span class="letter-em">feeling</span> — that first sip that made the world slow down for a second. That feeling became a compass. I started chasing it.</p>
           <p>Every city I visited, every trip I planned — there was always a quiet second agenda: find the best cup <span class="letter-em">here.</span> Not the most famous. Not the most photographed. The most honest one.</p>
           <div class="pull-quote"><div class="pull-quote-text">"Every cafe has a story.<br>I love knowing it."</div></div>
@@ -375,123 +397,60 @@
         </div>
       </div>
       <div class="stats-row">
-        <div class="stat-item"><div class="stat-num">7+</div><div class="stat-label">Countries</div></div>
+        <div class="stat-item"><div class="stat-num">7+</div><div class="stat-lbl">Countries</div></div>
         <div class="stat-div"></div>
-        <div class="stat-item"><div class="stat-num">50+</div><div class="stat-label">Cafes visited</div></div>
+        <div class="stat-item"><div class="stat-num">50+</div><div class="stat-lbl">Cafes visited</div></div>
         <div class="stat-div"></div>
-        <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">Coffees tried</div></div>
+        <div class="stat-item"><div class="stat-num">∞</div><div class="stat-lbl">Coffees tried</div></div>
         <div class="stat-div"></div>
-        <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">Matchas tried</div></div>
+        <div class="stat-item"><div class="stat-num">∞</div><div class="stat-lbl">Matchas tried</div></div>
       </div>
     </div>
-  </section>
-
-  <!-- ═══ TAB BAR ════════════════════════════════════════════════ -->
-  <nav class="tab-bar">
-    <button class="tab-btn active" onclick="switchTab('discover')" id="tab-discover"><span class="tab-icon">🧭</span>Discover</button>
-    <button class="tab-btn" onclick="switchTab('guides')" id="tab-guides"><span class="tab-icon">📖</span>Guides</button>
-    <button class="tab-btn" onclick="switchTab('trending')" id="tab-trending"><span class="tab-icon">🔥</span>Trending</button>
-    <button class="tab-btn" onclick="switchTab('author')" id="tab-author"><span class="tab-icon">👤</span>Author</button>
-  </nav>
-
-  <!-- ═══ VIBE SHEET ═════════════════════════════════════════════ -->
-  <div class="sheet-overlay" id="filter-sheet" onclick="closeSheet(event)">
-    <div class="sheet" onclick="event.stopPropagation()">
-      <div class="sheet-handle"></div>
-      <div class="sheet-header"><span class="sheet-title">Filter by Vibe</span><button class="sheet-clear" id="sheet-clear-btn" onclick="clearVibes()">Clear</button></div>
-      <div class="vibe-grid" id="vibe-grid"></div>
-      <button class="apply-btn" id="apply-btn" onclick="closeSheet()"></button>
-    </div>
+    <nav class="bottom-nav">
+      <button class="nav-btn" onclick="showSwipeScreen()"><span class="nav-icon">🃏</span>Discover</button>
+      <button class="nav-btn" onclick="showListScreen()"><span class="nav-icon">📋</span>My List</button>
+      <button class="nav-btn active" onclick="showAuthorScreen()"><span class="nav-icon">👤</span>Author</button>
+      <button class="nav-recommend" onclick="openNominate()"><span class="nav-icon">✦</span>Recommend</button>
+    </nav>
   </div>
 
-  <!-- ═══ NOMINATE MODAL ═════════════════════════════════════════ -->
+  <!-- ══ NOMINATE MODAL ════════════════════════════════ -->
   <div class="nominate-overlay" id="nominate-overlay">
     <div class="nominate-header">
       <div class="nominate-title">Nominate a Café ✦</div>
       <button class="nominate-close" onclick="closeNominate()">✕</button>
     </div>
-
-    <!-- Form state -->
     <div id="nominate-form-state">
       <div class="nominate-body">
-        <div class="nominate-intro">
-          <div class="nominate-intro-headline">Know a place that belongs in the Codex?</div>
-          <div class="nominate-intro-sub">Tell Pallavi about it. Every great cafe deserves to be found. If it makes the cut, you'll be credited as the one who found it.</div>
-        </div>
-
+        <div class="nominate-intro-headline">Know a place that belongs in the Codex?</div>
+        <div class="nominate-intro-sub">Tell Pallavi about it. If it makes the cut, you'll be credited as the one who found it.</div>
         <form id="nomination-form" onsubmit="submitNomination(event)">
-
           <div class="form-section-label">The Café</div>
-
-          <div class="form-group">
-            <label class="form-label" for="n-name">Café name <span>*</span></label>
-            <input class="form-input" id="n-name" name="cafe_name" type="text" placeholder="e.g. Onibus Coffee" required />
-          </div>
-
+          <div class="form-group"><label class="form-label">Café name <span>*</span></label><input class="form-input" name="cafe_name" type="text" placeholder="e.g. Onibus Coffee" required /></div>
           <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="n-city">City <span>*</span></label>
-              <input class="form-input" id="n-city" name="city" type="text" placeholder="e.g. Tokyo" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="n-country">Country <span>*</span></label>
-              <input class="form-input" id="n-country" name="country" type="text" placeholder="e.g. Japan" required />
-            </div>
+            <div class="form-group"><label class="form-label">City <span>*</span></label><input class="form-input" name="city" type="text" placeholder="e.g. Tokyo" required /></div>
+            <div class="form-group"><label class="form-label">Country <span>*</span></label><input class="form-input" name="country" type="text" placeholder="e.g. Japan" required /></div>
           </div>
-
-          <div class="form-group">
-            <label class="form-label" for="n-neighborhood">Neighborhood <span>optional</span></label>
-            <input class="form-input" id="n-neighborhood" name="neighborhood" type="text" placeholder="e.g. Nakameguro" />
-          </div>
-
+          <div class="form-group"><label class="form-label">Neighborhood <span>optional</span></label><input class="form-input" name="neighborhood" type="text" placeholder="e.g. Nakameguro" /></div>
           <div class="form-divider"></div>
           <div class="form-section-label">Your honest take</div>
-
-          <div class="form-group">
-            <label class="form-label" for="n-special">What makes it honest? <span>*</span></label>
-            <textarea class="form-textarea" id="n-special" name="what_makes_it_special" placeholder="Why does this cafe belong in the Codex? What sets it apart?" required></textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="n-order">The thing you must order <span>*</span></label>
-            <input class="form-input" id="n-order" name="must_order" type="text" placeholder="e.g. The ceremonial matcha bowl" required />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="n-time">Best time to go <span>optional</span></label>
-            <input class="form-input" id="n-time" name="best_time" type="text" placeholder="e.g. Weekday mornings before 10am" />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="n-tips">Content tips <span>optional</span></label>
-            <input class="form-input" id="n-tips" name="content_tips" type="text" placeholder="e.g. Great natural light by the window at noon" />
-          </div>
-
+          <div class="form-group"><label class="form-label">What makes it honest? <span>*</span></label><textarea class="form-textarea" name="what_makes_it_special" placeholder="Why does this cafe belong in the Codex?" required></textarea></div>
+          <div class="form-group"><label class="form-label">Must order <span>*</span></label><input class="form-input" name="must_order" type="text" placeholder="e.g. The ceremonial matcha bowl" required /></div>
+          <div class="form-group"><label class="form-label">Best time to go <span>optional</span></label><input class="form-input" name="best_time" type="text" placeholder="e.g. Weekday mornings" /></div>
           <div class="form-divider"></div>
           <div class="form-section-label">Credit</div>
-
-          <div class="form-group">
-            <label class="form-label" for="n-yourname">Your name <span>*</span></label>
-            <input class="form-input" id="n-yourname" name="your_name" type="text" placeholder="First name or nickname" required />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label" for="n-handle">Your @handle <span>optional — for credit on the site</span></label>
-            <input class="form-input" id="n-handle" name="instagram_handle" type="text" placeholder="@yourhandle" />
-          </div>
-
-          <button class="submit-btn" type="submit" id="submit-btn">Send to Pallavi ✦</button>
-          <p class="submit-note">Pallavi personally reviews every nomination. If it makes the Codex, you'll be credited as the finder.</p>
+          <div class="form-group"><label class="form-label">Your name <span>*</span></label><input class="form-input" name="your_name" type="text" placeholder="First name or nickname" required /></div>
+          <div class="form-group"><label class="form-label">Your @handle <span>optional</span></label><input class="form-input" name="instagram_handle" type="text" placeholder="@yourhandle" /></div>
+          <button class="submit-btn" type="submit">Send to Pallavi ✦</button>
+          <p class="submit-note">Pallavi personally reviews every nomination. If it makes the Codex, you'll be credited.</p>
         </form>
       </div>
     </div>
-
-    <!-- Success state -->
     <div class="nominate-success" id="nominate-success">
       <div class="success-icon">✦</div>
       <div class="success-title">Nomination sent!</div>
       <p class="success-msg">Pallavi will review it. If it makes the Codex, your name goes on the map.</p>
-      <div class="draft-card" id="draft-card">
+      <div class="draft-card">
         <div class="draft-info">
           <div class="draft-label">🤝 Community Nomination</div>
           <div class="draft-name" id="draft-name"></div>
@@ -500,470 +459,342 @@
         </div>
       </div>
       <button class="share-btn" onclick="shareNomination()">📤 Share your nomination</button>
-      <button class="back-to-discover-btn" onclick="closeNominate()">Back to Discover</button>
+      <button class="back-btn" onclick="closeNominate()">Back to Discover</button>
     </div>
   </div>
 
-  <!-- Share toast -->
   <div class="share-toast" id="share-toast">Copied to clipboard ✓</div>
 
-  <!-- ═══ DETAIL MODAL ════════════════════════════════════════════ -->
-  <div class="modal-overlay" id="detail-modal" onclick="closeModal(event)">
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal-photo"><span class="modal-photo-emoji">☕</span><button class="modal-close" onclick="closeModal()">✕</button></div>
-      <div class="modal-body" id="modal-body"></div>
-    </div>
-  </div>
-
   <script>
-  // ── DATA ──────────────────────────────────────────────────────
-  const VIBE_TAGS = [
-    {id:'viral_aesthetic',  label:'Viral & Aesthetic', emoji:'📸'},
-    {id:'matcha_specialist',label:'Matcha Specialist',  emoji:'🍵'},
-    {id:'specialty_coffee', label:'Specialty Coffee',   emoji:'☕'},
-    {id:'pour_over',        label:'Pour-Over',          emoji:'🫖'},
-    {id:'creative_drinks',  label:'Creative Drinks',    emoji:'🧋'},
-    {id:'cozy_quiet',       label:'Cozy & Quiet',       emoji:'🌿'},
-    {id:'hidden_gem',       label:'Hidden Gem',         emoji:'✨'},
-    {id:'collab_worthy',    label:'Collab-Worthy',      emoji:'🤝'},
-  ];
-
+  // ── DATA ──────────────────────────────────────────────
   const CAFES = [
-    {id:'1',name:'Elm Coffee Roasters',city:'Seattle',country:'United States',neighborhood:'Pioneer Square',vibe_tags:['specialty_coffee','pour_over','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, the cortado',what_to_skip:'Nothing — everything is excellent',best_time:'Weekday mornings before 9am',content_tips:'Natural light floods the bar in the AM. Shoot the pour-over in progress.'},instagram_handle:'elmcoffeeroasters',trending:false},
-    {id:'2',name:'Koda Cafe',city:'Seattle',country:'United States',neighborhood:'Capitol Hill',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial matcha latte, hojicha soft serve',what_to_skip:'The drip coffee — not their focus',best_time:'Late morning on weekdays',content_tips:'The soft serve is a must-film moment. Green-on-white aesthetic.'},instagram_handle:'kodacafe',trending:true},
-    {id:'3',name:'Broadcast Coffee',city:'Seattle',country:'United States',neighborhood:'Roosevelt',vibe_tags:['specialty_coffee','cozy_quiet','hidden_gem'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'The Gibraltar, seasonal latte',what_to_skip:'Pastries — get them at the bakery next door instead',best_time:'Sunday mornings',content_tips:'Low light, moody interior. Bring a prime lens.'},instagram_handle:'broadcastcoffee',trending:false},
-    {id:'4',name:'Ichi-ni-san',city:'Seattle',country:'United States',neighborhood:'International District',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Thick matcha, wagashi of the day',what_to_skip:'Nothing — tiny menu, everything is intentional',best_time:'Weekday afternoons, never crowded',content_tips:'Ceramic bowls are stunning. The bamboo whisk in frame.'},instagram_handle:'ichinisanseattle',trending:true},
-    {id:'5',name:'Stoneground Matcha',city:'New York',country:'United States',neighborhood:'West Village',vibe_tags:['matcha_specialist','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Stone-ground ceremonial bowl, iced hojicha',what_to_skip:'Latte if you want clean matcha flavor — go for the pure bowl',best_time:'Tuesdays and Wednesdays, minimal wait',content_tips:'The stone grinding mill in the background makes every shot.'},instagram_handle:'stonegroundmatcha',trending:true},
-    {id:'6',name:'Blue Bottle Coffee',city:'New York',country:'United States',neighborhood:'Chelsea',vibe_tags:['specialty_coffee','pour_over','viral_aesthetic'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'New Orleans iced coffee, single-origin pour-over',what_to_skip:'Espresso drinks — not their strength',best_time:'Midweek mornings',content_tips:'Minimal white interior, great for flat lay shots.'},instagram_handle:'bluebottlecoffee',trending:false},
-    {id:'7',name:'Tandem Coffee',city:'New York',country:'United States',neighborhood:'Williamsburg',vibe_tags:['creative_drinks','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Lavender oat latte, seasonal special',what_to_skip:'Drip coffee',best_time:'Golden hour on weekends for content',content_tips:'Exposed brick + huge windows = perfect content light.'},instagram_handle:'tandemcoffeenyc',trending:false},
+    {id:'1',name:'Elm Coffee Roasters',city:'Seattle',country:'United States',neighborhood:'Pioneer Square',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, the cortado',best_time:'Weekday mornings before 9am',content_tips:'Natural light floods the bar in the AM.'},instagram_handle:'elmcoffeeroasters',trending:false},
+    {id:'2',name:'Koda Cafe',city:'Seattle',country:'United States',neighborhood:'Capitol Hill',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial matcha latte, hojicha soft serve',best_time:'Late morning on weekdays',content_tips:'The soft serve is a must-film moment.'},instagram_handle:'kodacafe',trending:true},
+    {id:'3',name:'Broadcast Coffee',city:'Seattle',country:'United States',neighborhood:'Roosevelt',drink:'coffee',vibe_tags:['specialty_coffee','cozy_quiet','hidden_gem'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'The Gibraltar, seasonal latte',best_time:'Sunday mornings',content_tips:'Low light, moody interior. Bring a prime lens.'},instagram_handle:'broadcastcoffee',trending:false},
+    {id:'4',name:'Ichi-ni-san',city:'Seattle',country:'United States',neighborhood:'International District',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Thick matcha, wagashi of the day',best_time:'Weekday afternoons, never crowded',content_tips:'Ceramic bowls are stunning.'},instagram_handle:'ichinisanseattle',trending:true},
+    {id:'5',name:'Stoneground Matcha',city:'New York',country:'United States',neighborhood:'West Village',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Stone-ground ceremonial bowl, iced hojicha',best_time:'Tuesdays and Wednesdays',content_tips:'The stone grinding mill makes every shot.'},instagram_handle:'stonegroundmatcha',trending:true},
+    {id:'6',name:'Blue Bottle Coffee',city:'New York',country:'United States',neighborhood:'Chelsea',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','viral_aesthetic'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'New Orleans iced coffee, single-origin pour-over',best_time:'Midweek mornings',content_tips:'Minimal white interior, great for flat lays.'},instagram_handle:'bluebottlecoffee',trending:false},
+    {id:'7',name:'Tandem Coffee',city:'New York',country:'United States',neighborhood:'Williamsburg',drink:'coffee',vibe_tags:['creative_drinks','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Lavender oat latte, seasonal special',best_time:'Golden hour on weekends',content_tips:'Exposed brick + huge windows = perfect light.'},instagram_handle:'tandemcoffeenyc',trending:false},
   ];
 
-  // Approved community finds — Pallavi tells me to add entries here
-  // Format: same as CAFES but with is_community:true, submitted_by:'@handle', submitted_name:'Name'
-  const COMMUNITY_CAFES = [
-    // Example (uncomment when a real one is approved):
-    // {id:'c1',name:'Onibus Coffee',city:'Tokyo',country:'Japan',neighborhood:'Nakameguro',
-    //  vibe_tags:['specialty_coffee','cozy_quiet','hidden_gem'],curator_pick:false,curator_rating:4,
-    //  is_community:true,submitted_by:'@coffeelover',submitted_name:'Kenji',
-    //  curator_notes:{what_to_order:'Single-origin drip',what_to_skip:'Nothing',best_time:'Mornings',content_tips:'Canal-side seating is beautiful.'},
-    //  instagram_handle:'onibuscoffee',trending:false},
-  ];
+  const VIBE_EMOJI = {specialty_coffee:'☕',pour_over:'🫖',matcha_specialist:'🍵',viral_aesthetic:'📸',creative_drinks:'🧋',cozy_quiet:'🌿',hidden_gem:'✨',collab_worthy:'🤝'};
+  const VIBE_LABEL = {specialty_coffee:'Specialty Coffee',pour_over:'Pour-Over',matcha_specialist:'Matcha',viral_aesthetic:'Viral & Aesthetic',creative_drinks:'Creative Drinks',cozy_quiet:'Cozy & Quiet',hidden_gem:'Hidden Gem',collab_worthy:'Collab-Worthy'};
 
-  const CITY_GUIDES = [
-    {id:'cg1',city:'Seattle',title:'Top 5 Matcha Spots in Seattle',description:"Seattle's matcha scene punches well above its weight. Here are the spots I keep coming back to.",curator_rating:'4.8/5 for matcha',cafe_ids:['2','4','3'],emoji:'🍵'},
-    {id:'cg2',city:'Seattle',title:'Best Pour-Over Cafes in Seattle',description:"The Pacific Northwest takes coffee seriously. These are the pour-over bars doing it right.",curator_rating:'4.9/5 for coffee',cafe_ids:['1','3'],emoji:'☕'},
-    {id:'cg3',city:'New York',title:'Top Matcha in NYC',description:"NYC has exploded with matcha spots. These are the ones worth the wait.",curator_rating:'4.7/5 for matcha',cafe_ids:['5','7'],emoji:'🍵'},
-  ];
-
-  const COUNTRIES = [
-    {name:'United States',flag:'🇺🇸',visited:true,aliases:['united states','usa','us','u.s','u.s.a','america','american','states','wa','washington','ny','new york','seattle'],cities:['New York','Seattle']},
-    {name:'Japan',flag:'🇯🇵',visited:false,wishlist:true,aliases:['japan','jp','ja','jap','nihon','nippon','japanese','tokyo','kyoto','osaka'],planned_cities:['Kyoto','Osaka','Tokyo'],fun_messages:['Still dreaming about Japan — the matcha there is on a completely different level. Tokyo, Kyoto and Osaka are circled on my map.','Japan is high on the list. Stone-ground matcha, kissaten coffee culture... I\'ll get there. Soon.']},
-    {name:'India',flag:'🇮🇳',visited:false,wishlist:true,aliases:['india','in','ind','indian','bangalore','bengaluru','mumbai','delhi','hyderabad'],planned_cities:['Bangalore','Delhi','Hyderabad','Mumbai'],fun_messages:['India\'s specialty coffee scene is exploding right now — Bangalore especially. I\'m coming for it.','India is on the list and climbing fast. Bangalore\'s third-wave coffee culture? I need to see it for myself.']},
-    {name:'United Kingdom',flag:'🇬🇧',visited:false,wishlist:true,aliases:['uk','gb','britain','england','british','london','scotland'],planned_cities:['London'],fun_messages:['London has a brilliant specialty coffee scene. I haven\'t made it there yet, but Borough Market and Shoreditch are calling.','Still on my list — London cafes are on a different level and I intend to find out firsthand.']},
-    {name:'France',flag:'🇫🇷',visited:false,wishlist:true,aliases:['france','fr','french','paris','lyon'],planned_cities:['Paris'],fun_messages:['Paris has this incredible new-wave coffee scene hiding behind all the classic brasseries. Haven\'t been yet — but it\'s circled.','I haven\'t sipped my way through Paris yet, but it\'s absolutely on the list.']},
-    {name:'Netherlands',flag:'🇳🇱',visited:false,wishlist:true,aliases:['netherlands','nl','holland','dutch','amsterdam'],planned_cities:['Amsterdam'],fun_messages:['Amsterdam\'s café culture is everything. Narrow canal-side spots with incredible pour-overs. I\'m going. Eventually.','The Netherlands is on the list — I hear Amsterdam\'s coffee scene is quietly one of the best in Europe.']},
-    {name:'Denmark',flag:'🇩🇰',visited:false,wishlist:true,aliases:['denmark','dk','danish','copenhagen'],planned_cities:['Copenhagen'],fun_messages:['Copenhagen is where Scandinavian coffee culture was born. Haven\'t been, but it\'s circled twice.','Denmark and specialty coffee go hand in hand. Copenhagen is absolutely on the radar.']},
-    {name:'Australia',flag:'🇦🇺',visited:false,wishlist:true,aliases:['australia','au','aus','aussie','melbourne','sydney'],planned_cities:['Melbourne','Sydney'],fun_messages:['Melbourne basically invented modern flat white culture. I have no excuse for not going yet — it\'s on the list.','Australia is calling — Melbourne\'s coffee scene is legendary and I haven\'t been yet.']},
-    {name:'South Korea',flag:'🇰🇷',visited:false,wishlist:true,aliases:['south korea','korea','kr','korean','seoul','busan'],planned_cities:['Busan','Seoul'],fun_messages:['Seoul\'s café aesthetic is like nothing else in the world — art installations, specialty beans, and perfectly lit interiors. I need to go.','South Korea has some of the most visually stunning cafes on the planet. Seoul is very much on the list.']},
-    {name:'Canada',flag:'🇨🇦',visited:false,wishlist:true,aliases:['canada','ca','can','canadian','toronto','vancouver','montreal'],planned_cities:['Montreal','Toronto','Vancouver'],fun_messages:['Canada is closer than most of my list — Vancouver especially has a great third-wave scene. Haven\'t made it yet!','Still haven\'t crossed the border for a proper Canadian coffee crawl. It\'s coming though.']},
-  ];
-
-  function matchCountry(query) {
-    const q = query.toLowerCase().trim();
-    if (!q || q.length < 2) return [];
-    return COUNTRIES.filter(c => c.name.toLowerCase().includes(q) || c.aliases.some(a => a.includes(q) || q.includes(a))).slice(0,5);
-  }
-
-  // ── STATE ─────────────────────────────────────────────────────
-  let selectedCity = 'All', activeVibes = [], searchQuery = '', selectedCountry = null;
-  let saved   = JSON.parse(localStorage.getItem('cc_saved')  || '[]');
-  let visited = JSON.parse(localStorage.getItem('cc_visited')|| '[]');
-  let dropdownBlurTimer = null;
+  // ── STATE ─────────────────────────────────────────────
+  let selectedDrink = 'coffee';
+  let selectedVibes = [];
+  let deck = [];
+  let currentIndex = 0;
+  let activeListTab = 'wishlist';
   let nominationData = {};
 
-  // ── HELPERS ───────────────────────────────────────────────────
-  function getCities(cn) { return [...new Set(CAFES.filter(c=>c.country===cn).map(c=>c.city))].sort(); }
-  function vibeLabel(id) { const t=VIBE_TAGS.find(t=>t.id===id); return t?`${t.emoji} ${t.label}`:id; }
-  function stars(n) { return '★'.repeat(n); }
-  function isSaved(id) { return saved.includes(id); }
-  function isVisited(id) { return visited.includes(id); }
-  function rand(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+  let wishlist = JSON.parse(localStorage.getItem('cc_wishlist') || '[]');
+  let beenThere = JSON.parse(localStorage.getItem('cc_been') || '[]');
 
-  function toggleSaved(id,e) {
-    e&&e.stopPropagation();
-    if(isSaved(id)) saved=saved.filter(s=>s!==id); else saved.push(id);
-    localStorage.setItem('cc_saved',JSON.stringify(saved));
-    renderAll(); updateModalActions(id);
+  // ── ONBOARDING ────────────────────────────────────────
+  function pickDrink(drink) {
+    selectedDrink = drink;
+    document.getElementById('vibe-sub').textContent = drink === 'coffee' ? '☕ Coffee selected' : '🍵 Matcha selected';
+    showScreen('screen-vibe');
   }
-  function toggleVisited(id) {
-    if(isVisited(id)) visited=visited.filter(v=>v!==id); else visited.push(id);
-    localStorage.setItem('cc_visited',JSON.stringify(visited));
-    renderAll(); updateModalActions(id);
+  function toggleVibe(el) {
+    el.classList.toggle('selected');
   }
-
-  // ── SEARCH ────────────────────────────────────────────────────
-  function onSearchInput() {
-    const val = document.getElementById('search-input').value;
-    document.getElementById('search-clear').classList.toggle('hide', !val);
-    const matches = matchCountry(val);
-    if (val.length >= 2 && matches.length > 0 && !selectedCountry) {
-      renderDropdown(matches);
-      document.getElementById('country-dropdown').classList.add('open');
-    } else {
-      document.getElementById('country-dropdown').classList.remove('open');
-      searchQuery = val.toLowerCase().trim();
-      renderDiscoverList();
-    }
+  function goBack() {
+    selectedVibes = [];
+    document.querySelectorAll('.ob-vibe').forEach(v => v.classList.remove('selected'));
+    showScreen('screen-drink');
   }
-  function onSearchFocus() {
-    clearTimeout(dropdownBlurTimer);
-    document.getElementById('search-box').classList.add('focused');
-    const val = document.getElementById('search-input').value;
-    if (val.length >= 2 && !selectedCountry) {
-      const m = matchCountry(val);
-      if (m.length) { renderDropdown(m); document.getElementById('country-dropdown').classList.add('open'); }
-    }
-  }
-  function onSearchBlur() {
-    document.getElementById('search-box').classList.remove('focused');
-    dropdownBlurTimer = setTimeout(() => document.getElementById('country-dropdown').classList.remove('open'), 200);
-  }
-  function renderDropdown(countries) {
-    document.getElementById('country-dropdown').innerHTML = countries.map(c => `
-      <div class="dropdown-item" onmousedown="selectCountry('${c.name}')" ontouchstart="selectCountry('${c.name}')">
-        <span class="dropdown-flag">${c.flag}</span>
-        <div class="dropdown-info">
-          <div class="dropdown-country-name">${c.name}</div>
-          <div class="dropdown-status ${c.visited?'visited':'wishlist'}">${c.visited?`✓ Explored — ${getCities(c.name).join(', ')}`:'✈️ On the list'}</div>
-        </div>
-        <span class="dropdown-arrow">›</span>
-      </div>`).join('');
-  }
-  function selectCountry(name) {
-    document.getElementById('country-dropdown').classList.remove('open');
-    const country = COUNTRIES.find(c=>c.name===name);
-    if (!country) return;
-    selectedCountry = country;
-    document.getElementById('search-input').value = `${country.flag} ${country.name}`;
-    document.getElementById('search-clear').classList.remove('hide');
-    searchQuery = '';
-    if (country.visited) showVisitedCountry(country); else showNotVisitedCountry(country);
-  }
-  function showVisitedCountry(country) {
-    const cities = getCities(country.name);
-    selectedCity = 'All';
-    document.getElementById('banner-flag').textContent = country.flag;
-    document.getElementById('banner-text').textContent = country.name;
-    document.getElementById('banner-sub').textContent = `${cities.length} ${cities.length===1?'city':'cities'} explored · ${CAFES.filter(c=>c.country===country.name).length} cafes`;
-    document.getElementById('country-banner').classList.add('show');
-    document.getElementById('not-visited-screen').classList.remove('show');
-    document.getElementById('filter-section').style.display = 'block';
-    renderCityPills(cities);
-    renderDiscoverList();
-  }
-  function showNotVisitedCountry(country) {
-    document.getElementById('filter-section').style.display = 'none';
-    document.getElementById('country-banner').classList.remove('show');
-    const msg = rand(country.fun_messages || ["Still on my list — haven't made it here yet, but it's circled on the map."]);
-    document.getElementById('nv-flag').textContent = country.flag;
-    document.getElementById('nv-title').textContent = `${country.name} is on my list`;
-    document.getElementById('nv-message').textContent = msg;
-    const planned = country.planned_cities || [];
-    document.getElementById('nv-cities-section').innerHTML = planned.length ? `
-      <div class="nv-soon-label">Cities I'm planning to visit</div>
-      <div class="nv-cities">${planned.map(c=>`<span class="nv-city-pill">📍 ${c}</span>`).join('')}</div>` : '';
-    document.getElementById('not-visited-screen').classList.add('show');
-  }
-  function clearSearch() {
-    document.getElementById('search-input').value = '';
-    document.getElementById('search-clear').classList.add('hide');
-    document.getElementById('country-dropdown').classList.remove('open');
-    searchQuery = ''; clearCountry();
-  }
-  function clearCountry() {
-    selectedCountry = null;
-    document.getElementById('search-input').value = '';
-    document.getElementById('search-clear').classList.add('hide');
-    document.getElementById('country-banner').classList.remove('show');
-    document.getElementById('not-visited-screen').classList.remove('show');
-    document.getElementById('filter-section').style.display = 'block';
-    selectedCity = 'All'; activeVibes = []; searchQuery = '';
-    renderCityPills(); renderDiscoverList();
+  function startSwiping() {
+    selectedVibes = [...document.querySelectorAll('.ob-vibe.selected')].map(v => v.dataset.vibe);
+    buildDeck();
+    renderStack();
+    document.getElementById('active-filter-label').textContent =
+      (selectedDrink === 'coffee' ? '☕ Coffee' : '🍵 Matcha') +
+      (selectedVibes.length ? ' · ' + selectedVibes.map(v => ({trending:'Trending',picks:'Picks',aesthetic:'Aesthetic',hidden:'Hidden Gems'}[v])).join(', ') : '');
+    showScreen('screen-swipe');
   }
 
-  // ── FILTER & RENDER ───────────────────────────────────────────
-  function getAllCafes() { return [...CAFES, ...COMMUNITY_CAFES]; }
-  function getFiltered() {
-    return CAFES.filter(c => {
-      const countryOk = !selectedCountry || !selectedCountry.visited || c.country === selectedCountry.name;
-      const cityOk    = selectedCity==='All' || c.city===selectedCity;
-      const vibeOk    = activeVibes.length===0 || activeVibes.every(v=>c.vibe_tags.includes(v));
-      const srchOk    = !searchQuery || c.name.toLowerCase().includes(searchQuery) || c.neighborhood.toLowerCase().includes(searchQuery) || c.city.toLowerCase().includes(searchQuery);
-      return countryOk && cityOk && vibeOk && srchOk;
+  // ── DECK BUILDING ─────────────────────────────────────
+  function buildDeck() {
+    let filtered = CAFES.filter(c => {
+      const drinkMatch = selectedDrink === 'matcha'
+        ? c.drink === 'matcha' || c.vibe_tags.includes('matcha_specialist')
+        : c.drink === 'coffee' || !c.vibe_tags.includes('matcha_specialist');
+      if (!drinkMatch) return false;
+      if (selectedVibes.length === 0) return true;
+      return selectedVibes.some(v => {
+        if (v === 'trending')  return c.trending;
+        if (v === 'picks')     return c.curator_pick && c.curator_rating >= 5;
+        if (v === 'aesthetic') return c.vibe_tags.includes('viral_aesthetic');
+        if (v === 'hidden')    return c.vibe_tags.includes('hidden_gem');
+        return false;
+      });
     });
-  }
-  function getFilteredCommunity() {
-    return COMMUNITY_CAFES.filter(c => {
-      const cityOk = selectedCity==='All' || c.city===selectedCity;
-      const vibeOk = activeVibes.length===0 || activeVibes.every(v=>c.vibe_tags.includes(v));
-      const srchOk = !searchQuery || c.name.toLowerCase().includes(searchQuery) || c.city.toLowerCase().includes(searchQuery);
-      return cityOk && vibeOk && srchOk;
-    });
-  }
-  function renderDiscoverList() {
-    const filtered = getFiltered();
-    const hasFilters = activeVibes.length>0 || selectedCity!=='All';
-    document.getElementById('count-text').textContent = `${filtered.length} ${filtered.length===1?'cafe':'cafes'}${hasFilters||searchQuery?' · filtered':''}`;
-    document.getElementById('clear-all-btn').classList.toggle('hide', !hasFilters);
-    document.getElementById('cafe-list').innerHTML = filtered.length
-      ? filtered.map(cafeCardHTML).join('')
-      : `<div class="empty-state"><div class="empty-emoji">☕</div><div class="empty-title">No cafes match</div><div class="empty-sub">Try adjusting your filters</div></div>`;
-    // Community finds
-    const comm = getFilteredCommunity();
-    const commSection = document.getElementById('community-section');
-    if (comm.length > 0) {
-      commSection.classList.remove('hide');
-      document.getElementById('community-list').innerHTML = comm.map(cafeCardHTML).join('');
-    } else {
-      commSection.classList.add('hide');
-    }
-  }
-  function renderCityPills(override) {
-    const cities = override || [...new Set(CAFES.map(c=>c.city))].sort();
-    document.getElementById('city-pills').innerHTML =
-      ['All',...cities].map(c=>`<button class="pill${c===selectedCity?' active':''}" onclick="selectCity('${c}')">${c}</button>`).join('') +
-      `<button class="filter-btn${activeVibes.length>0?' has-filters':''}" onclick="openSheet()">⚙${activeVibes.length>0?`<span class="filter-count">${activeVibes.length}</span>`:''}</button>`;
-  }
-  function selectCity(city) {
-    selectedCity = city;
-    renderCityPills(selectedCountry&&selectedCountry.visited?getCities(selectedCountry.name):null);
-    renderDiscoverList();
-  }
-  function clearAll() {
-    activeVibes=[]; selectedCity='All';
-    renderCityPills(selectedCountry&&selectedCountry.visited?getCities(selectedCountry.name):null);
-    renderDiscoverList();
+    // Remove already swiped
+    const swiped = [...wishlist, ...beenThere];
+    filtered = filtered.filter(c => !swiped.includes(c.id));
+    deck = filtered;
+    currentIndex = 0;
   }
 
-  // ── CAFE CARD ─────────────────────────────────────────────────
-  function cafeCardHTML(cafe) {
-    const sv=isSaved(cafe.id), vis=isVisited(cafe.id);
-    const tags = cafe.vibe_tags.slice(0,3).map(t=>`<span class="tag">${vibeLabel(t)}</span>`).join('');
-    const sharedBy = cafe.is_community && cafe.submitted_by
-      ? `<div class="shared-by">🤝 Shared by ${cafe.submitted_by}</div>` : '';
-    return `
-      <div class="cafe-card" onclick="openCafe('${cafe.id}')">
-        <div class="cafe-photo">
-          <span class="cafe-photo-emoji">☕</span>
-          <div class="cafe-badges">
-            ${cafe.curator_pick?'<span class="badge-pick">✦ Pallavi\'s Pick</span>':''}
-            ${cafe.trending?'<span class="badge-trending">🔥 Trending</span>':''}
-            ${cafe.is_community?'<span class="badge-community">🤝 Community Find</span>':''}
-          </div>
-          <button class="save-btn" onclick="toggleSaved('${cafe.id}',event)">${sv?'❤️':'🤍'}</button>
-        </div>
-        <div class="cafe-info">
-          <div class="cafe-name-row">
-            <span class="cafe-name">${cafe.name}</span>
-            ${cafe.curator_rating?`<span class="rating-pill">${stars(cafe.curator_rating)}</span>`:''}
-          </div>
-          <div class="cafe-meta">
-            <span class="cafe-location">${cafe.neighborhood||cafe.city} · ${cafe.city}</span>
-            ${vis?'<span class="visited-badge">✓ Visited</span>':''}
-          </div>
-          ${sharedBy}
-          <div class="tag-row">${tags}</div>
-        </div>
-      </div>`;
-  }
+  // ── CARD STACK ────────────────────────────────────────
+  function renderStack() {
+    const stack = document.getElementById('card-stack');
+    stack.innerHTML = '';
+    renderProgressDots();
 
-  // ── GUIDES ────────────────────────────────────────────────────
-  function renderGuides() {
-    document.getElementById('guides-list').innerHTML = CITY_GUIDES.map(g => {
-      const pills = g.cafe_ids.map((id,i)=>{const c=CAFES.find(c=>c.id===id);return c?`<span class="guide-cafe-pill"><span>#${i+1}</span>${c.name}</span>`:''}).join('');
-      return `
-        <div class="guide-card" onclick="openGuide('${g.id}')">
-          <div class="guide-top">
-            <div style="display:flex;align-items:flex-start;gap:10px;flex:1">
-              <span class="guide-emoji">${g.emoji}</span>
-              <div class="guide-title-wrap"><div class="guide-city">${g.city}</div><div class="guide-title">${g.title}</div></div>
-            </div>
-            <span class="guide-rating">${g.curator_rating}</span>
-          </div>
-          <p class="guide-desc">${g.description}</p>
-          <div class="guide-cafes">${pills}</div>
+    if (deck.length === 0) {
+      stack.innerHTML = `
+        <div class="swipe-empty">
+          <div class="swipe-empty-icon">☕</div>
+          <div class="swipe-empty-title">You've seen them all!</div>
+          <div class="swipe-empty-sub">Check your list or change your filters to discover more cafes.</div>
+          <button class="swipe-empty-btn" onclick="goBack()">Change filters</button>
         </div>`;
+      return;
+    }
+
+    // Render up to 3 cards (current + 2 behind)
+    for (let i = Math.min(deck.length - 1, currentIndex + 2); i >= currentIndex; i--) {
+      const card = buildCard(deck[i]);
+      if (i === currentIndex + 2) card.classList.add('is-next-2');
+      else if (i === currentIndex + 1) card.classList.add('is-next');
+      stack.appendChild(card);
+    }
+
+    // Attach swipe to top card
+    attachSwipe(stack.lastChild);
+  }
+
+  function buildCard(cafe) {
+    const el = document.createElement('div');
+    el.className = 'swipe-card';
+    el.dataset.id = cafe.id;
+    const tags = cafe.vibe_tags.slice(0, 3).map(t =>
+      `<span class="card-tag">${VIBE_EMOJI[t] || ''} ${VIBE_LABEL[t] || t}</span>`).join('');
+    const badge = cafe.curator_pick
+      ? `<div class="card-pick-badge">✦ Pallavi's Pick</div>`
+      : cafe.trending ? `<div class="card-trending-badge">🔥 Trending</div>` : '';
+    el.innerHTML = `
+      <div class="card-photo">
+        <span class="card-photo-emoji">${cafe.drink === 'matcha' ? '🍵' : '☕'}</span>
+        ${badge}
+        <div class="swipe-overlay right"><div class="overlay-label">WANT IT</div></div>
+        <div class="swipe-overlay left"><div class="overlay-label">BEEN THERE</div></div>
+      </div>
+      <div class="card-body">
+        <div class="card-name">${cafe.name}</div>
+        <div class="card-location">${cafe.neighborhood} · ${cafe.city}</div>
+        <div class="card-note">
+          <div class="card-note-label">Order this</div>
+          <div class="card-note-value">${cafe.curator_notes.what_to_order}</div>
+        </div>
+        <div class="card-tags">${tags}</div>
+      </div>`;
+    return el;
+  }
+
+  function renderProgressDots() {
+    const dots = document.getElementById('progress-dots');
+    const total = Math.min(deck.length, 7);
+    dots.innerHTML = Array.from({length: total}, (_, i) =>
+      `<div class="dot${i === 0 ? ' active' : ''}"></div>`).join('');
+  }
+  function updateDots() {
+    const dots = document.querySelectorAll('.dot');
+    dots.forEach((d, i) => d.classList.toggle('active', i === currentIndex % dots.length));
+  }
+
+  // ── SWIPE MECHANICS ───────────────────────────────────
+  function attachSwipe(card) {
+    if (!card || card.classList.contains('swipe-empty')) return;
+    let startX, startY, dragging = false;
+    const THRESHOLD = 75;
+
+    function onStart(x, y) { startX = x; startY = y; dragging = true; card.style.transition = 'none'; }
+    function onMove(x, y) {
+      if (!dragging) return;
+      const dx = x - startX, dy = (y - startY) * 0.25;
+      const rotate = dx / 18;
+      card.style.transform = `translateX(${dx}px) translateY(${dy}px) rotate(${rotate}deg)`;
+      const rightOverlay = card.querySelector('.swipe-overlay.right');
+      const leftOverlay  = card.querySelector('.swipe-overlay.left');
+      const ratio = Math.min(Math.abs(dx) / THRESHOLD, 1);
+      if (dx > 10)       { rightOverlay.style.opacity = ratio * 0.9; leftOverlay.style.opacity = 0; }
+      else if (dx < -10) { leftOverlay.style.opacity  = ratio * 0.9; rightOverlay.style.opacity = 0; }
+      else               { rightOverlay.style.opacity = 0; leftOverlay.style.opacity = 0; }
+    }
+    function onEnd(x) {
+      if (!dragging) return; dragging = false;
+      const dx = x - startX;
+      if (dx > THRESHOLD) commitSwipe('right');
+      else if (dx < -THRESHOLD) commitSwipe('left');
+      else {
+        card.style.transition = 'transform 0.3s cubic-bezier(0.4,0,0.2,1)';
+        card.style.transform = '';
+        card.querySelector('.swipe-overlay.right').style.opacity = 0;
+        card.querySelector('.swipe-overlay.left').style.opacity  = 0;
+      }
+    }
+
+    card.addEventListener('pointerdown', e => { onStart(e.clientX, e.clientY); card.setPointerCapture(e.pointerId); });
+    card.addEventListener('pointermove', e => onMove(e.clientX, e.clientY));
+    card.addEventListener('pointerup',   e => onEnd(e.clientX));
+    card.addEventListener('pointercancel', () => { dragging = false; card.style.transform = ''; });
+  }
+
+  function swipeAction(dir) {
+    const stack = document.getElementById('card-stack');
+    const top = stack.lastChild;
+    if (!top || top.classList.contains('swipe-empty')) return;
+    // Show overlay briefly then fly out
+    const overlay = top.querySelector(`.swipe-overlay.${dir}`);
+    if (overlay) overlay.style.opacity = 0.9;
+    commitSwipe(dir);
+  }
+
+  function commitSwipe(dir) {
+    const cafe = deck[currentIndex];
+    if (!cafe) return;
+
+    if (dir === 'right') {
+      if (!wishlist.includes(cafe.id)) { wishlist.push(cafe.id); localStorage.setItem('cc_wishlist', JSON.stringify(wishlist)); }
+    } else {
+      if (!beenThere.includes(cafe.id)) { beenThere.push(cafe.id); localStorage.setItem('cc_been', JSON.stringify(beenThere)); }
+    }
+
+    // Animate top card out
+    const stack = document.getElementById('card-stack');
+    const top = stack.lastChild;
+    if (top) {
+      top.classList.add('animating');
+      top.style.transform = dir === 'right'
+        ? 'translateX(120%) rotate(20deg)' : 'translateX(-120%) rotate(-20deg)';
+      top.style.opacity = '0';
+      setTimeout(() => top.remove(), 380);
+    }
+
+    // Promote next cards
+    const next = stack.children[stack.children.length - 2];
+    const next2 = stack.children[stack.children.length - 3];
+    if (next) { setTimeout(() => { next.classList.remove('is-next'); attachSwipe(next); }, 50); }
+    if (next2) { setTimeout(() => { next2.classList.remove('is-next-2'); next2.classList.add('is-next'); }, 50); }
+
+    currentIndex++;
+    updateDots();
+
+    if (currentIndex >= deck.length) {
+      setTimeout(() => {
+        stack.innerHTML = `
+          <div class="swipe-empty">
+            <div class="swipe-empty-icon">✦</div>
+            <div class="swipe-empty-title">That's all of them!</div>
+            <div class="swipe-empty-sub">You've been through the full list. Check your saved cafes or change your filters.</div>
+            <button class="swipe-empty-btn" onclick="showListScreen()">See my list</button>
+          </div>`;
+      }, 400);
+    } else if (currentIndex + 2 < deck.length && stack.children.length < 3) {
+      // Add a new card at the back of the stack
+      const newCard = buildCard(deck[currentIndex + 2]);
+      newCard.classList.add('is-next-2');
+      stack.insertBefore(newCard, stack.firstChild);
+    }
+  }
+
+  // ── MY LIST ───────────────────────────────────────────
+  function showListTab(tab) {
+    activeListTab = tab;
+    document.getElementById('lt-wishlist').classList.toggle('active', tab === 'wishlist');
+    document.getElementById('lt-visited').classList.toggle('active', tab === 'visited');
+    renderList();
+  }
+  function renderList() {
+    const ids = activeListTab === 'wishlist' ? wishlist : beenThere;
+    const scroll = document.getElementById('list-scroll');
+    if (ids.length === 0) {
+      const msg = activeListTab === 'wishlist'
+        ? ['Swipe right on cafes to save them here.', '❤️']
+        : ['Swipe left on cafes you\'ve visited.', '✓'];
+      scroll.innerHTML = `<div class="list-empty"><div class="list-empty-icon">${msg[1]}</div><div class="list-empty-title">Nothing here yet</div><div class="list-empty-sub">${msg[0]}</div></div>`;
+      return;
+    }
+    scroll.innerHTML = ids.map(id => {
+      const c = CAFES.find(c => c.id === id);
+      if (!c) return '';
+      return `<div class="list-card">
+        <div class="list-card-icon">${c.drink === 'matcha' ? '🍵' : '☕'}</div>
+        <div class="list-card-info">
+          <div class="list-card-name">${c.name}</div>
+          <div class="list-card-loc">${c.neighborhood} · ${c.city}</div>
+        </div>
+        <div class="list-card-badge">${activeListTab === 'wishlist' ? '❤️' : '✓'}</div>
+      </div>`;
     }).join('');
   }
-  function openGuide(id) {
-    const g=CITY_GUIDES.find(g=>g.id===id);
-    if(!g) return;
-    switchTab('discover'); clearCountry(); selectedCity=g.city; renderCityPills(); renderDiscoverList();
-  }
 
-  // ── TRENDING ──────────────────────────────────────────────────
-  function renderTrending() {
-    const tr=CAFES.filter(c=>c.trending), pk=CAFES.filter(c=>c.curator_pick&&c.curator_rating===5);
-    document.getElementById('trending-list').innerHTML = tr.length?tr.map(cafeCardHTML).join(''):'<div class="empty-state"><div class="empty-emoji">🔥</div><div class="empty-title">No trending cafes yet</div></div>';
-    document.getElementById('picks-list').innerHTML   = pk.length?pk.map(cafeCardHTML).join(''):'<div class="empty-state"><div class="empty-emoji">✦</div><div class="empty-title">No picks yet</div></div>';
+  // ── SCREENS ───────────────────────────────────────────
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
   }
-
-  // ── VIBE SHEET ────────────────────────────────────────────────
-  function renderVibeGrid() {
-    document.getElementById('vibe-grid').innerHTML = VIBE_TAGS.map(t=>`<button class="vibe-tag${activeVibes.includes(t.id)?' active':''}" onclick="toggleVibe('${t.id}')"><span>${t.emoji}</span>${t.label}</button>`).join('');
-    document.getElementById('sheet-clear-btn').classList.toggle('hide',activeVibes.length===0);
-    const n=getFiltered().length; const b=document.getElementById('apply-btn');
-    if(b) b.textContent=`Show ${n} ${n===1?'cafe':'cafes'}`;
+  function showSwipeScreen() {
+    showScreen('screen-swipe');
+    buildDeck(); renderStack();
   }
-  function toggleVibe(id) { if(activeVibes.includes(id))activeVibes=activeVibes.filter(v=>v!==id);else activeVibes.push(id); renderVibeGrid(); renderCityPills(); renderDiscoverList(); }
-  function clearVibes() { activeVibes=[]; renderVibeGrid(); renderCityPills(); renderDiscoverList(); }
-  function openSheet() { renderVibeGrid(); document.getElementById('filter-sheet').classList.add('open'); document.body.style.overflow='hidden'; }
-  function closeSheet(e) { if(e&&e.target!==document.getElementById('filter-sheet'))return; document.getElementById('filter-sheet').classList.remove('open'); document.body.style.overflow=''; renderCityPills(); }
+  function showListScreen() {
+    showScreen('screen-list');
+    renderList();
+  }
+  function showAuthorScreen() { showScreen('screen-author'); }
 
-  // ── NOMINATE ──────────────────────────────────────────────────
+  // ── NOMINATE ──────────────────────────────────────────
   function openNominate() {
     document.getElementById('nominate-overlay').classList.add('open');
     document.getElementById('nominate-form-state').style.display = 'block';
     document.getElementById('nominate-success').classList.remove('show');
     document.getElementById('nomination-form').reset();
-    document.body.style.overflow = 'hidden';
   }
-  function closeNominate() {
-    document.getElementById('nominate-overlay').classList.remove('open');
-    document.body.style.overflow = '';
-  }
+  function closeNominate() { document.getElementById('nominate-overlay').classList.remove('open'); }
+
+  function toTitleCase(str) { return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '); }
 
   async function submitNomination(e) {
     e.preventDefault();
-    const btn = document.getElementById('submit-btn');
-    btn.disabled = true; btn.textContent = 'Sending…';
-
     const form = e.target;
     const data = {
-      cafe_name:            form.cafe_name.value.trim(),
-      city:                 form.city.value.trim(),
-      country:              form.country.value.trim(),
-      neighborhood:         form.neighborhood.value.trim(),
-      what_makes_it_special:form.what_makes_it_special.value.trim(),
-      must_order:           form.must_order.value.trim(),
-      best_time:            form.best_time.value.trim(),
-      content_tips:         form.content_tips.value.trim(),
-      your_name:            form.your_name.value.trim(),
-      instagram_handle:     form.instagram_handle.value.trim(),
+      cafe_name: form.cafe_name.value.trim(), city: form.city.value.trim(),
+      country: form.country.value.trim(), neighborhood: form.neighborhood.value.trim(),
+      what_makes_it_special: form.what_makes_it_special.value.trim(),
+      must_order: form.must_order.value.trim(), best_time: form.best_time.value.trim(),
+      your_name: form.your_name.value.trim(), instagram_handle: form.instagram_handle.value.trim(),
     };
     nominationData = data;
-
-    // Submit via Formspree
-    // ⚠️  Replace YOUR_FORM_ID below after signing up at formspree.io
-    const FORMSPREE_ENDPOINT = 'https://formspree.io/f/YOUR_FORM_ID';
-
     try {
-      const resp = await fetch(FORMSPREE_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      await fetch('https://formspree.io/f/YOUR_FORM_ID', {
+        method:'POST', headers:{'Accept':'application/json','Content-Type':'application/json'},
         body: JSON.stringify(data),
       });
-      // Show success even if Formspree not yet configured (for demo)
-      showNominationSuccess(data);
-    } catch(err) {
-      // Still show success UI for now
-      showNominationSuccess(data);
-    }
+    } catch(err) {}
+    showNominationSuccess(data);
   }
-
-  function toTitleCase(str) {
-    return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-  }
-  function normalizeCountry(input) {
-    const q = input.toLowerCase().trim();
-    const match = COUNTRIES.find(c => c.name.toLowerCase() === q || c.aliases.includes(q));
-    return match ? match.name : toTitleCase(input);
-  }
-
   function showNominationSuccess(data) {
     document.getElementById('nominate-form-state').style.display = 'none';
-    const displayName    = toTitleCase(data.your_name);
-    const displayCountry = normalizeCountry(data.country);
-    const displayCity    = data.city.split(' ').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
-    document.getElementById('draft-name').textContent = data.cafe_name;
-    document.getElementById('draft-loc').textContent  = `${data.neighborhood ? data.neighborhood + ' · ' : ''}${displayCity}, ${displayCountry}`;
     const handle = data.instagram_handle ? data.instagram_handle.replace(/^@/,'') : null;
-    document.getElementById('draft-by').textContent   = `Nominated by ${displayName}${handle?' · @'+handle:''}`;
+    document.getElementById('draft-name').textContent = data.cafe_name;
+    document.getElementById('draft-loc').textContent  = `${data.neighborhood ? data.neighborhood + ' · ' : ''}${data.city}, ${toTitleCase(data.country)}`;
+    document.getElementById('draft-by').textContent   = `Nominated by ${toTitleCase(data.your_name)}${handle ? ' · @'+handle : ''}`;
     document.getElementById('nominate-success').classList.add('show');
     document.getElementById('nominate-overlay').scrollTop = 0;
   }
-
   function shareNomination() {
     const d = nominationData;
-    const handle = d.instagram_handle ? ` · @${d.instagram_handle.replace('@','')}` : '';
-    const text = `Just nominated ${d.cafe_name} in ${d.city} to @honestcoffeestop's Café Codex ✦☕\n\nHope it makes the list! Check out Café Codex: https://pduggal.github.io/CafeCodex`;
+    const text = `Just nominated ${d.cafe_name} in ${d.city} to @honestcoffeestop's Café Codex ✦☕\n\nHope it makes the list! https://pduggal.github.io/CafeCodex`;
     navigator.clipboard.writeText(text).then(() => {
-      const toast = document.getElementById('share-toast');
-      toast.classList.add('show');
-      setTimeout(()=>toast.classList.remove('show'), 2500);
-    }).catch(()=>{
-      // Fallback
-      prompt('Copy this:', text);
-    });
+      const t = document.getElementById('share-toast'); t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }).catch(() => prompt('Copy this:', text));
   }
-
-  // ── DETAIL MODAL ──────────────────────────────────────────────
-  let currentCafeId = null;
-  function openCafe(id) {
-    currentCafeId = id;
-    const cafe = getAllCafes().find(c=>c.id===id);
-    if (!cafe) return;
-    renderModalBody(cafe);
-    document.getElementById('detail-modal').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function renderModalBody(cafe) {
-    const sv=isSaved(cafe.id), vis=isVisited(cafe.id);
-    const tags=cafe.vibe_tags.map(t=>`<span class="tag">${vibeLabel(t)}</span>`).join('');
-    const n=cafe.curator_notes;
-    const sharedLine = cafe.is_community && cafe.submitted_name
-      ? `<div class="modal-shared-by">🤝 Community Find · Shared by ${cafe.submitted_name}${cafe.submitted_by?' ('+cafe.submitted_by+')':''}</div>` : '';
-    document.getElementById('modal-body').innerHTML = `
-      <div class="modal-name-row">
-        <div class="modal-name">${cafe.name}</div>
-        <button class="modal-save-btn" id="modal-save-${cafe.id}" onclick="toggleSaved('${cafe.id}')">${sv?'❤️':'🤍'}</button>
-      </div>
-      <div class="modal-location">${cafe.neighborhood||cafe.city} · ${cafe.city}</div>
-      ${sharedLine}
-      <div class="modal-tags">${tags}</div>
-      <div class="modal-divider"></div>
-      <div class="notes-title">Curator Notes</div>
-      <div class="note-item"><div class="note-label">ORDER THIS</div><div class="note-value">${n.what_to_order}</div></div>
-      <div class="note-item"><div class="note-label">SKIP THIS</div><div class="note-value">${n.what_to_skip||'—'}</div></div>
-      <div class="note-item"><div class="note-label">BEST TIME TO GO</div><div class="note-value">${n.best_time}</div></div>
-      <div class="note-item"><div class="note-label">CONTENT TIPS</div><div class="note-value">${n.content_tips||'—'}</div></div>
-      <div class="modal-actions">
-        ${cafe.instagram_handle?`<a class="action-btn action-primary" href="https://instagram.com/${cafe.instagram_handle}" target="_blank">Instagram</a>`:'<div></div>'}
-        <button class="action-btn action-secondary${vis?' visited-active':''}" id="modal-visited-${cafe.id}" onclick="toggleVisited('${cafe.id}')">${vis?'✓ Visited':'Mark Visited'}</button>
-      </div>`;
-  }
-  function updateModalActions(id) {
-    if(currentCafeId!==id) return;
-    const s=document.getElementById(`modal-save-${id}`), v=document.getElementById(`modal-visited-${id}`);
-    if(s) s.textContent=isSaved(id)?'❤️':'🤍';
-    if(v){v.textContent=isVisited(id)?'✓ Visited':'Mark Visited';v.classList.toggle('visited-active',isVisited(id));}
-  }
-  function closeModal(e) {
-    if(e&&e.target!==document.getElementById('detail-modal'))return;
-    document.getElementById('detail-modal').classList.remove('open');
-    document.body.style.overflow=''; currentCafeId=null;
-  }
-
-  // ── TABS ──────────────────────────────────────────────────────
-  const TABS=['discover','guides','trending','author'];
-  function switchTab(tab) {
-    TABS.forEach(t=>{document.getElementById(`sec-${t}`).classList.toggle('active',t===tab);document.getElementById(`tab-${t}`).classList.toggle('active',t===tab);});
-    window.scrollTo({top:0,behavior:'instant'});
-  }
-  function renderAll() { renderDiscoverList(); renderTrending(); }
-
-  // ── INIT ──────────────────────────────────────────────────────
-  renderCityPills(); renderDiscoverList(); renderGuides(); renderTrending();
   </script>
 </body>
 </html>
