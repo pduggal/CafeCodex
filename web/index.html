@@ -1039,9 +1039,10 @@
       stack.innerHTML = `
         <div class="swipe-empty">
           <div class="swipe-empty-icon">☕</div>
-          <div class="swipe-empty-title">You've seen them all!</div>
-          <div class="swipe-empty-sub">Check your list or change your filters to discover more cafes.</div>
-          <button class="swipe-empty-btn" onclick="goBack()">Change filters</button>
+          <div class="swipe-empty-title">That's all for now</div>
+          <div class="swipe-empty-sub">No cafes match those filters yet — but the Codex is always growing.</div>
+          <button class="swipe-empty-btn" onclick="goBack()" style="margin-bottom:10px">Try different filters</button>
+          <button class="swipe-empty-btn" style="background:var(--card);border:1px solid var(--primary);color:var(--primary)" onclick="openNominate()">✦ Know a place? Nominate it</button>
         </div>`;
       return;
     }
@@ -1188,9 +1189,10 @@
         stack.innerHTML = `
           <div class="swipe-empty">
             <div class="swipe-empty-icon">✦</div>
-            <div class="swipe-empty-title">That's all of them!</div>
-            <div class="swipe-empty-sub">You've been through the full list. Check your saved cafes or change your filters.</div>
-            <button class="swipe-empty-btn" onclick="showListScreen()">See my list</button>
+            <div class="swipe-empty-title">That's all for today</div>
+            <div class="swipe-empty-sub" style="margin-bottom:20px">You've been through everything on the list. Check your saves — or if you've tried a place we're missing, tell us about it.</div>
+            <button class="swipe-empty-btn" onclick="showListScreen()" style="margin-bottom:10px">See my list</button>
+            <button class="swipe-empty-btn" style="background:var(--card);border:1px solid var(--primary);color:var(--primary)" onclick="openNominate()">✦ Share a recommendation</button>
           </div>`;
       }, 400);
     } else if (currentIndex + 2 < deck.length && stack.children.length < 3) {
