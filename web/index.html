@@ -255,6 +255,32 @@
     .stat-div { width: 1px; height: 26px; background: var(--border); }
 
     /* ══════════════════════════════════════════
+       CARD DETAIL SHEET
+    ══════════════════════════════════════════ */
+    .detail-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:flex-end; justify-content:center; }
+    .detail-overlay.open { display:flex; }
+    .detail-sheet { background:var(--bg); border-radius:22px 22px 0 0; width:100%; max-height:88dvh; overflow-y:auto; padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
+    .detail-photo { height:160px; background:var(--card); display:flex; align-items:center; justify-content:center; border-radius:22px 22px 0 0; position:relative; }
+    .detail-photo-emoji { font-size:56px; opacity:0.2; }
+    .detail-close { position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%; background:rgba(26,15,10,0.8); border:1px solid var(--border); color:var(--muted); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .detail-pick-badge { position:absolute; top:14px; left:14px; background:var(--primary); color:var(--bg); font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
+    .detail-body { padding:20px 20px 0; }
+    .detail-name { color:var(--white); font-size:22px; font-weight:800; margin-bottom:4px; line-height:1.2; }
+    .detail-loc { color:var(--muted); font-size:13px; margin-bottom:14px; }
+    .detail-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; }
+    .detail-tag { background:var(--tag-bg); border:1px solid var(--border); color:var(--muted); font-size:11px; padding:4px 10px; border-radius:20px; }
+    .detail-divider { height:1px; background:var(--border); margin:0 -20px 18px; }
+    .detail-notes-title { color:var(--primary); font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-bottom:14px; }
+    .detail-note { margin-bottom:14px; }
+    .detail-note-label { color:var(--muted); font-size:11px; font-weight:600; margin-bottom:3px; }
+    .detail-note-value { color:var(--cream); font-size:14px; line-height:1.5; }
+    .detail-actions { display:flex; gap:10px; margin-top:20px; padding:0 0 4px; }
+    .detail-action { flex:1; padding:13px; border-radius:12px; font-size:14px; font-weight:700; cursor:pointer; border:none; text-align:center; text-decoration:none; display:block; }
+    .detail-action-primary { background:var(--primary); color:var(--bg); }
+    .detail-action-right { background:rgba(107,158,107,0.15); border:1px solid var(--success); color:var(--success); }
+    .detail-action-left { background:rgba(201,151,58,0.08); border:1px solid var(--border); color:var(--muted); }
+
+    /* ══════════════════════════════════════════
        NOMINATE MODAL
     ══════════════════════════════════════════ */
     .nominate-overlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 400; overflow-y: auto; flex-direction: column; }
@@ -479,6 +505,32 @@
       <button class="nav-btn active" onclick="showAuthorScreen()"><span class="nav-icon">👤</span>Author</button>
       <button class="nav-recommend" onclick="openNominate()"><span class="nav-icon">✦</span>Recommend</button>
     </nav>
+  </div>
+
+  <!-- ══ CARD DETAIL SHEET ════════════════════════════ -->
+  <div class="detail-overlay" id="detail-overlay" onclick="closeCardDetail(event)">
+    <div class="detail-sheet" onclick="event.stopPropagation()">
+      <div class="detail-photo" id="detail-photo">
+        <span class="detail-photo-emoji" id="detail-photo-emoji">☕</span>
+        <button class="detail-close" onclick="closeCardDetail()">✕</button>
+        <div class="detail-pick-badge" id="detail-pick-badge" style="display:none">✦ Pallavi's Pick</div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-name" id="detail-name"></div>
+        <div class="detail-loc" id="detail-loc"></div>
+        <div class="detail-tags" id="detail-tags"></div>
+        <div class="detail-divider"></div>
+        <div class="detail-notes-title">Curator Notes</div>
+        <div class="detail-note"><div class="detail-note-label">ORDER THIS</div><div class="detail-note-value" id="dn-order"></div></div>
+        <div class="detail-note"><div class="detail-note-label">BEST TIME</div><div class="detail-note-value" id="dn-time"></div></div>
+        <div class="detail-note"><div class="detail-note-label">CONTENT TIPS</div><div class="detail-note-value" id="dn-tips"></div></div>
+        <div class="detail-actions">
+          <a class="detail-action detail-action-primary" id="dn-ig" href="#" target="_blank">Instagram</a>
+          <button class="detail-action detail-action-right" onclick="swipeFromDetail('right')">❤️ Want to go</button>
+          <button class="detail-action detail-action-left" onclick="swipeFromDetail('left')">✓ Been there</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ══ NOMINATE MODAL ════════════════════════════════ -->
@@ -964,7 +1016,7 @@
       if (selectedVibes.length === 0) return true;
       return selectedVibes.some(v => {
         if (v === 'trending')  return c.trending;
-        if (v === 'picks')     return c.curator_pick && c.curator_rating >= 5;
+        if (v === 'picks')     return c.curator_pick === true;
         if (v === 'aesthetic') return c.vibe_tags.includes('viral_aesthetic');
         if (v === 'hidden')    return c.vibe_tags.includes('hidden_gem');
         return false;
@@ -1064,9 +1116,17 @@
       else if (dx < -10) { leftOverlay.style.opacity  = ratio * 0.9; rightOverlay.style.opacity = 0; }
       else               { rightOverlay.style.opacity = 0; leftOverlay.style.opacity = 0; }
     }
-    function onEnd(x) {
+    function onEnd(x, y) {
       if (!dragging) return; dragging = false;
       const dx = x - startX;
+      const dy = y - startY;
+      // Tap detection: barely moved = open detail
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) {
+        card.style.transition = 'transform 0.2s';
+        card.style.transform = '';
+        openCardDetail(card.dataset.id);
+        return;
+      }
       if (dx > THRESHOLD) commitSwipe('right');
       else if (dx < -THRESHOLD) commitSwipe('left');
       else {
@@ -1079,7 +1139,7 @@
 
     card.addEventListener('pointerdown', e => { onStart(e.clientX, e.clientY); card.setPointerCapture(e.pointerId); });
     card.addEventListener('pointermove', e => onMove(e.clientX, e.clientY));
-    card.addEventListener('pointerup',   e => onEnd(e.clientX));
+    card.addEventListener('pointerup',   e => onEnd(e.clientX, e.clientY));
     card.addEventListener('pointercancel', () => { dragging = false; card.style.transform = ''; });
   }
 
@@ -1186,6 +1246,54 @@
     renderList();
   }
   function showAuthorScreen() { showScreen('screen-author'); }
+
+  // ── CARD DETAIL ───────────────────────────────────────
+  function openCardDetail(id) {
+    const cafe = CAFES.find(c => c.id === id);
+    if (!cafe) return;
+    const n = cafe.curator_notes;
+    document.getElementById('detail-photo-emoji').textContent = cafe.drink === 'matcha' ? '🍵' : '☕';
+    document.getElementById('detail-pick-badge').style.display = cafe.curator_pick ? 'block' : 'none';
+    document.getElementById('detail-name').textContent = cafe.name;
+    document.getElementById('detail-loc').textContent = `${cafe.neighborhood} · ${cafe.city}`;
+    document.getElementById('detail-tags').innerHTML = cafe.vibe_tags.map(t =>
+      `<span class="detail-tag">${VIBE_EMOJI[t] || ''} ${VIBE_LABEL[t] || t}</span>`).join('');
+    document.getElementById('dn-order').textContent = n.what_to_order || '—';
+    document.getElementById('dn-time').textContent  = n.best_time || '—';
+    document.getElementById('dn-tips').textContent  = n.content_tips || '—';
+    const igLink = document.getElementById('dn-ig');
+    if (cafe.instagram_handle) {
+      igLink.href = `https://instagram.com/${cafe.instagram_handle}`;
+      igLink.style.display = 'block';
+    } else {
+      igLink.style.display = 'none';
+    }
+    document.getElementById('detail-overlay').dataset.cafeId = id;
+    document.getElementById('detail-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeCardDetail(e) {
+    if (e && e.target !== document.getElementById('detail-overlay')) return;
+    document.getElementById('detail-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  function swipeFromDetail(dir) {
+    const id = document.getElementById('detail-overlay').dataset.cafeId;
+    document.getElementById('detail-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+    // Check if this is still the top card
+    const stack = document.getElementById('card-stack');
+    const top = stack.lastChild;
+    if (top && top.dataset.id === id) {
+      commitSwipe(dir);
+    } else {
+      // Just save it directly
+      const cafe = CAFES.find(c => c.id === id);
+      if (!cafe) return;
+      if (dir === 'right' && !wishlist.includes(id))  { wishlist.push(id);  localStorage.setItem('cc_wishlist', JSON.stringify(wishlist)); }
+      if (dir === 'left'  && !beenThere.includes(id)) { beenThere.push(id); localStorage.setItem('cc_been',    JSON.stringify(beenThere)); }
+    }
+  }
 
   // ── NOMINATE ──────────────────────────────────────────
   function openNominate() {
