@@ -7,7 +7,7 @@
   <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Café Codex</title>
-  <!-- v2.4 Apr 20 2026 Morocco added -->
+  <!-- v2.5 Apr 20 2026 Morocco mint tea message -->
   <meta name="description" content="Swipe your way to the world's best cups. By @honestcoffeestop." />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1461,7 +1461,16 @@
     renderProgressDots();
 
     if (deck.length === 0) {
-      stack.innerHTML = `
+      const isMorocco = selectedLocation && selectedLocation.country === 'Morocco';
+      const isMoroccoMatcha = isMorocco && selectedDrink === 'matcha';
+      stack.innerHTML = isMoroccoMatcha ? `
+        <div class="swipe-empty">
+          <div class="swipe-empty-icon">🍃</div>
+          <div class="swipe-empty-title">Morocco is a tea culture</div>
+          <div class="swipe-empty-sub" style="max-width:280px;line-height:1.7">Matcha isn't part of the tradition here — and honestly, that's not a gap. Morocco has one of the world's great tea rituals: fresh mint, gunpowder green tea, poured high from a silver pot into a small glass. It's a ceremony in its own right.<br><br>My honest advice: skip the matcha hunt, find a rooftop café or a Medina terrace, and order the mint tea. It's the real cup of this place.<br><br>I didn't find a dedicated matcha spot worth recommending here — I'd rather say nothing than send you somewhere average.</div>
+          <button class="swipe-empty-btn" onclick="selectedDrink='coffee';buildDeck();renderStack()" style="margin-bottom:10px">See coffee spots instead</button>
+          <button class="swipe-empty-btn" style="background:var(--card);border:1px solid var(--primary);color:var(--primary)" onclick="goBack()">Change location</button>
+        </div>` : `
         <div class="swipe-empty">
           <div class="swipe-empty-icon">☕</div>
           <div class="swipe-empty-title">That's all for now</div>
