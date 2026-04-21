@@ -7,7 +7,7 @@
   <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Café Codex</title>
-  <!-- v3.9 Apr 20 2026 Redmond complete: 3 coffee + 3 matcha cafes -->
+  <!-- v4.0 Apr 20 2026 Add Lunakin Cafe Las Vegas — Balinese oasis, Kyushu matcha -->
   <meta name="description" content="Swipe your way to the world's best cups. By @honestcoffeestop." />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -931,6 +931,7 @@
     {id:'196',name:"Nana's Green Tea",city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Stone-ground Uji matcha latte, matcha dessert',best_time:'Afternoons — the full menu is available all day',content_tips:'An authentic Japanese chain bringing Uji/Shizuoka stone-ground matcha to Las Vegas. The menu depth is impressive — matcha in every form. Reliable quality from a brand that takes the leaf seriously.'},instagram_handle:'nanasgreentea_lv',trending:true},
     {id:'197',name:'Urban Matcha',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'matcha',vibe_tags:['matcha_specialist','creative_drinks','viral_aesthetic'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial matcha latte, signature seasonal drink',best_time:'Weekday mornings',content_tips:'A dedicated matcha café with active multi-location presence — Urban Matcha is building the most consistent matcha brand in Las Vegas outside the Arts District specialists. The drinks are creative without losing the leaf.'},instagram_handle:'urbanmatchalv',trending:true},
     {id:'198',name:'True Matcha',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial-grade matcha, matcha latte',best_time:'Weekday mornings',content_tips:'True Matcha holds the ceremonial-grade positioning without performance — the name does the work. A quiet, serious option in a city that can lean loud. Go here when you want the leaf, not the theatre.'},instagram_handle:'truematchalv',trending:false},
+    {id:'383',name:'Lunakin Café',city:'Las Vegas',country:'United States',neighborhood:'West Las Vegas',drink:'coffee',vibe_tags:['viral_aesthetic','creative_drinks','matcha_specialist','collab_worthy'],curator_pick:true,curator_rating:5,must_try:{drink:'Kyushu Matcha Latte',note:'Organic ceremonial-grade matcha sourced directly from Kyushu Island, Japan — available in blueberry, strawberry, banana, or lavender. One of the only places in Vegas pulling from a named Japanese region. Order it lavender.'},curator_notes:{what_to_order:'Kyushu matcha latte, croissant muffin with Meyer lemon curd, espresso',best_time:'Weekend mornings — the pastry chef bakes fresh daily and sells out early',content_tips:'A Balinese oasis five minutes from the Strip — giant hand-carved wooden face, lush greenery, bright airy interiors that photograph like a resort. French pastry chef on site. 25K Instagram followers and deserves more. The rare Vegas café that passes both the coffee test and the content test without trying too hard. Strong collab energy.'},instagram_handle:'lunakincafe',trending:true},
 
     // ── Arizona — Matcha ──────────────────────────────────
     {id:'199',name:'Fair Trade Cafe',city:'Phoenix',country:'United States',neighborhood:'Phoenix',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial-grade matcha, their house espresso',best_time:'Weekday mornings',content_tips:'One of Phoenix\'s most consistent ceremonial-grade matcha sources — the fair trade sourcing ethos extends to the matcha leaf. Honest, unpretentious, reliable. The coffee program is equally serious.'},instagram_handle:'fairtradeaz',trending:false},
@@ -1610,6 +1611,7 @@
     'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?w=600&h=440&fit=crop&q=85&auto=format',
   ];
   function getCafePhoto(cafe) {
+    if (cafe.photo_url) return cafe.photo_url;
     const arr = (cafe.drink === 'matcha' || cafe.vibe_tags.includes('matcha_specialist'))
       ? MATCHA_PHOTOS : COFFEE_PHOTOS;
     return arr[cafe.id % arr.length];
