@@ -164,6 +164,14 @@
     .swipe-card.is-next { transform: scale(0.94) translateY(12px); pointer-events: none; transition: transform 0.3s ease; }
     .swipe-card.is-next-2 { transform: scale(0.88) translateY(24px); pointer-events: none; transition: transform 0.3s ease; }
 
+    /* Tap to expand hint */
+    .card-tap-hint { display: flex; align-items: center; justify-content: center; gap: 5px; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.3px; padding: 8px 0 4px; }
+    .card-tap-hint-icon { font-size: 13px; }
+
+    /* First-time swipe tooltip */
+    .swipe-tooltip { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(201,151,58,0.95); color: #1A0F0A; font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 20px; white-space: nowrap; z-index: 50; pointer-events: none; animation: tooltipFade 3.5s ease forwards; }
+    @keyframes tooltipFade { 0%{opacity:0;transform:translateX(-50%) translateY(6px)} 15%{opacity:1;transform:translateX(-50%) translateY(0)} 75%{opacity:1} 100%{opacity:0;transform:translateX(-50%) translateY(-4px)} }
+
     .card-photo { height: 220px; background: #2A1A12; position: relative; overflow: hidden; flex-shrink: 0; }
     .card-photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
     .card-photo-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 64px; opacity: 0.15; }
@@ -1652,6 +1660,17 @@
       (selectedLocation?.visited ? ` ${selectedLocation.city || selectedLocation.country}` : ' Everywhere') +
       (selectedVibes.length ? ' · ' + selectedVibes.map(v => ({trending:'Trending',picks:'Picks',aesthetic:'Aesthetic',hidden:'Hidden'}[v])).join(', ') : '');
     showScreen('screen-swipe');
+    // Show first-time tip only once
+    if (!localStorage.getItem('cc_tip_seen')) {
+      localStorage.setItem('cc_tip_seen', '1');
+      setTimeout(() => {
+        const tip = document.createElement('div');
+        tip.className = 'swipe-tooltip';
+        tip.textContent = '👆 Tap any card to see full details';
+        document.getElementById('screen-swipe').appendChild(tip);
+        setTimeout(() => tip.remove(), 4000);
+      }, 800);
+    }
   }
 
   // ── DECK BUILDING ─────────────────────────────────────
@@ -1796,6 +1815,7 @@
         <div class="card-location">${cafe.neighborhood} · ${cafe.city}</div>
         ${orderSection}
         <div class="card-tags">${tags}</div>
+        <div class="card-tap-hint"><span class="card-tap-hint-icon">↑</span> Tap card for full details</div>
       </div>`;
     return el;
   }
