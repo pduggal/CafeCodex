@@ -132,16 +132,20 @@
     .browse-city-bar::-webkit-scrollbar { display: none; }
     .browse-city-chip { background: var(--card); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
     .browse-city-chip.active { background: rgba(201,151,58,0.15); border-color: var(--primary); color: var(--primary); }
-    .browse-row { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; flex-shrink: 0; }
-    .browse-row:active { opacity: 0.8; }
-    .browse-thumb { width: 52px; height: 52px; border-radius: 10px; background: var(--bg); object-fit: cover; flex-shrink: 0; font-size: 24px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .browse-row { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; -webkit-tap-highlight-color: transparent; flex-shrink: 0; }
+    .browse-thumb { width: 52px; height: 52px; border-radius: 10px; background: var(--bg); object-fit: cover; flex-shrink: 0; font-size: 24px; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; }
     .browse-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
-    .browse-info { flex: 1; min-width: 0; }
+    .browse-info { flex: 1; min-width: 0; cursor: pointer; }
     .browse-name { color: var(--white); font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .browse-loc { color: var(--muted); font-size: 11px; margin-top: 2px; }
     .browse-rating { display: flex; align-items: center; gap: 3px; margin-top: 4px; }
     .browse-stars { color: var(--primary); font-size: 11px; }
     .browse-pick-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+    .browse-actions { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+    .browse-save-btn { background: none; border: 1.5px solid var(--border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.15s; }
+    .browse-save-btn.saved { border-color: var(--primary); background: rgba(201,151,58,0.12); }
+    .browse-been-btn { background: none; border: 1.5px solid var(--border); border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.15s; }
+    .browse-been-btn.been { border-color: #6B9E6B; background: rgba(107,158,107,0.12); }
     .browse-empty { color: var(--muted); text-align: center; font-size: 14px; padding: 40px 20px; }
 
     .swipe-area { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0 16px; }
@@ -1582,23 +1586,43 @@
     container.innerHTML = items.map(c => {
       const photo = getCafePhoto(c);
       const fallbackEmoji = c.drink === 'matcha' ? '🍵' : '☕';
-      const thumb = photo
-        ? `<div class="browse-thumb"><img src="${photo}" alt="${c.name}" loading="lazy" onerror="this.innerHTML='${fallbackEmoji}'"></div>`
-        : `<div class="browse-thumb">${fallbackEmoji}</div>`;
+      const thumbInner = photo
+        ? `<img src="${photo}" alt="${c.name}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" onerror="this.parentElement.innerHTML='${fallbackEmoji}'">`
+        : fallbackEmoji;
       const stars = c.curator_rating ? '★'.repeat(c.curator_rating) + '☆'.repeat(5 - c.curator_rating) : '';
       const pickDot = c.curator_pick ? '<div class="browse-pick-dot" title="Pallavi\'s Pick"></div>' : '';
-      return `<div class="browse-row" onclick="openCard(${JSON.stringify(c).split('"').join('&quot;')})">
-        ${thumb}
-        <div class="browse-info">
+      const isWish = wishlist.includes(c.id);
+      const isBeen = beenThere.includes(c.id);
+      const cardArg = JSON.stringify(c).split('"').join('&quot;');
+      return `<div class="browse-row">
+        <div class="browse-thumb" onclick="openCard(${cardArg})">${thumbInner}</div>
+        <div class="browse-info" onclick="openCard(${cardArg})">
           <div class="browse-name">${c.name}</div>
           <div class="browse-loc">${c.neighborhood ? c.neighborhood + ' · ' : ''}${c.city}</div>
           ${stars ? `<div class="browse-rating"><span class="browse-stars">${stars}</span>${pickDot}</div>` : ''}
         </div>
-        <div style="color:var(--muted);font-size:18px;flex-shrink:0;">›</div>
+        <div class="browse-actions">
+          <button class="browse-save-btn${isWish ? ' saved' : ''}" onclick="toggleBrowseWishlist('${c.id}')" title="${isWish ? 'Remove from Want to Go' : 'Want to Go'}">${isWish ? '❤️' : '🤍'}</button>
+          <button class="browse-been-btn${isBeen ? ' been' : ''}" onclick="toggleBrowseBeen('${c.id}')" title="${isBeen ? 'Mark as Been There' : 'Mark as Been There'}">✓</button>
+        </div>
       </div>`;
     }).join('');
   }
 
+  function toggleBrowseWishlist(id) {
+    const idx = wishlist.indexOf(id);
+    if (idx >= 0) wishlist.splice(idx, 1); else { wishlist.push(id); beenThere = beenThere.filter(x => x !== id); }
+    localStorage.setItem('cc_wishlist', JSON.stringify(wishlist));
+    localStorage.setItem('cc_been', JSON.stringify(beenThere));
+    renderBrowseList();
+  }
+  function toggleBrowseBeen(id) {
+    const idx = beenThere.indexOf(id);
+    if (idx >= 0) beenThere.splice(idx, 1); else { beenThere.push(id); wishlist = wishlist.filter(x => x !== id); }
+    localStorage.setItem('cc_been', JSON.stringify(beenThere));
+    localStorage.setItem('cc_wishlist', JSON.stringify(wishlist));
+    renderBrowseList();
+  }
   function filterBrowseCity(city) {
     browseListCity = city === 'All' ? 'all' : city;
     renderBrowseList();
