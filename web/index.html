@@ -120,6 +120,30 @@
     }
     .swipe-filter-pill span { color: var(--cream); }
 
+    /* View toggle */
+    .view-toggle { display: flex; gap: 0; border-radius: 20px; overflow: hidden; border: 1px solid var(--border); flex-shrink: 0; }
+    .vt-btn { background: var(--card); border: none; color: var(--muted); padding: 7px 12px; font-size: 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.15s; }
+    .vt-btn.active { background: var(--primary); color: var(--bg); }
+
+    /* Browse list (inside screen-swipe) */
+    .browse-list-wrap { flex: 1; overflow-y: auto; padding: 8px 16px 24px; display: none; flex-direction: column; }
+    .browse-list-wrap.visible { display: flex; }
+    .browse-city-bar { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; flex-shrink: 0; }
+    .browse-city-bar::-webkit-scrollbar { display: none; }
+    .browse-city-chip { background: var(--card); border: 1px solid var(--border); color: var(--muted); border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+    .browse-city-chip.active { background: rgba(201,151,58,0.15); border-color: var(--primary); color: var(--primary); }
+    .browse-row { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; -webkit-tap-highlight-color: transparent; flex-shrink: 0; }
+    .browse-row:active { opacity: 0.8; }
+    .browse-thumb { width: 52px; height: 52px; border-radius: 10px; background: var(--bg); object-fit: cover; flex-shrink: 0; font-size: 24px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .browse-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+    .browse-info { flex: 1; min-width: 0; }
+    .browse-name { color: var(--white); font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .browse-loc { color: var(--muted); font-size: 11px; margin-top: 2px; }
+    .browse-rating { display: flex; align-items: center; gap: 3px; margin-top: 4px; }
+    .browse-stars { color: var(--primary); font-size: 11px; }
+    .browse-pick-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); flex-shrink: 0; }
+    .browse-empty { color: var(--muted); text-align: center; font-size: 14px; padding: 40px 20px; }
+
     .swipe-area { flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 0 16px; }
 
     /* Stack */
@@ -440,14 +464,25 @@
   <div class="screen" id="screen-swipe">
     <div class="swipe-header">
       <div class="swipe-logo">Café Codex</div>
-      <div class="swipe-filter-pill" onclick="goBack()">
-        <span id="active-filter-label">☕ All</span> · change
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="swipe-filter-pill" onclick="goBack()">
+          <span id="active-filter-label">☕ All</span> · change
+        </div>
+        <div class="view-toggle">
+          <button class="vt-btn active" id="vt-cards" onclick="setViewMode('cards')" title="Card view">🃏</button>
+          <button class="vt-btn" id="vt-list" onclick="setViewMode('list')" title="List view">≡</button>
+        </div>
       </div>
     </div>
 
     <div class="progress-dots" id="progress-dots"></div>
 
-    <div class="swipe-area">
+    <div class="browse-list-wrap" id="browse-list-wrap">
+      <div class="browse-city-bar" id="browse-city-bar"></div>
+      <div id="browse-list-items"></div>
+    </div>
+
+    <div class="swipe-area" id="swipe-area-wrap">
       <div class="card-stack" id="card-stack"></div>
     </div>
 
@@ -1501,9 +1536,90 @@
     document.querySelectorAll('.ob-vibe').forEach(v => v.classList.remove('selected'));
     showScreen('screen-drink');
   }
-  function startSwiping() {
+  // ── VIEW MODE (cards / list) ──────────────────────────
+  let currentViewMode = 'cards';
+  let browseListCity = 'all';
+  let currentDeck = [];
+
+  function setViewMode(mode) {
+    currentViewMode = mode;
+    document.getElementById('vt-cards').classList.toggle('active', mode === 'cards');
+    document.getElementById('vt-list').classList.toggle('active', mode === 'list');
+    const swipeArea = document.getElementById('swipe-area-wrap');
+    const browseWrap = document.getElementById('browse-list-wrap');
+    const swipeActions = document.querySelector('.swipe-actions');
+    const progressDots = document.getElementById('progress-dots');
+    if (mode === 'list') {
+      swipeArea.style.display = 'none';
+      swipeActions.style.display = 'none';
+      progressDots.style.display = 'none';
+      browseWrap.classList.add('visible');
+      renderBrowseList();
+    } else {
+      swipeArea.style.display = '';
+      swipeActions.style.display = '';
+      progressDots.style.display = '';
+      browseWrap.classList.remove('visible');
+    }
+  }
+
+  function renderBrowseList() {
+    // Build city list from current deck
+    const cities = ['All', ...new Set(currentDeck.map(c => c.city))];
+    const cityBar = document.getElementById('browse-city-bar');
+    cityBar.innerHTML = cities.map(city =>
+      `<div class="browse-city-chip${(city === 'All' ? browseListCity === 'all' : browseListCity === city) ? ' active' : ''}" onclick="filterBrowseCity('${city}')">${city}</div>`
+    ).join('');
+
+    // Filter by city
+    let items = browseListCity === 'all' ? currentDeck : currentDeck.filter(c => c.city === browseListCity);
+
+    const container = document.getElementById('browse-list-items');
+    if (items.length === 0) {
+      container.innerHTML = '<div class="browse-empty">No cafes found for this filter.</div>';
+      return;
+    }
+    container.innerHTML = items.map(c => {
+      const photo = getCafePhoto(c);
+      const fallbackEmoji = c.drink === 'matcha' ? '🍵' : '☕';
+      const thumb = photo
+        ? `<div class="browse-thumb"><img src="${photo}" alt="${c.name}" loading="lazy" onerror="this.innerHTML='${fallbackEmoji}'"></div>`
+        : `<div class="browse-thumb">${fallbackEmoji}</div>`;
+      const stars = c.curator_rating ? '★'.repeat(c.curator_rating) + '☆'.repeat(5 - c.curator_rating) : '';
+      const pickDot = c.curator_pick ? '<div class="browse-pick-dot" title="Pallavi's Pick"></div>' : '';
+      return `<div class="browse-row" onclick="openCard(${JSON.stringify(c).split('"').join('&quot;')})">
+        ${thumb}
+        <div class="browse-info">
+          <div class="browse-name">${c.name}</div>
+          <div class="browse-loc">${c.neighborhood ? c.neighborhood + ' · ' : ''}${c.city}</div>
+          ${stars ? `<div class="browse-rating"><span class="browse-stars">${stars}</span>${pickDot}</div>` : ''}
+        </div>
+        <div style="color:var(--muted);font-size:18px;flex-shrink:0;">›</div>
+      </div>`;
+    }).join('');
+  }
+
+  function filterBrowseCity(city) {
+    browseListCity = city === 'All' ? 'all' : city;
+    renderBrowseList();
+  }
+
+  function openCard(c) {
+    openCardDetail(c.id);
+  }
+
+    function startSwiping() {
     selectedVibes = [...document.querySelectorAll('.ob-vibe.selected')].map(v => v.dataset.vibe);
     buildDeck();
+    currentDeck = [...deck];
+    browseListCity = 'all';
+    currentViewMode = 'cards';
+    document.getElementById('vt-cards').classList.add('active');
+    document.getElementById('vt-list').classList.remove('active');
+    document.getElementById('browse-list-wrap').classList.remove('visible');
+    document.getElementById('swipe-area-wrap').style.display = '';
+    document.querySelector('.swipe-actions').style.display = '';
+    document.getElementById('progress-dots').style.display = '';
     renderStack();
     const locPart = selectedLocation?.visited
       ? ` · ${selectedLocation.city || selectedLocation.country}` : '';
