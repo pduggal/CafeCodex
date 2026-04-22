@@ -1586,7 +1586,7 @@
         ? `<div class="browse-thumb"><img src="${photo}" alt="${c.name}" loading="lazy" onerror="this.innerHTML='${fallbackEmoji}'"></div>`
         : `<div class="browse-thumb">${fallbackEmoji}</div>`;
       const stars = c.curator_rating ? '★'.repeat(c.curator_rating) + '☆'.repeat(5 - c.curator_rating) : '';
-      const pickDot = c.curator_pick ? '<div class="browse-pick-dot" title="Pallavi's Pick"></div>' : '';
+      const pickDot = c.curator_pick ? '<div class="browse-pick-dot" title="Pallavi\'s Pick"></div>' : '';
       return `<div class="browse-row" onclick="openCard(${JSON.stringify(c).split('"').join('&quot;')})">
         ${thumb}
         <div class="browse-info">
