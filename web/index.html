@@ -314,6 +314,15 @@
     .signature { margin-top: 20px; margin-bottom: 32px; }
     .sig-dash { color: var(--muted); font-size: 15px; margin-bottom: 3px; }
     .sig-name { color: var(--primary); font-size: 24px; font-weight: 800; font-style: italic; }
+    /* Press section */
+    .press-section { padding: 20px 20px 4px; }
+    .press-eyebrow { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
+    .press-card { background: linear-gradient(135deg, rgba(201,151,58,0.12), rgba(201,151,58,0.05)); border: 1px solid rgba(201,151,58,0.3); border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+    .press-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--primary); color: #1A0F0A; font-size: 11px; font-weight: 800; letter-spacing: 0.3px; padding: 4px 10px; border-radius: 20px; align-self: flex-start; }
+    .press-quote { color: var(--cream); font-size: 15px; font-weight: 700; line-height: 1.45; }
+    .press-source { color: var(--muted); font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .press-source-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); }
+
     .stats-row { display: flex; align-items: center; margin: 0 20px 32px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 0; }
     .stat-item { flex: 1; text-align: center; }
     .stat-num { color: var(--primary); font-size: 17px; font-weight: 800; margin-bottom: 3px; }
@@ -582,6 +591,16 @@
         <div class="stat-item"><div class="stat-num">∞</div><div class="stat-lbl">Matchas tried</div></div>
       </div>
     </div>
+
+    <div class="press-section">
+      <div class="press-eyebrow">In the Press</div>
+      <div class="press-card">
+        <div class="press-badge">🏆 #5 Best Coffee City in the US</div>
+        <div class="press-quote">"Seattle ranks at number five on the list of the country's best coffee cities."</div>
+        <div class="press-source"><div class="press-source-dot"></div>@secretseattle_ · Secret Seattle</div>
+      </div>
+    </div>
+
     <nav class="bottom-nav">
       <button class="nav-btn" onclick="showSwipeScreen()"><span class="nav-icon">🃏</span>Discover</button>
       <button class="nav-btn" onclick="showListScreen()"><span class="nav-icon">📋</span>My List</button>
@@ -1496,10 +1515,11 @@
         : `✈️ On my list`;
       const statusClass = item.visited ? 'visited' : 'wishlist';
       const label = item.type === 'city' ? `${item.city}, ${item.country}` : item.country;
+      const pressTag = item.city === 'Seattle' ? `<span style="font-size:10px;font-weight:700;background:rgba(201,151,58,0.2);color:#C9973A;border-radius:8px;padding:2px 7px;margin-left:6px;">🏆 #5 Coffee City</span>` : '';
       return `<div class="ob-loc-item" onmousedown="selectLocation(${JSON.stringify(item).split('"').join('&quot;')})" ontouchstart="selectLocation(${JSON.stringify(item).split('"').join('&quot;')})">
         <span class="ob-loc-flag">${item.flag}</span>
         <div class="ob-loc-info">
-          <div class="ob-loc-name">${label}</div>
+          <div class="ob-loc-name">${label}${pressTag}</div>
           <div class="ob-loc-status ${statusClass}">${statusText}</div>
         </div>
       </div>`;
