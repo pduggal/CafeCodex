@@ -176,6 +176,7 @@
     .card-photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
     .card-photo-fallback { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 64px; opacity: 0.15; }
     .card-photo-gradient { position: absolute; bottom: 0; left: 0; right: 0; height: 80px; background: linear-gradient(to top, var(--card), transparent); pointer-events: none; }
+    .card-press-badge { position: absolute; top: 14px; right: 14px; background: rgba(201,151,58,0.92); color: #1A0F0A; font-size: 10px; font-weight: 800; padding: 4px 9px; border-radius: 20px; backdrop-filter: blur(4px); letter-spacing: 0.2px; }
     .card-pick-badge { position: absolute; top: 14px; left: 14px; background: var(--primary); color: var(--bg); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
     .card-trending-badge { position: absolute; top: 14px; left: 14px; background: rgba(26,15,10,0.85); border: 1px solid var(--primary); color: var(--primary); font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
 
@@ -727,7 +728,7 @@
     {id:'353',name:'Analog Coffee',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/tQ4Kq-hJcHyPGttWg7tB1Q/1000s.jpg',city:'Seattle',country:'United States',neighborhood:'Capitol Hill',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, espresso',best_time:'Weekday mornings before the Hill wakes up',content_tips:'Capitol Hill\'s most photogenic specialty bar — the roastery aesthetic is genuinely strong and the coffee backs it up completely. Film the pour; the bar is built for it.'},instagram_handle:'analogcoffeeco',trending:true},
     {id:'354',name:'Espresso Vivace',city:'Seattle',country:'United States',neighborhood:'Capitol Hill',drink:'coffee',vibe_tags:['specialty_coffee','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,photo_url:'https://espressovivace.com/wp-content/themes/vivace/images/pour-small.jpg',curator_notes:{what_to_order:'Rosetta latte, espresso al banco',best_time:'Early weekday mornings — the legacy crowd',content_tips:'The café that taught Seattle what espresso could be. David Schomer\'s Rosetta latte is the shot that trained an entire generation of Pacific Northwest baristas. A pilgrimage stop, not just a café.'},instagram_handle:'espressovivace',trending:false},
     {id:'355',name:'Ghost Note Coffee',city:'Seattle',country:'United States',neighborhood:'Capitol Hill',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,photo_url:'https://ghostnotecoffee.com/img/latte-art-1.jpg',curator_notes:{what_to_order:'Filter coffee, espresso',best_time:'Weekday mornings',content_tips:'One of Capitol Hill\'s strongest specialty programs — serious beans, clean aesthetic, and a space that photographs without trying. The name fits the energy: present but understated.'},instagram_handle:'ghostnotecoffee',trending:true},
-    {id:'356',name:'Victrola Coffee Roasters',city:'Seattle',country:'United States',neighborhood:'Capitol Hill',drink:'coffee',vibe_tags:['specialty_coffee','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,photo_url:'https://www.victrolacoffee.com/cdn/shop/files/1_747aa364-21e1-4bfb-ac91-c47d41afbe4f_1440x640.jpg?v=1768946275',curator_notes:{what_to_order:'Drip of the day, single-origin espresso',best_time:'Weekday mornings',content_tips:'A Capitol Hill institution — roasted in-house since 2000, and still one of Seattle\'s most honest specialty programs. The kind of café that made this neighborhood what it is for coffee.'},instagram_handle:'victrolacoffee',trending:false},
+    {id:'356',name:'Victrola Coffee Roasters',press_mention:'🏆 #5 Coffee City in the US',city:'Seattle',country:'United States',neighborhood:'Capitol Hill',drink:'coffee',vibe_tags:['specialty_coffee','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,photo_url:'https://www.victrolacoffee.com/cdn/shop/files/1_747aa364-21e1-4bfb-ac91-c47d41afbe4f_1440x640.jpg?v=1768946275',curator_notes:{what_to_order:'Drip of the day, single-origin espresso',best_time:'Weekday mornings',content_tips:'A Capitol Hill institution — roasted in-house since 2000, and still one of Seattle\'s most honest specialty programs. The kind of café that made this neighborhood what it is for coffee.'},instagram_handle:'victrolacoffee',trending:false},
     {id:'357',name:'Overcast Coffee',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/e5NTZ_O8PDLmkVle9291lQ/1000s.jpg',city:'Seattle',country:'United States',neighborhood:'Capitol Hill',drink:'coffee',vibe_tags:['specialty_coffee','cozy_quiet','hidden_gem'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Espresso, drip coffee',best_time:'Weekday mornings',content_tips:'Small, low-key, and genuinely good — the kind of neighbourhood spot that Capitol Hill does better than anywhere. No performance, just coffee.'},instagram_handle:'overcastcoffeeco',trending:false},
 
     // ── Seattle — Downtown / Pioneer Square ───────────────
@@ -1807,6 +1808,8 @@
       : cafe.curator_pick
         ? `<div class="card-pick-badge">✦ Pallavi's Pick</div>`
         : cafe.trending ? `<div class="card-trending-badge">🔥 Trending</div>` : '';
+    const pressBadge = cafe.press_mention
+      ? `<div class="card-press-badge">${cafe.press_mention}</div>` : '';
     const closedBadge = cafe.is_active === false
       ? `<div class="closed-badge">⚠ Permanently Closed</div>` : '';
     const emoji = cafe.drink === 'matcha' ? '🍵' : '☕';
@@ -1826,7 +1829,7 @@
         <img class="card-photo-img" src="${photoUrl}" alt="${cafe.name}" loading="lazy" draggable="false" onerror="this.style.display='none'">
         <div class="card-photo-fallback">${emoji}</div>
         <div class="card-photo-gradient"></div>
-        ${badge}${closedBadge}
+        ${badge}${closedBadge}${pressBadge}
         <div class="swipe-overlay right"><div class="overlay-label">WANT IT</div></div>
         <div class="swipe-overlay left"><div class="overlay-label">BEEN THERE</div></div>
       </div>
