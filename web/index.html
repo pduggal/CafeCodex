@@ -2024,9 +2024,9 @@
     }
     const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.name + ' ' + c.city)}`;
     return `<div class="list-card">
-      <div class="list-card-icon">${c.drink === 'matcha' ? '🍵' : '☕'}</div>
+      <div class="list-card-icon" onclick="openCardDetail('${c.id}')" style="cursor:pointer">${c.drink === 'matcha' ? '🍵' : '☕'}</div>
       <div class="list-card-info">
-        <div class="list-card-name">${c.name}</div>
+        <div class="list-card-name" onclick="openCardDetail('${c.id}')" style="cursor:pointer">${c.name} <span style="color:var(--muted);font-size:11px;font-weight:400">↗ details</span></div>
         <div class="list-card-loc">${c.neighborhood} · ${c.city}</div>
         <div class="list-card-actions">
           ${favBtn}${moveBtn}
