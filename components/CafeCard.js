@@ -4,16 +4,18 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
-import { VIBE_TAGS } from '../data/cafes';
+import { VIBE_TAGS, getCafePhoto } from '../data/cafes';
 import { useCafes } from '../context/CafeContext';
 
 export default function CafeCard({ cafe, onPress }) {
   const { isSaved, toggleSaved, isVisited } = useCafes();
   const saved = isSaved(cafe.id);
   const visited = isVisited(cafe.id);
+  const photo = getCafePhoto(cafe);
 
   const vibeLabel = (tagId) => {
     const found = VIBE_TAGS.find((t) => t.id === tagId);
@@ -22,13 +24,9 @@ export default function CafeCard({ cafe, onPress }) {
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
-      {/* Photo area — compact */}
       <View style={styles.photoArea}>
-        <View style={styles.photoPlaceholder}>
-          <Text style={styles.photoEmoji}>☕</Text>
-        </View>
+        <Image source={{ uri: photo }} style={styles.photoImg} />
 
-        {/* Badges */}
         <View style={styles.badgeRow}>
           {cafe.curator_pick && (
             <View style={styles.curatorBadge}>
@@ -42,7 +40,18 @@ export default function CafeCard({ cafe, onPress }) {
           )}
         </View>
 
-        {/* Save button */}
+        {cafe.is_active === false && (
+          <View style={styles.closedBadge}>
+            <Text style={styles.closedBadgeText}>⚠ Closed</Text>
+          </View>
+        )}
+
+        {cafe.press_mention && (
+          <View style={styles.pressBadge}>
+            <Text style={styles.pressBadgeText}>{cafe.press_mention}</Text>
+          </View>
+        )}
+
         <TouchableOpacity
           style={styles.saveBtn}
           onPress={() => toggleSaved(cafe.id)}
@@ -56,7 +65,6 @@ export default function CafeCard({ cafe, onPress }) {
         </TouchableOpacity>
       </View>
 
-      {/* Info — tighter padding */}
       <View style={styles.info}>
         <View style={styles.nameRow}>
           <Text style={styles.name} numberOfLines={1}>{cafe.name}</Text>
@@ -69,7 +77,7 @@ export default function CafeCard({ cafe, onPress }) {
 
         <View style={styles.metaRow}>
           <Text style={styles.location}>
-            {cafe.neighborhood} · {cafe.city}
+            {cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}
           </Text>
           {visited && (
             <View style={styles.visitedBadge}>
@@ -78,9 +86,16 @@ export default function CafeCard({ cafe, onPress }) {
           )}
         </View>
 
-        {/* Vibe tags — max 3, inline */}
+        {cafe.must_try && (
+          <View style={styles.mustTryRow}>
+            <Text style={styles.mustTryText} numberOfLines={1}>
+              ✦ Must try: {cafe.must_try.drink}
+            </Text>
+          </View>
+        )}
+
         <View style={styles.tagRow}>
-          {cafe.vibe_tags.slice(0, 3).map((tag) => (
+          {(cafe.vibe_tags || []).slice(0, 3).map((tag) => (
             <View key={tag} style={styles.tag}>
               <Text style={styles.tagText}>{vibeLabel(tag)}</Text>
             </View>
@@ -104,15 +119,10 @@ const styles = StyleSheet.create({
     height: 140,
     position: 'relative',
   },
-  photoPlaceholder: {
-    flex: 1,
-    backgroundColor: '#2A1A12',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photoEmoji: {
-    fontSize: 40,
-    opacity: 0.35,
+  photoImg: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
   },
   badgeRow: {
     position: 'absolute',
@@ -145,6 +155,38 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 10,
     fontWeight: '600',
+  },
+  closedBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 10,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    borderWidth: 1,
+    borderColor: '#ff6b6b',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  closedBadgeText: {
+    color: '#ff6b6b',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  pressBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 44,
+    backgroundColor: 'rgba(201,151,58,0.92)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+  },
+  pressBadgeText: {
+    color: Colors.background,
+    fontSize: 10,
+    fontWeight: '800',
   },
   saveBtn: {
     position: 'absolute',
@@ -207,12 +249,26 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
   },
+  mustTryRow: {
+    backgroundColor: 'rgba(201,151,58,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(201,151,58,0.3)',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginBottom: 8,
+  },
+  mustTryText: {
+    color: Colors.primary,
+    fontSize: 11,
+    fontWeight: '600',
+  },
   tagRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   tag: {
-    backgroundColor: Colors.tagBackground,
+    backgroundColor: Colors.cardBackground,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
     paddingHorizontal: 8,

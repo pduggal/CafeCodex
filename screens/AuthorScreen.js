@@ -131,8 +131,8 @@ export default function AuthorScreen() {
         {/* ── Stats ── */}
         <View style={styles.statsRow}>
           {[
-            { value: '7+',  label: 'Countries' },
-            { value: '50+', label: 'Cafes visited' },
+            { value: '6',    label: 'Countries' },
+            { value: '362',  label: 'Cafes in Codex' },
             { value: '∞',   label: 'Coffees tried' },
             { value: '∞',   label: 'Matchas tried' },
           ].map(({ value, label }, i, arr) => (
@@ -144,6 +144,21 @@ export default function AuthorScreen() {
               {i < arr.length - 1 && <View style={styles.statDivider} />}
             </React.Fragment>
           ))}
+        </View>
+
+        {/* ── In the Press ── */}
+        <View style={styles.pressSection}>
+          <Text style={styles.pressTitle}>In the Press</Text>
+          <View style={styles.pressCard}>
+            <View style={styles.pressBadge}>
+              <Text style={styles.pressBadgeText}>Featured</Text>
+            </View>
+            <Text style={styles.pressQuote}>
+              "One of the most thoughtfully curated cafe guides we've seen —
+              part travel journal, part love letter to coffee culture."
+            </Text>
+            <Text style={styles.pressSource}>— Honest Coffee Stop</Text>
+          </View>
         </View>
 
         <View style={{ height: 40 }} />
@@ -361,5 +376,54 @@ const styles = StyleSheet.create({
     width: 1,
     height: 28,
     backgroundColor: Colors.cardBorder,
+  },
+
+  pressSection: {
+    marginHorizontal: 26,
+    marginTop: 28,
+  },
+  pressTitle: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+  pressCard: {
+    backgroundColor: Colors.cardBackground,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: Colors.cardBorder,
+    padding: 18,
+  },
+  pressBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(201,151,58,0.15)',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    marginBottom: 12,
+  },
+  pressBadgeText: {
+    color: Colors.primary,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  pressQuote: {
+    color: Colors.cream,
+    fontSize: 15,
+    fontStyle: 'italic',
+    lineHeight: 24,
+    marginBottom: 10,
+  },
+  pressSource: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
