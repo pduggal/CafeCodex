@@ -317,16 +317,22 @@
     .sig-dash { color: var(--muted); font-size: 15px; margin-bottom: 3px; }
     .sig-name { color: var(--primary); font-size: 24px; font-weight: 800; font-style: italic; }
     .world-best { margin: 0 20px 28px; }
-    .world-best-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-    .world-best-title { color: var(--primary); font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
-    .world-best-year { color: var(--muted); font-size: 11px; font-weight: 600; }
+    .world-best-header { margin-bottom: 16px; }
+    .world-best-title { color: var(--primary); font-size: 13px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 4px; }
+    .world-best-subtitle { color: var(--muted); font-size: 11px; font-style: italic; }
     .world-best-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
-    .world-best-row { display: flex; align-items: center; padding: 11px 16px; gap: 12px; border-bottom: 1px solid var(--border); }
+    .world-best-row { display: flex; align-items: flex-start; padding: 14px 16px; gap: 12px; border-bottom: 1px solid var(--border); }
     .world-best-row:last-child { border-bottom: none; }
-    .world-best-rank { color: var(--primary); font-size: 13px; font-weight: 800; width: 22px; text-align: center; flex-shrink: 0; }
-    .world-best-name { color: var(--cream); font-size: 13px; font-weight: 700; flex: 1; }
-    .world-best-loc { color: var(--muted); font-size: 11px; flex-shrink: 0; }
-    .world-best-source { text-align: center; padding: 12px 16px; }
+    .world-best-row.top3 { background: linear-gradient(135deg, rgba(201,151,58,0.08), transparent); padding: 16px; }
+    .world-best-rank { color: var(--primary); font-size: 14px; font-weight: 800; width: 24px; text-align: center; flex-shrink: 0; padding-top: 2px; }
+    .world-best-row.top3 .world-best-rank { font-size: 18px; }
+    .world-best-info { flex: 1; min-width: 0; }
+    .world-best-name { color: var(--cream); font-size: 14px; font-weight: 700; margin-bottom: 3px; }
+    .world-best-row.top3 .world-best-name { font-size: 15px; }
+    .world-best-loc { color: var(--muted); font-size: 11px; display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+    .world-best-flag { font-size: 13px; }
+    .world-best-known { color: var(--cream); font-size: 11px; opacity: 0.7; font-style: italic; line-height: 1.4; }
+    .world-best-source { text-align: center; padding: 12px 16px; border-top: 1px solid var(--border); }
     .world-best-source a { color: var(--muted); font-size: 10px; text-decoration: none; letter-spacing: 0.3px; }
     .stats-row { display: flex; align-items: center; margin: 0 20px 32px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 0; }
     .stat-item { flex: 1; text-align: center; }
@@ -600,21 +606,91 @@
 
     <div class="world-best">
       <div class="world-best-header">
-        <div class="world-best-title">✦ World's Best Coffee Shops</div>
-        <div class="world-best-year">2026</div>
+        <div class="world-best-title">✦ World's Best Coffee Shops 2026</div>
+        <div class="world-best-subtitle">The top 10 from over 100 shops worldwide</div>
       </div>
       <div class="world-best-card">
-        <div class="world-best-row"><span class="world-best-rank">1</span><span class="world-best-name">Onyx Coffee Lab</span><span class="world-best-loc">Arkansas, USA</span></div>
-        <div class="world-best-row"><span class="world-best-rank">2</span><span class="world-best-name">Tim Wendelboe</span><span class="world-best-loc">Oslo, Norway</span></div>
-        <div class="world-best-row"><span class="world-best-rank">3</span><span class="world-best-name">Alquimia Coffee</span><span class="world-best-loc">Santa Ana, El Salvador</span></div>
-        <div class="world-best-row"><span class="world-best-rank">4</span><span class="world-best-name">Only Coffee Project</span><span class="world-best-loc">Sydney, Australia</span></div>
-        <div class="world-best-row"><span class="world-best-rank">5</span><span class="world-best-name">Toby's Estate Roasters</span><span class="world-best-loc">Sydney, Australia</span></div>
-        <div class="world-best-row"><span class="world-best-rank">6</span><span class="world-best-name">Apartment Coffee</span><span class="world-best-loc">Singapore</span></div>
-        <div class="world-best-row"><span class="world-best-rank">7</span><span class="world-best-name">Gota Coffee Experts</span><span class="world-best-loc">Vienna, Austria</span></div>
-        <div class="world-best-row"><span class="world-best-rank">8</span><span class="world-best-name">Story of Ono</span><span class="world-best-loc">Kuala Lumpur, Malaysia</span></div>
-        <div class="world-best-row"><span class="world-best-rank">9</span><span class="world-best-name">Tropicalia Coffee</span><span class="world-best-loc">Bogotá, Colombia</span></div>
-        <div class="world-best-row"><span class="world-best-rank">10</span><span class="world-best-name">Tanat</span><span class="world-best-loc">Paris, France</span></div>
-        <div class="world-best-source"><a href="https://theworlds100bestcoffeeshops.com/top-100-coffee-shops/" target="_blank">Source: The World's 100 Best Coffee Shops →</a></div>
+        <div class="world-best-row top3">
+          <span class="world-best-rank">1</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Onyx Coffee Lab</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇺🇸</span> Rogers, Arkansas, USA</div>
+            <div class="world-best-known">Multi-award-winning roaster known for sourcing the world's rarest lots</div>
+          </div>
+        </div>
+        <div class="world-best-row top3">
+          <span class="world-best-rank">2</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Tim Wendelboe</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇳🇴</span> Grünerløkka, Oslo, Norway</div>
+            <div class="world-best-known">Legendary Nordic micro-roastery — single-origin light roasts, no milk menu</div>
+          </div>
+        </div>
+        <div class="world-best-row top3">
+          <span class="world-best-rank">3</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Alquimia Coffee</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇸🇻</span> Santa Ana, El Salvador</div>
+            <div class="world-best-known">Farm-to-cup at origin — brews from their own volcanic-soil estate</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">4</span>
+          <div class="world-best-info">
+            <div class="world-best-name">ONA Coffee</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇦🇺</span> Marrickville, Sydney, Australia</div>
+            <div class="world-best-known">World Barista Championship winners — precision-driven specialty</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">5</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Toby's Estate Roasters</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇦🇺</span> Chippendale, Sydney, Australia</div>
+            <div class="world-best-known">Warehouse roastery with seasonal blends and single origins</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">6</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Apartment Coffee</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇸🇬</span> Lavender, Singapore</div>
+            <div class="world-best-known">Minimalist café bar serving refined espresso and batch brews</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">7</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Gota Coffee Experts</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇦🇹</span> Neubau, Vienna, Austria</div>
+            <div class="world-best-known">Third-wave pioneer in a city famous for traditional coffeehouses</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">8</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Story of Ono</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇲🇾</span> Kuala Lumpur, Malaysia</div>
+            <div class="world-best-known">Japanese-inspired pour-over bar with single-estate Malaysian beans</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">9</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Tropicalia Coffee</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇨🇴</span> Chapinero, Bogotá, Colombia</div>
+            <div class="world-best-known">Colombian specialty at origin — fruit-forward roasts and cascara</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">10</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Tanat</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇫🇷</span> Le Marais, Paris, France</div>
+            <div class="world-best-known">New-wave Parisian espresso bar redefining café culture in the Marais</div>
+          </div>
+        </div>
+        <div class="world-best-source"><a href="https://theworlds100bestcoffeeshops.com/top-100-coffee-shops/" target="_blank">Source: The World's 100 Best Coffee Shops 2026 →</a></div>
       </div>
     </div>
 
