@@ -23,7 +23,11 @@
       --success: #6B9E6B; --tag-bg: #221510;
     }
     html, body { height: 100%; }
-    body { background: var(--bg); color: var(--cream); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; overflow: hidden; -webkit-text-size-adjust: 100%; }
+    body { background: #0D0705; color: var(--cream); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; overflow: hidden; -webkit-text-size-adjust: 100%; }
+    .app-shell { width: 100%; max-width: 430px; height: 100%; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); position: relative; }
+    @media (min-width: 481px) {
+      .app-shell { border-left: 1px solid var(--border); border-right: 1px solid var(--border); box-shadow: 0 0 80px rgba(201,151,58,0.06); }
+    }
 
     /* ── Screens ── */
     .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
@@ -351,7 +355,7 @@
     /* ══════════════════════════════════════════
        CARD DETAIL SHEET
     ══════════════════════════════════════════ */
-    .detail-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:flex-end; justify-content:center; }
+    .detail-overlay { display:none; position:absolute; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:flex-end; justify-content:center; }
     .detail-overlay.open { display:flex; }
     .detail-sheet { background:var(--bg); border-radius:22px 22px 0 0; width:100%; max-height:88dvh; overflow-y:auto; padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
     .detail-photo { height:200px; background:var(--card); border-radius:22px 22px 0 0; position:relative; overflow:hidden; }
@@ -378,7 +382,7 @@
     /* ══════════════════════════════════════════
        NOMINATE MODAL
     ══════════════════════════════════════════ */
-    .nominate-overlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 400; overflow-y: auto; flex-direction: column; }
+    .nominate-overlay { display: none; position: absolute; inset: 0; background: var(--bg); z-index: 400; overflow-y: auto; flex-direction: column; }
     .nominate-overlay.open { display: flex; }
     .nominate-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 16px; position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 1; }
     .nominate-title { font-size: 18px; font-weight: 800; color: var(--cream); }
@@ -415,7 +419,7 @@
     .draft-by { color: var(--success); font-size: 12px; font-style: italic; }
     .share-btn { width: 100%; background: var(--card); border: 1px solid var(--primary); color: var(--primary); border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
     .back-btn { width: 100%; background: var(--primary); color: var(--bg); border: none; border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
-    .share-toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--success); color: #fff; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 999; }
+    .share-toast { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--success); color: #fff; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 999; }
     .share-toast.show { opacity: 1; }
 
     @media (max-width: 480px) {
@@ -453,6 +457,7 @@
   </style>
 </head>
 <body>
+<div class="app-shell">
 
   <!-- ══ SCREEN 1: Pick drink + location ══════════════ -->
   <div class="screen active" id="screen-drink">
@@ -2413,5 +2418,6 @@
     }).catch(() => prompt('Copy this:', text));
   }
   </script>
+</div>
 </body>
 </html>
