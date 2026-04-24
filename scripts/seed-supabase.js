@@ -15,10 +15,10 @@ const headers = {
 function extractData() {
   const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 
-  const cafesMatch = html.match(/const CAFES = \[([\s\S]*?)\];\s*\n\s*(?:const |\/\/|let |var )/);
+  const cafesMatch = html.match(/const CAFES_INLINE = \[([\s\S]*?)\];\s*\n/);
   if (!cafesMatch) throw new Error('Could not find CAFES array');
 
-  const countriesMatch = html.match(/const COUNTRIES = \[([\s\S]*?)\];\s*\n/);
+  const countriesMatch = html.match(/const COUNTRIES_INLINE = \[([\s\S]*?)\];\s*\n/);
   if (!countriesMatch) throw new Error('Could not find COUNTRIES array');
 
   let cafes, countries;
