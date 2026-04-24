@@ -166,7 +166,7 @@
     .swipe-card.is-next-2 { transform: scale(0.88) translateY(24px); pointer-events: none; transition: transform 0.3s ease; }
 
     /* Tap to expand hint — pinned to bottom of card */
-    .card-tap-hint { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 0 12px; background: linear-gradient(to top, var(--card) 60%, transparent); color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.3px; pointer-events: none; z-index: 5; }
+    .card-tap-hint { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 0 8px; background: var(--card); border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.3px; pointer-events: none; z-index: 5; }
     .card-tap-hint-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border); font-size: 10px; line-height: 1; }
 
     /* First-time swipe tooltip */
@@ -189,13 +189,13 @@
     .swipe-overlay.right .overlay-label { color: var(--success); border-color: var(--success); transform: rotate(-12deg); }
     .swipe-overlay.left  .overlay-label { color: var(--primary); border-color: var(--primary); transform: rotate(12deg); }
 
-    .card-body { flex: 1; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+    .card-body { flex: 1; padding: 16px 18px 28px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
     .card-name { color: var(--white); font-size: 22px; font-weight: 800; line-height: 1.15; }
     .card-location { color: var(--muted); font-size: 13px; }
     .card-note { background: var(--bg); border-radius: 10px; padding: 10px 12px; margin-top: 2px; }
     .card-note-label { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
     .card-note-value { color: var(--cream); font-size: 13px; line-height: 1.4; }
-    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; padding-top: 4px; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; padding-top: 4px; padding-bottom: 4px; }
     .card-tag { background: var(--tag-bg); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
     .must-try-callout { background: linear-gradient(135deg,rgba(201,151,58,0.18),rgba(201,151,58,0.06)); border: 1px solid rgba(201,151,58,0.55); border-radius: 10px; padding: 10px 12px; margin-top: 2px; }
     .must-try-label { color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px; }
