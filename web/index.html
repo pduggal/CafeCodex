@@ -7,7 +7,8 @@
   <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Café Codex</title>
-  <!-- v4.1 Apr 20 2026 Real cafe photos: 9 cafes wired with official photo_url -->
+  <!-- v4.2 Apr 23 2026 Supabase backend, detail photos, improved tap hint -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <meta name="description" content="Swipe your way to the world's best cups. By @honestcoffeestop." />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -164,9 +165,9 @@
     .swipe-card.is-next { transform: scale(0.94) translateY(12px); pointer-events: none; transition: transform 0.3s ease; }
     .swipe-card.is-next-2 { transform: scale(0.88) translateY(24px); pointer-events: none; transition: transform 0.3s ease; }
 
-    /* Tap to expand hint */
-    .card-tap-hint { display: flex; align-items: center; justify-content: center; gap: 5px; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.3px; padding: 8px 0 4px; }
-    .card-tap-hint-icon { font-size: 13px; }
+    /* Tap to expand hint — pinned to bottom of card */
+    .card-tap-hint { position: absolute; bottom: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 0 8px; background: var(--card); border-top: 1px solid var(--border); color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: 0.3px; pointer-events: none; z-index: 5; }
+    .card-tap-hint-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border); font-size: 10px; line-height: 1; }
 
     /* First-time swipe tooltip */
     .swipe-tooltip { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: rgba(201,151,58,0.95); color: #1A0F0A; font-size: 12px; font-weight: 700; padding: 8px 16px; border-radius: 20px; white-space: nowrap; z-index: 50; pointer-events: none; animation: tooltipFade 3.5s ease forwards; }
@@ -188,13 +189,13 @@
     .swipe-overlay.right .overlay-label { color: var(--success); border-color: var(--success); transform: rotate(-12deg); }
     .swipe-overlay.left  .overlay-label { color: var(--primary); border-color: var(--primary); transform: rotate(12deg); }
 
-    .card-body { flex: 1; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+    .card-body { flex: 1; padding: 16px 18px 28px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
     .card-name { color: var(--white); font-size: 22px; font-weight: 800; line-height: 1.15; }
     .card-location { color: var(--muted); font-size: 13px; }
     .card-note { background: var(--bg); border-radius: 10px; padding: 10px 12px; margin-top: 2px; }
     .card-note-label { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
     .card-note-value { color: var(--cream); font-size: 13px; line-height: 1.4; }
-    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; padding-top: 4px; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; padding-top: 4px; padding-bottom: 4px; }
     .card-tag { background: var(--tag-bg); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
     .must-try-callout { background: linear-gradient(135deg,rgba(201,151,58,0.18),rgba(201,151,58,0.06)); border: 1px solid rgba(201,151,58,0.55); border-radius: 10px; padding: 10px 12px; margin-top: 2px; }
     .must-try-label { color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px; }
@@ -336,8 +337,9 @@
     .detail-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:flex-end; justify-content:center; }
     .detail-overlay.open { display:flex; }
     .detail-sheet { background:var(--bg); border-radius:22px 22px 0 0; width:100%; max-height:88dvh; overflow-y:auto; padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
-    .detail-photo { height:160px; background:var(--card); display:flex; align-items:center; justify-content:center; border-radius:22px 22px 0 0; position:relative; }
-    .detail-photo-emoji { font-size:56px; opacity:0.2; }
+    .detail-photo { height:200px; background:var(--card); border-radius:22px 22px 0 0; position:relative; overflow:hidden; }
+    .detail-photo-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .detail-photo-emoji { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:56px; opacity:0.2; }
     .detail-close { position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%; background:rgba(26,15,10,0.8); border:1px solid var(--border); color:var(--muted); font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
     .detail-pick-badge { position:absolute; top:14px; left:14px; background:var(--primary); color:var(--bg); font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; }
     .detail-body { padding:20px 20px 0; }
@@ -614,6 +616,7 @@
   <div class="detail-overlay" id="detail-overlay" onclick="closeCardDetail(event)">
     <div class="detail-sheet" onclick="event.stopPropagation()">
       <div class="detail-photo" id="detail-photo">
+        <img class="detail-photo-img" id="detail-photo-img" src="" alt="" onerror="this.style.display='none'">
         <span class="detail-photo-emoji" id="detail-photo-emoji">☕</span>
         <button class="detail-close" onclick="closeCardDetail()">✕</button>
         <div class="detail-pick-badge" id="detail-pick-badge" style="display:none">✦ Pallavi's Pick</div>
@@ -687,8 +690,15 @@
   <div class="share-toast" id="share-toast">Copied to clipboard ✓</div>
 
   <script>
-  // ── DATA ──────────────────────────────────────────────
-  const CAFES = [
+  // ── SUPABASE ─────────────────────────────────────────
+  const _sb = supabase.createClient(
+    'https://slwymfjwjhklgbijgixc.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsd3ltZmp3amhrbGdiaWpnaXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTQ1MzUsImV4cCI6MjA5MjI5MDUzNX0.uluPL86awSIie7Hu70P72v3qi4rCIucKr2y4HhYwnOQ'
+  );
+
+  // ── DATA (fetched from Supabase, inline fallback below) ──
+  let CAFES_LOADED = false;
+  const CAFES_INLINE = [
 
 
     {id:'5',name:'Stoneground Matcha',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/Gt0cgXZMp4srmRbYOlPmbA/1000s.jpg',city:'New York',country:'United States',neighborhood:'West Village',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:5,must_try:{drink:'Stone-Ground Ceremonial Bowl',note:'Made on an actual stone grinding mill in the shop — you can watch it. The freshest ceremonial matcha in New York City, full stop.'},curator_notes:{what_to_order:'Stone-ground ceremonial bowl, iced hojicha',best_time:'Tuesdays and Wednesdays',content_tips:'The stone grinding mill makes every shot.'},instagram_handle:'stonegroundmatcha',trending:true},
@@ -698,7 +708,7 @@
     // ── New York — SoHo / Nolita ─────────────────────────
     {id:'13',name:'% Arabica',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/AeWjRvKh-ixhgRBjx8L9hw/1000s.jpg',city:'New York',country:'United States',neighborhood:'Nolita',drink:'coffee',vibe_tags:['viral_aesthetic','creative_drinks','specialty_coffee'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Kyoto-style latte, single-origin espresso',best_time:'Weekday mornings before the line forms',content_tips:'The all-white minimal interior is built for content — every surface is intentional. The cup in hand against the white wall is the classic shot.'},instagram_handle:'percentarabica',trending:true},
     {id:'14',name:'La Cabra',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/TGCSKHAf-ihyVlLAErjSyA/1000s.jpg',city:'New York',country:'United States',neighborhood:'SoHo',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Filter coffee, cortado',best_time:'Weekday mornings',content_tips:'Danish restraint done right — clean lines, honest light. The filter in a glass is the shot.'},instagram_handle:'lacabra_nyc',trending:false},
-    {id:'15',name:'Felix Roasting Co.',city:'New York',country:'United States',neighborhood:'SoHo',drink:'coffee',vibe_tags:['viral_aesthetic','creative_drinks','collab_worthy'],curator_pick:true,curator_rating:4,photo_url:'https://d3k81ch9hvuctc.cloudfront.net/company/TuhVFM/images/d98a230f-c863-46bf-8e02-460164b99d4c.jpeg',must_try:{drink:'Hickory Smoked S\'mores Latte',note:'Finished tableside with a blowtorch — marshmallow, dark chocolate, a hit of hickory smoke. Felix\'s most iconic creation and one of the most content-worthy drinks in SoHo.'},curator_notes:{what_to_order:'Latte, specialty seasonal drink',best_time:'Weekend mornings for the full aesthetic experience',content_tips:'The blush-and-brass interior is one of the most consistent aesthetics in SoHo. Good natural light from the street side in the morning.'},instagram_handle:'felixroastingco',trending:true},
+    {id:'15',name:'Felix Roasting Co.',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/o3CUFBZc4I_fhxAUzkDxLQ/1000s.jpg',city:'New York',country:'United States',neighborhood:'SoHo',drink:'coffee',vibe_tags:['viral_aesthetic','creative_drinks','collab_worthy'],curator_pick:true,curator_rating:4,photo_url:'https://d3k81ch9hvuctc.cloudfront.net/company/TuhVFM/images/d98a230f-c863-46bf-8e02-460164b99d4c.jpeg',must_try:{drink:'Hickory Smoked S\'mores Latte',note:'Finished tableside with a blowtorch — marshmallow, dark chocolate, a hit of hickory smoke. Felix\'s most iconic creation and one of the most content-worthy drinks in SoHo.'},curator_notes:{what_to_order:'Latte, specialty seasonal drink',best_time:'Weekend mornings for the full aesthetic experience',content_tips:'The blush-and-brass interior is one of the most consistent aesthetics in SoHo. Good natural light from the street side in the morning.'},instagram_handle:'felixroastingco',trending:true},
     {id:'16',name:'Ground Support Cafe',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/PgcRB2B-WL6Zqt7HdcszxQ/1000s.jpg',city:'New York',country:'United States',neighborhood:'SoHo',drink:'coffee',vibe_tags:['specialty_coffee','cozy_quiet','hidden_gem'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Drip coffee, espresso',best_time:'Early weekday mornings — pre-tourist SoHo',content_tips:'Old-school SoHo energy, before the neighborhood got polished. Honest, unpretentious. Good for candid shots.'},instagram_handle:'groundsupportcafe',trending:false},
 
     // ── New York — West Village ───────────────────────────
@@ -714,7 +724,7 @@
     {id:'24',name:'La Cabra East Village',city:'New York',country:'United States',neighborhood:'East Village',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','cozy_quiet'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, natural process espresso',best_time:'Morning — quieter than the SoHo location',content_tips:'Same Danish precision as the SoHo spot, slightly more neighborhood feel. The filter in glass remains the shot.'},instagram_handle:'lacabra_nyc',trending:false},
 
     // ── New York — Lower East Side ────────────────────────
-    {id:'25',name:'787 Coffee',city:'New York',country:'United States',neighborhood:'Lower East Side',drink:'coffee',vibe_tags:['viral_aesthetic','creative_drinks','collab_worthy'],curator_pick:true,curator_rating:4,photo_url:'https://images.squarespace-cdn.com/content/v1/6256e7c9ffcbf452d1da5e6d/96f54796-3d44-4279-ab1d-0f4963aaa5a2/787+coffee+specialty+coffee.jpg',must_try:{drink:'Coquito Latte',note:'Puerto Rican coquito sauce — coconut cream, rum notes, warm spices — folded into espresso. A cultural statement in a cup and the drink that put 787 on the NYC viral map.'},curator_notes:{what_to_order:'Cortado, cold brew, seasonal latte',best_time:'Weekend mornings when the LES is waking up',content_tips:'Puerto Rican-owned, community-rooted. The brand story is as powerful as the coffee. Great for collab content — the owners are warm and open.'},instagram_handle:'787coffee',trending:true},
+    {id:'25',name:'787 Coffee',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/qOh2SX_Dj-7vOQBwF_BC-g/1000s.jpg',city:'New York',country:'United States',neighborhood:'Lower East Side',drink:'coffee',vibe_tags:['viral_aesthetic','creative_drinks','collab_worthy'],curator_pick:true,curator_rating:4,photo_url:'https://images.squarespace-cdn.com/content/v1/6256e7c9ffcbf452d1da5e6d/96f54796-3d44-4279-ab1d-0f4963aaa5a2/787+coffee+specialty+coffee.jpg',must_try:{drink:'Coquito Latte',note:'Puerto Rican coquito sauce — coconut cream, rum notes, warm spices — folded into espresso. A cultural statement in a cup and the drink that put 787 on the NYC viral map.'},curator_notes:{what_to_order:'Cortado, cold brew, seasonal latte',best_time:'Weekend mornings when the LES is waking up',content_tips:'Puerto Rican-owned, community-rooted. The brand story is as powerful as the coffee. Great for collab content — the owners are warm and open.'},instagram_handle:'787coffee',trending:true},
     {id:'26',name:'Pause Cafe',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/DP1SfUU8L4dORqyS3-eLGw/1000s.jpg',city:'New York',country:'United States',neighborhood:'Lower East Side',drink:'coffee',vibe_tags:['viral_aesthetic','cozy_quiet','hidden_gem'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Latte, pastry of the day',best_time:'Late morning on weekdays',content_tips:'Small, beautifully styled, strong Instagram presence for its size. The window light in the morning is exceptional.'},instagram_handle:'pausecafenyc',trending:false},
     {id:'27',name:'Birch Coffee',city:'New York',country:'United States',neighborhood:'Lower East Side',drink:'coffee',vibe_tags:['specialty_coffee','cozy_quiet','collab_worthy'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Pour-over, drip coffee',best_time:'Weekday mornings',content_tips:'Reliable specialty with a community orientation. Less about the aesthetic, more about the cup — which is refreshing.'},instagram_handle:'birchcoffee',trending:false},
 
@@ -810,7 +820,7 @@
     {id:'59',name:'Mjöl Bakehouse',city:'Gurgaon',country:'India',neighborhood:'Golf Course Road',drink:'coffee',vibe_tags:['viral_aesthetic','collab_worthy','cozy_quiet'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Cardamom latte, pastry of the day',best_time:'Weekend mornings',content_tips:'Scandinavian-leaning bakehouse with a strong visual identity. Great for lifestyle content — the baked goods photograph as well as the coffee.'},instagram_handle:'mjolbakehouse',trending:true},
 
     // ── Gurgaon — Cyber Hub / Cyber City / Udyog Vihar ───
-    {id:'60',name:'Blue Tokai Coffee',city:'Gurgaon',country:'India',neighborhood:'Cyber Hub',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'V60 pour-over, cold brew',best_time:'Weekday mornings before the Cyber Hub crowd',content_tips:'Higher foot traffic than their quieter locations but the coffee consistency stays. The most accessible specialty address in Cyber Hub.'},instagram_handle:'bluetokaicoffee',trending:false},
+    {id:'60',name:'Blue Tokai Coffee',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2a/b8/64/bf/outside-view.jpg',city:'Gurgaon',country:'India',neighborhood:'Cyber Hub',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'V60 pour-over, cold brew',best_time:'Weekday mornings before the Cyber Hub crowd',content_tips:'Higher foot traffic than their quieter locations but the coffee consistency stays. The most accessible specialty address in Cyber Hub.'},instagram_handle:'bluetokaicoffee',trending:false},
     {id:'61',name:'Third Wave Coffee',city:'Gurgaon',country:'India',neighborhood:'Cyber Hub',drink:'coffee',vibe_tags:['specialty_coffee','creative_drinks'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Specialty latte, cold brew',best_time:'Weekday mornings',content_tips:'A reliable specialty chain — better than most mall options, not in the top serious coffee tier.'},instagram_handle:'thirdwavecoffee',trending:false},
     {id:'62',name:'abCoffee',city:'Gurgaon',country:'India',neighborhood:'Cyber City',drink:'coffee',vibe_tags:['creative_drinks'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Quick espresso, latte',best_time:'Morning rush or mid-afternoon',content_tips:'Fast-format specialty — built for the Cyber City work crowd. Good for a quick fix.'},instagram_handle:'abcoffeein',trending:false},
     {id:'63',name:'Avancos Coffee',city:'Gurgaon',country:'India',neighborhood:'Udyog Vihar',drink:'coffee',vibe_tags:['specialty_coffee','hidden_gem'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Espresso, filter coffee',best_time:'Weekday mornings',content_tips:'Under the radar but doing honest specialty work in Udyog Vihar — not the obvious address, worth the detour.'},instagram_handle:'avancoscoffee',trending:false},
@@ -827,19 +837,19 @@
     {id:'70',name:'Devan\'s Coffee',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/13/91/3f/85/photo1jpg.jpg',city:'Delhi',country:'India',neighborhood:'Khan Market',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','hidden_gem'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Estate filter blend, South Indian filter',best_time:'Weekday mornings',content_tips:'A Delhi institution predating the third-wave conversation — earns its reputation purely through the coffee. Low-key, high-integrity. One of the rare originals.'},instagram_handle:'devanscoffee',trending:false},
     {id:'71',name:'Common Time',city:'Delhi',country:'India',neighborhood:'Lodhi Colony',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','cozy_quiet'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, cortado',best_time:'Weekend mornings',content_tips:'The Lodhi Colony light is genuinely special — great for content with coffee that actually holds up.'},instagram_handle:'commontimedelhi',trending:false},
     {id:'72',name:'LoCol by Subko',city:'Delhi',country:'India',neighborhood:'Khan Market',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','collab_worthy'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, single-origin espresso',best_time:'Weekday mornings',content_tips:'Subko\'s Delhi outpost — one of India\'s most serious sourcing programs in a clean aesthetic space.'},instagram_handle:'subkocoffee',trending:false},
-    {id:'73',name:'Chelvies Coffee',city:'Delhi',country:'India',neighborhood:'Connaught Place',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Pour-over, signature espresso',best_time:'Weekday mornings before the CP crowd',content_tips:'One of Delhi\'s best — Chelvies holds up across all their locations and the CP address is one of their cleanest. Serious coffee in a genuinely well-designed space.'},instagram_handle:'chelviescoffee',trending:true},
+    {id:'73',name:'Chelvies Coffee',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/30/08/33/f9/caption.jpg',city:'Delhi',country:'India',neighborhood:'Connaught Place',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Pour-over, signature espresso',best_time:'Weekday mornings before the CP crowd',content_tips:'One of Delhi\'s best — Chelvies holds up across all their locations and the CP address is one of their cleanest. Serious coffee in a genuinely well-designed space.'},instagram_handle:'chelviescoffee',trending:true},
 
     // ── Delhi — South Delhi (Hauz Khas / GK / Panchsheel) ─
     {id:'74',name:'Quick Brown Fox',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/25/44/c8/6b/the-place.jpg',city:'Delhi',country:'India',neighborhood:'Hauz Khas',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','hidden_gem'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Filter coffee, single-origin pour-over',best_time:'Weekday mornings — the quiet hour before the crowd',content_tips:'Reddit\'s consistent top pick for serious Delhi coffee. No gimmicks — this is about the cup. QBF is the address you take someone who wants to understand Indian specialty coffee.'},instagram_handle:'quickbrownfoxcafe',trending:false},
-    {id:'75',name:'Subko Coffee Roasters',city:'Delhi',country:'India',neighborhood:'Shahpur Jat',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','viral_aesthetic'],curator_pick:true,curator_rating:5,must_try:{drink:'Jaago',note:'Jaggery-sweetened espresso with oat milk — earthy, caramel-dark, unmistakably Indian. Subko\'s signature creation. The name means "wake up" in Hindi. It earns it.'},curator_notes:{what_to_order:'Single-estate filter, house espresso blend',best_time:'Weekday mornings',content_tips:'One of India\'s most important roasters — direct-sourced, roasted with intention. The Shahpur Jat space is beautiful and the light cooperates.'},instagram_handle:'subkocoffee',trending:true},
-    {id:'76',name:'Savorworks Coffee',city:'Delhi',country:'India',neighborhood:'Greater Kailash',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','viral_aesthetic'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'V60, single-origin espresso',best_time:'Weekday mornings',content_tips:'Savorworks GK is their most established Delhi presence. Consistent, serious, beautiful — one of the rare places where coffee knowledge matches the aesthetic.'},instagram_handle:'savorworks',trending:false},
+    {id:'75',name:'Subko Coffee Roasters',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2b/81/00/a1/caption.jpg',city:'Delhi',country:'India',neighborhood:'Shahpur Jat',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','viral_aesthetic'],curator_pick:true,curator_rating:5,must_try:{drink:'Jaago',note:'Jaggery-sweetened espresso with oat milk — earthy, caramel-dark, unmistakably Indian. Subko\'s signature creation. The name means "wake up" in Hindi. It earns it.'},curator_notes:{what_to_order:'Single-estate filter, house espresso blend',best_time:'Weekday mornings',content_tips:'One of India\'s most important roasters — direct-sourced, roasted with intention. The Shahpur Jat space is beautiful and the light cooperates.'},instagram_handle:'subkocoffee',trending:true},
+    {id:'76',name:'Savorworks Coffee',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/26/aa/25/43/savorworks.jpg',city:'Delhi',country:'India',neighborhood:'Greater Kailash',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','viral_aesthetic'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'V60, single-origin espresso',best_time:'Weekday mornings',content_tips:'Savorworks GK is their most established Delhi presence. Consistent, serious, beautiful — one of the rare places where coffee knowledge matches the aesthetic.'},instagram_handle:'savorworks',trending:false},
     {id:'77',name:'IKVITI',city:'Delhi',country:'India',neighborhood:'GK / SDA',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','hidden_gem'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Espresso, house filter',best_time:'Weekend mornings',content_tips:'A South Delhi find that the neighbourhood specialty crowd keeps coming back to.'},instagram_handle:'ikviticoffee',trending:false},
     {id:'78',name:'Beanly Coffee',city:'Delhi',country:'India',neighborhood:'Panchsheel',drink:'coffee',vibe_tags:['specialty_coffee','creative_drinks'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Latte, their signature specialty drink',best_time:'Mornings',content_tips:'Specialty coffee delivered accessibly — leans more latte bar than pour-over lab.'},instagram_handle:'beanlycoffee',trending:false},
     {id:'79',name:'Shack Coffee Co.',city:'Delhi',country:'India',neighborhood:'Hauz Khas',drink:'coffee',vibe_tags:['specialty_coffee','cozy_quiet'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, espresso',best_time:'Weekday mornings',content_tips:'Honest neighbourhood specialty spot — not the loudest name on the scene but earns its regular crowd.'},instagram_handle:'shackcoffeeco',trending:false},
     {id:'80',name:'Daily Drama',city:'Delhi',country:'India',neighborhood:'South Delhi',drink:'coffee',vibe_tags:['creative_drinks','viral_aesthetic','collab_worthy','matcha_specialist'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Matcha latte, specialty seasonal drink',best_time:'Weekend mornings',content_tips:'The aesthetic is strong and photographs well. The matcha latte is getting called out as a highlight — better than the coffee-first impression suggests. Still hype-forward, but the matcha is worth ordering.'},instagram_handle:'dailydrama',trending:true},
 
     // ── Delhi — Mehrauli / Chhatarpur / Dhan Mill ─────────
-    {id:'81',name:'Cafe Dori',city:'Delhi',country:'India',neighborhood:'Mehrauli',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Latte, their signature espresso drink',best_time:'Weekday mornings',content_tips:'The original Cafe Dori — one of Delhi\'s most visually and coffee-seriously respected spots. The Mehrauli setting is beautiful and the Reddit community flags this repeatedly as a genuine standout.'},instagram_handle:'cafedori',trending:true},
+    {id:'81',name:'Cafe Dori',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/e9/ce/36/photo3jpg.jpg',city:'Delhi',country:'India',neighborhood:'Mehrauli',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Latte, their signature espresso drink',best_time:'Weekday mornings',content_tips:'The original Cafe Dori — one of Delhi\'s most visually and coffee-seriously respected spots. The Mehrauli setting is beautiful and the Reddit community flags this repeatedly as a genuine standout.'},instagram_handle:'cafedori',trending:true},
     {id:'82',name:'Roastery Coffee House',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/30/a7/32/b7/caption.jpg',city:'Delhi',country:'India',neighborhood:'Mehrauli',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','viral_aesthetic'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Filter coffee, cold brew, single-origin pour-over',best_time:'Weekday mornings',content_tips:'A flagship name in Delhi specialty coffee — the Mehrauli location has incredible warmth and natural light. One of the addresses that has defined the NCR scene.'},instagram_handle:'roasterycoffeehouse',trending:true},
     {id:'83',name:'GOODHOOD Coffee',city:'Delhi',country:'India',neighborhood:'Dhan Mill / Mehrauli',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','hidden_gem'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, espresso',best_time:'Weekend mornings',content_tips:'The Dhan Mill compound has excellent natural light and Goodhood has carved out a strong identity within it. A little harder to find — worth it.'},instagram_handle:'goodhoodcoffee',trending:false},
     {id:'84',name:'Seven Seeds Coffee',city:'Delhi',country:'India',neighborhood:'Chhatarpur',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','cozy_quiet'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Pour-over, filter coffee',best_time:'Weekday mornings',content_tips:'Quiet, serious South Delhi specialty — for when you want the coffee to do the talking.'},instagram_handle:'sevenseedscoffee',trending:false},
@@ -851,14 +861,14 @@
 
     // ── Noida — Sector 104 / Central ─────────────────────
     {id:'88',name:'Chelvies Coffee',city:'Noida',country:'India',neighborhood:'Sector 104',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Pour-over, single-origin espresso',best_time:'Weekday mornings',content_tips:'Chelvies Noida brings the same rigor as their other locations — one of the top picks for serious Noida coffee.'},instagram_handle:'chelviescoffee',trending:true},
-    {id:'89',name:'Blue Tokai Coffee',city:'Noida',country:'India',neighborhood:'Sector 104',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'V60 pour-over, cold brew',best_time:'Weekday mornings',content_tips:'India\'s leading specialty chain — reliable and honest on the coffee wherever you find them.'},instagram_handle:'bluetokaicoffee',trending:false},
+    {id:'89',name:'Blue Tokai Coffee',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/2b/55/f4/1e/caption.jpg',city:'Noida',country:'India',neighborhood:'Sector 104',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'V60 pour-over, cold brew',best_time:'Weekday mornings',content_tips:'India\'s leading specialty chain — reliable and honest on the coffee wherever you find them.'},instagram_handle:'bluetokaicoffee',trending:false},
     {id:'90',name:'Tan Coffee',city:'Noida',country:'India',neighborhood:'Sector 104',drink:'coffee',vibe_tags:['creative_drinks','viral_aesthetic'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Signature latte, cold brew',best_time:'Afternoons',content_tips:'Aesthetic-forward with a crowd-pleasing drinks menu. Instagram-friendly space.'},instagram_handle:'tancoffeein',trending:true},
     {id:'91',name:'Della Nucci',city:'Noida',country:'India',neighborhood:'Noida',drink:'coffee',vibe_tags:['creative_drinks','viral_aesthetic','collab_worthy'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Specialty latte, their signature drink',best_time:'Weekends',content_tips:'Italian-leaning aesthetic with a photogenic setup — the drinks photograph well.'},instagram_handle:'dellanucci',trending:false},
 
     // ── Noida — Sector 75 / Spectrum ─────────────────────
-    {id:'93',name:'Colocal Coffee',city:'Noida',country:'India',neighborhood:'Sector 75',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Filter coffee, single-origin espresso',best_time:'Weekday mornings',content_tips:'Colocal Noida is a Reddit community top pick for the city — serious coffee and a strong visual identity.'},instagram_handle:'colocal.coffee',trending:true},
-    {id:'94',name:'Haven Coffee',city:'Noida',country:'India',neighborhood:'Sector 75',drink:'coffee',vibe_tags:['specialty_coffee','creative_drinks','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Filter coffee, house latte',best_time:'Weekday mornings',content_tips:'Haven is consistently flagged as one of Noida\'s best specialty spots — the name is earned. Cozy, well-sourced, no noise.'},instagram_handle:'havencoffeenoida',trending:true},
-    {id:'95',name:'Roastery Coffee House',city:'Noida',country:'India',neighborhood:'Sector 75',drink:'coffee',vibe_tags:['specialty_coffee','matcha_specialist','pour_over','viral_aesthetic'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Matcha latte, filter coffee, cold brew',best_time:'Weekday mornings',content_tips:'The Roastery brand translates well to Noida — consistent quality and a familiar aesthetic. The matcha is a genuine part of the menu, not an afterthought.'},instagram_handle:'roasterycoffeehouse',trending:false},
+    {id:'93',name:'Colocal Coffee',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/30/a7/31/77/caption.jpg',city:'Noida',country:'India',neighborhood:'Sector 75',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Filter coffee, single-origin espresso',best_time:'Weekday mornings',content_tips:'Colocal Noida is a Reddit community top pick for the city — serious coffee and a strong visual identity.'},instagram_handle:'colocal.coffee',trending:true},
+    {id:'94',name:'Haven Coffee',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/07/86/6e/the-haven.jpg',city:'Noida',country:'India',neighborhood:'Sector 75',drink:'coffee',vibe_tags:['specialty_coffee','creative_drinks','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Filter coffee, house latte',best_time:'Weekday mornings',content_tips:'Haven is consistently flagged as one of Noida\'s best specialty spots — the name is earned. Cozy, well-sourced, no noise.'},instagram_handle:'havencoffeenoida',trending:true},
+    {id:'95',name:'Roastery Coffee House',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/30/a7/32/b7/caption.jpg',city:'Noida',country:'India',neighborhood:'Sector 75',drink:'coffee',vibe_tags:['specialty_coffee','matcha_specialist','pour_over','viral_aesthetic'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Matcha latte, filter coffee, cold brew',best_time:'Weekday mornings',content_tips:'The Roastery brand translates well to Noida — consistent quality and a familiar aesthetic. The matcha is a genuine part of the menu, not an afterthought.'},instagram_handle:'roasterycoffeehouse',trending:false},
     {id:'96',name:'Third Wave Coffee',city:'Noida',country:'India',neighborhood:'Sector 75',drink:'coffee',vibe_tags:['specialty_coffee','creative_drinks'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Specialty latte, cold brew',best_time:'Weekday mornings',content_tips:'A reliable chain option — better than most, not in the same tier as the destination spots.'},instagram_handle:'thirdwavecoffee',trending:false},
 
     // ── Noida — Sector 50 / 144 / Others ─────────────────
@@ -896,7 +906,7 @@
     {id:'126',name:'Buna Café',city:'Mexico City',country:'Mexico',neighborhood:'Juárez',drink:'coffee',vibe_tags:['specialty_coffee','cozy_quiet'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Espresso, house filter',best_time:'Mornings',content_tips:'The Juárez location is more low-key than the Roma original — a good escape from the busier spots.'},instagram_handle:'bunacaferica',trending:false},
 
     // ── Mexico City — San Rafael ──────────────────────────
-    {id:'130',name:'Café Passmar',city:'Mexico City',country:'Mexico',neighborhood:'San Rafael',drink:'coffee',vibe_tags:['specialty_coffee','hidden_gem'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin filter, espresso',best_time:'Weekday mornings',content_tips:'Café Passmar is the kind of address that coffee nerds share quietly. San Rafael is off the tourist trail — the coffee is worth every extra block.'},instagram_handle:'cafepassmar',trending:false},
+    {id:'130',name:'Café Passmar',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/03/73/8f/5f/cafe-passmar.jpg',city:'Mexico City',country:'Mexico',neighborhood:'San Rafael',drink:'coffee',vibe_tags:['specialty_coffee','hidden_gem'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin filter, espresso',best_time:'Weekday mornings',content_tips:'Café Passmar is the kind of address that coffee nerds share quietly. San Rafael is off the tourist trail — the coffee is worth every extra block.'},instagram_handle:'cafepassmar',trending:false},
 
     // ── Mexico City — Narvarte / Del Valle ────────────────
 
@@ -908,12 +918,12 @@
     // ── Palo Alto — University Ave / Downtown ─────────────
     {id:'139',name:'Verve Coffee Roasters',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/o4PypzWCJwKtd7M-mO-qvw/1000s.jpg',city:'Palo Alto',country:'United States',neighborhood:'University Ave',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, oat latte',best_time:'Weekday mornings before the Stanford crowd',content_tips:'Verve is one of California\'s most respected roasters — the University Ave location is their Peninsula flagship. Clean light, strong visual identity, and the sourcing is genuinely serious.'},instagram_handle:'vervecoffee',trending:true},
     {id:'140',name:'Cafe Venetia',city:'Palo Alto',country:'United States',neighborhood:'University Ave',drink:'coffee',vibe_tags:['creative_drinks','cozy_quiet'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Latte, their specialty coffee drink',best_time:'Weekday mornings',content_tips:'A Palo Alto institution — the coffee is solid if not cutting-edge specialty. The crowd and the room have good energy.'},instagram_handle:'cafevenetia',trending:false},
-    {id:'141',name:'Lou & Herbert\'s',city:'Palo Alto',country:'United States',neighborhood:'University Ave',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Espresso, house filter coffee',best_time:'Weekday mornings',content_tips:'Warm, considered design with a specialty-first attitude — one of University Ave\'s best newer additions. Photographs well and the coffee backs it up.'},instagram_handle:'louandherberts',trending:true},
+    {id:'141',name:'Lou & Herbert\'s',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/5Ro44iIYDmlOoP5mGAg2YA/1000s.jpg',city:'Palo Alto',country:'United States',neighborhood:'University Ave',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Espresso, house filter coffee',best_time:'Weekday mornings',content_tips:'Warm, considered design with a specialty-first attitude — one of University Ave\'s best newer additions. Photographs well and the coffee backs it up.'},instagram_handle:'louandherberts',trending:true},
 
     // ── Palo Alto — Cal Ave / Midtown ─────────────────────
-    {id:'142',name:'Covour Coffee',city:'Palo Alto',country:'United States',neighborhood:'California Ave',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, espresso',best_time:'Weekday mornings — quietest and most focused',content_tips:'Covour is the serious specialty address on the Cal Ave side of Palo Alto. Precision brewing, beautiful space, no fluff. The pour-over is the order.'},instagram_handle:'covourcoffee',trending:false},
+    {id:'142',name:'Covour Coffee',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/zVrB-zb2UN_VMxbHhimRnA/1000s.jpg',city:'Palo Alto',country:'United States',neighborhood:'California Ave',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, espresso',best_time:'Weekday mornings — quietest and most focused',content_tips:'Covour is the serious specialty address on the Cal Ave side of Palo Alto. Precision brewing, beautiful space, no fluff. The pour-over is the order.'},instagram_handle:'covourcoffee',trending:false},
     {id:'143',name:'Cloud9 Coffee',city:'Palo Alto',country:'United States',neighborhood:'Midtown',drink:'coffee',vibe_tags:['specialty_coffee','creative_drinks'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Espresso, latte',best_time:'Weekday mornings',content_tips:'A reliable Midtown specialty spot — serves the neighbourhood well and the coffee is genuinely good.'},instagram_handle:'cloud9coffeepaloalto',trending:false},
-    {id:'144',name:'Backyard Brew',city:'Palo Alto',country:'United States',neighborhood:'Midtown',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, espresso',best_time:'Weekday mornings',content_tips:'The backyard setting is exactly what it sounds like — relaxed outdoor energy with serious coffee. One of Palo Alto\'s more distinctive setups, visually and otherwise.'},instagram_handle:'yardbrewco',trending:true},
+    {id:'144',name:'Backyard Brew',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/IYtBNS_NWJUVqM2NeOaAgQ/1000s.jpg',city:'Palo Alto',country:'United States',neighborhood:'Midtown',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, espresso',best_time:'Weekday mornings',content_tips:'The backyard setting is exactly what it sounds like — relaxed outdoor energy with serious coffee. One of Palo Alto\'s more distinctive setups, visually and otherwise.'},instagram_handle:'yardbrewco',trending:true},
 
     // ── Palo Alto — Nearby ────────────────────────────────
     {id:'145',name:'Saint Frank Coffee',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/dHkmlo68Bt1HhA7dlmM4yw/1000s.jpg',city:'Palo Alto',country:'United States',neighborhood:'Palo Alto',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, cortado',best_time:'Weekday mornings',content_tips:'Saint Frank is a Bay Area specialty institution — the Palo Alto location brings their San Francisco-level coffee seriousness to the Peninsula. One of the best cups you\'ll find in the area.'},instagram_handle:'saintfrankcoffee',trending:false},
@@ -994,11 +1004,11 @@
     {id:'194',name:'Junbi',city:'Mountain View',country:'United States',neighborhood:'Castro Street',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','viral_aesthetic'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'100% shade-grown ceremonial matcha, daily matcha bowl',best_time:'Weekday mornings on Castro Street',content_tips:'Junbi uses 100% pure shade-grown ceremonial matcha daily — no compromises on the leaf source. The Castro Street location is bright and well-designed. This is Mountain View\'s most serious matcha address.'},instagram_handle:'junbi.co',trending:true},
 
     // ── Las Vegas — Matcha ────────────────────────────────
-    {id:'195',name:'LEEV Matcha Atelier',city:'Las Vegas',country:'United States',neighborhood:'Arts District',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','hidden_gem'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Shizuoka ceremonial-grade matcha, signature atelier drink',best_time:'Weekday mornings in the Arts District',content_tips:'The most refined matcha-only positioning in Las Vegas — Shizuoka ceremonial grade, atelier sensibility, no Strip gimmicks. The Arts District location is the right setting for it. This is the stop for a serious matcha moment in Vegas.'},instagram_handle:'leevmatcha',trending:true},
+    {id:'195',name:'LEEV Matcha Atelier',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/mWPdCK07rNTbb1AHfLlOXw/1000s.jpg',city:'Las Vegas',country:'United States',neighborhood:'Arts District',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','hidden_gem'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Shizuoka ceremonial-grade matcha, signature atelier drink',best_time:'Weekday mornings in the Arts District',content_tips:'The most refined matcha-only positioning in Las Vegas — Shizuoka ceremonial grade, atelier sensibility, no Strip gimmicks. The Arts District location is the right setting for it. This is the stop for a serious matcha moment in Vegas.'},instagram_handle:'leevmatcha',trending:true},
     {id:'196',name:"Nana's Green Tea",city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Stone-ground Uji matcha latte, matcha dessert',best_time:'Afternoons — the full menu is available all day',content_tips:'An authentic Japanese chain bringing Uji/Shizuoka stone-ground matcha to Las Vegas. The menu depth is impressive — matcha in every form. Reliable quality from a brand that takes the leaf seriously.'},instagram_handle:'nanasgreentea_lv',trending:true},
-    {id:'197',name:'Urban Matcha',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'matcha',vibe_tags:['matcha_specialist','creative_drinks','viral_aesthetic'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial matcha latte, signature seasonal drink',best_time:'Weekday mornings',content_tips:'A dedicated matcha café with active multi-location presence — Urban Matcha is building the most consistent matcha brand in Las Vegas outside the Arts District specialists. The drinks are creative without losing the leaf.'},instagram_handle:'urbanmatchalv',trending:true},
+    {id:'197',name:'Urban Matcha',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/v2ODV-gxNr2KbfPKQ9VSwA/1000s.jpg',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'matcha',vibe_tags:['matcha_specialist','creative_drinks','viral_aesthetic'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial matcha latte, signature seasonal drink',best_time:'Weekday mornings',content_tips:'A dedicated matcha café with active multi-location presence — Urban Matcha is building the most consistent matcha brand in Las Vegas outside the Arts District specialists. The drinks are creative without losing the leaf.'},instagram_handle:'urbanmatchalv',trending:true},
     {id:'198',name:'True Matcha',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial-grade matcha, matcha latte',best_time:'Weekday mornings',content_tips:'True Matcha holds the ceremonial-grade positioning without performance — the name does the work. A quiet, serious option in a city that can lean loud. Go here when you want the leaf, not the theatre.'},instagram_handle:'truematchalv',trending:false},
-    {id:'383',name:'Lunakin Café',city:'Las Vegas',country:'United States',neighborhood:'West Las Vegas',drink:'coffee',vibe_tags:['viral_aesthetic','creative_drinks','matcha_specialist','collab_worthy'],curator_pick:true,curator_rating:5,photo_url:'https://images.squarespace-cdn.com/content/v1/67f23c3e31a888319d396464/de949d5c-293e-4619-a004-8a4508920aee/Luna+kin-3.png?format=1500w',must_try:{drink:'Kyushu Matcha Latte',note:'Organic ceremonial-grade matcha sourced directly from Kyushu Island, Japan — available in blueberry, strawberry, banana, or lavender. One of the only places in Vegas pulling from a named Japanese region. Order it lavender.'},curator_notes:{what_to_order:'Kyushu matcha latte, croissant muffin with Meyer lemon curd, espresso',best_time:'Weekend mornings — the pastry chef bakes fresh daily and sells out early',content_tips:'A Balinese oasis five minutes from the Strip — giant hand-carved wooden face, lush greenery, bright airy interiors that photograph like a resort. French pastry chef on site. 25K Instagram followers and deserves more. The rare Vegas café that passes both the coffee test and the content test without trying too hard. Strong collab energy.'},instagram_handle:'lunakincafe',trending:true},
+    {id:'383',name:'Lunakin Café',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/KBWeU7NFKnwTRD_fpeC0mQ/1000s.jpg',city:'Las Vegas',country:'United States',neighborhood:'West Las Vegas',drink:'coffee',vibe_tags:['viral_aesthetic','creative_drinks','matcha_specialist','collab_worthy'],curator_pick:true,curator_rating:5,photo_url:'https://images.squarespace-cdn.com/content/v1/67f23c3e31a888319d396464/de949d5c-293e-4619-a004-8a4508920aee/Luna+kin-3.png?format=1500w',must_try:{drink:'Kyushu Matcha Latte',note:'Organic ceremonial-grade matcha sourced directly from Kyushu Island, Japan — available in blueberry, strawberry, banana, or lavender. One of the only places in Vegas pulling from a named Japanese region. Order it lavender.'},curator_notes:{what_to_order:'Kyushu matcha latte, croissant muffin with Meyer lemon curd, espresso',best_time:'Weekend mornings — the pastry chef bakes fresh daily and sells out early',content_tips:'A Balinese oasis five minutes from the Strip — giant hand-carved wooden face, lush greenery, bright airy interiors that photograph like a resort. French pastry chef on site. 25K Instagram followers and deserves more. The rare Vegas café that passes both the coffee test and the content test without trying too hard. Strong collab energy.'},instagram_handle:'lunakincafe',trending:true},
 
     // ── Arizona — Matcha ──────────────────────────────────
     {id:'199',name:'Fair Trade Cafe',city:'Phoenix',country:'United States',neighborhood:'Phoenix',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial-grade matcha, their house espresso',best_time:'Weekday mornings',content_tips:'One of Phoenix\'s most consistent ceremonial-grade matcha sources — the fair trade sourcing ethos extends to the matcha leaf. Honest, unpretentious, reliable. The coffee program is equally serious.'},instagram_handle:'fairtradeaz',trending:false},
@@ -1020,27 +1030,27 @@
     // ── NYC — SoHo / Nolita Matcha ───────────────────────
     {id:'210',name:'Matchaful',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/vgPxo5e8z322-4lKzDO3Bw/1000s.jpg',city:'New York',country:'United States',neighborhood:'Nolita',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','specialty_coffee'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial-grade matcha latte, ceremonial bowl',best_time:'Weekday mornings — Nolita before the boutique crowd',content_tips:'Matchaful is one of NYC\'s most serious matcha operations — direct-sourced ceremonial grade, beautiful branding, and a space that delivers consistently for content. The Nolita location is the original. The drink in hand against the minimal white walls is the classic shot.'},instagram_handle:'matchaful',trending:true},
     {id:'211',name:'Kettl Tea',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/6w7y-A_7YrfpjYc_AA3ONw/1000s.jpg',city:'New York',country:'United States',neighborhood:'Nolita',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin matcha, gyokuro, ceremonial bowl',best_time:'Weekday mornings or early afternoons',content_tips:'Kettl is a Japanese tea specialty operation with some of the most serious sourcing in NYC — direct relationships with Japanese farms, stone-ground on demand. Not a latte bar. Go here when you want to understand the leaf.'},instagram_handle:'kettlny',trending:false},
-    {id:'212',name:'12 Matcha',city:'New York',country:'United States',neighborhood:'Nolita',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial matcha latte, signature matcha drink',best_time:'Weekday mornings',content_tips:'12 Matcha has carved out a strong visual identity in Nolita — clean Japanese minimalism, photogenic cups, and a matcha program with genuine credentials. Strong content stop.'},instagram_handle:'12matcha',trending:true},
+    {id:'212',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/EYUvmQ7klN62W-JPMLi1vw/1000s.jpg',name:'12 Matcha',city:'New York',country:'United States',neighborhood:'Nolita',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial matcha latte, signature matcha drink',best_time:'Weekday mornings',content_tips:'12 Matcha has carved out a strong visual identity in Nolita — clean Japanese minimalism, photogenic cups, and a matcha program with genuine credentials. Strong content stop.'},instagram_handle:'12matcha',trending:true},
 
     // ── NYC — West Village / Greenwich Matcha ─────────────
     {id:'213',name:'Setsugekka',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/OsUh30WRYK3yFhU6rXt78A/1000s.jpg',city:'New York',country:'United States',neighborhood:'East Village',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,must_try:{drink:'Matcha Affogato',note:'Concentrated koicha matcha poured over house-made milk gelato — bittersweet, cold, and deeply Japanese. One of NYC\'s most quietly spectacular dessert-drinks, in a tea house that doesn\'t need to shout.'},curator_notes:{what_to_order:'High-end ceremonial matcha, seasonal tea bowl',best_time:'Weekday afternoons — the tea house format rewards slow visits',content_tips:'One of NYC\'s most authentic Japanese tea experiences — seasonal matcha, thoughtful ceremony, zero rush. The East Village location is intimate and beautifully designed. Film the preparation; every detail is intentional.'},instagram_handle:'setsugekka_nyc',trending:false},
-    {id:'214',name:'Tokuyamatcha',city:'New York',country:'United States',neighborhood:'West Village',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Matcha with onigirazu, ceremonial bowl',best_time:'Weekday afternoons',content_tips:'Matcha and onigirazu under one roof — a rare combination that works beautifully. The West Village space is compact, warmly designed, and distinctly Japanese. The matcha sourcing is serious.'},instagram_handle:'tokuyamatcha',trending:false},
-    {id:'215',name:'PPL',city:'New York',country:'United States',neighborhood:'West Village',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Matcha latte, their creative seasonal drink',best_time:'Weekday mornings — West Village before 10am',content_tips:'PPL brings a strong visual identity to the West Village matcha scene — the drinks photograph exceptionally well and the space has a warm, editorial quality. One of the neighborhood\'s best content stops.'},instagram_handle:'pplnyc',trending:true},
+    {id:'214',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/tryJYBpkd9fy73Tf7SBYeQ/1000s.jpg',name:'Tokuyamatcha',city:'New York',country:'United States',neighborhood:'West Village',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Matcha with onigirazu, ceremonial bowl',best_time:'Weekday afternoons',content_tips:'Matcha and onigirazu under one roof — a rare combination that works beautifully. The West Village space is compact, warmly designed, and distinctly Japanese. The matcha sourcing is serious.'},instagram_handle:'tokuyamatcha',trending:false},
+    {id:'215',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/LFeZhIWG646uB-a2dtchpw/1000s.jpg',name:'PPL',city:'New York',country:'United States',neighborhood:'West Village',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Matcha latte, their creative seasonal drink',best_time:'Weekday mornings — West Village before 10am',content_tips:'PPL brings a strong visual identity to the West Village matcha scene — the drinks photograph exceptionally well and the space has a warm, editorial quality. One of the neighborhood\'s best content stops.'},instagram_handle:'pplnyc',trending:true},
 
     // ── NYC — Lower East Side / East Village Matcha ───────
-    {id:'216',name:'Kijitora',city:'New York',country:'United States',neighborhood:'Lower East Side',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial matcha, Japanese seasonal sweet',best_time:'Weekday afternoons',content_tips:'Kijitora is one of NYC\'s quietest and most serious matcha destinations — a Japanese café with a focused menu and no performance. The ceramics and light make for understated, beautiful content.'},instagram_handle:'kijitoranyc',trending:false},
-    {id:'217',name:'Do Not Feed Alligators',city:'New York',country:'United States',neighborhood:'East Village',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Creative matcha drink, signature seasonal special',best_time:'Weekday mornings',content_tips:'The name is the whole personality — and the matcha program backs up the confidence. DNFA has one of the most distinctive visual identities in the East Village matcha scene. The drinks are creative and photograph extremely well.'},instagram_handle:'donotfeedalligators',trending:true},
+    {id:'216',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/FXVZZUoO3gKSQTzk5a0hvA/1000s.jpg',name:'Kijitora',city:'New York',country:'United States',neighborhood:'Lower East Side',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial matcha, Japanese seasonal sweet',best_time:'Weekday afternoons',content_tips:'Kijitora is one of NYC\'s quietest and most serious matcha destinations — a Japanese café with a focused menu and no performance. The ceramics and light make for understated, beautiful content.'},instagram_handle:'kijitoranyc',trending:false},
+    {id:'217',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/iIDAyLgHKqiUrU9m0oRYUA/1000s.jpg',name:'Do Not Feed Alligators',city:'New York',country:'United States',neighborhood:'East Village',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Creative matcha drink, signature seasonal special',best_time:'Weekday mornings',content_tips:'The name is the whole personality — and the matcha program backs up the confidence. DNFA has one of the most distinctive visual identities in the East Village matcha scene. The drinks are creative and photograph extremely well.'},instagram_handle:'donotfeedalligators',trending:true},
 
     // ── NYC — Midtown / Flatiron Matcha ───────────────────
-    {id:'218',name:'Matchaful Flatiron',city:'New York',country:'United States',neighborhood:'Flatiron',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','specialty_coffee'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial matcha bowl, iced matcha latte',best_time:'Weekday mornings',content_tips:'The Flatiron location of Matchaful brings the same direct-sourced ceremonial program to midtown — a reliable anchor for the area. Clean space, consistent drinks, and a visual identity that holds up.'},instagram_handle:'matchaful',trending:true},
+    {id:'218',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/3ftAPcAGX_oWiOlpKer0bA/1000s.jpg',name:'Matchaful Flatiron',city:'New York',country:'United States',neighborhood:'Flatiron',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','specialty_coffee'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial matcha bowl, iced matcha latte',best_time:'Weekday mornings',content_tips:'The Flatiron location of Matchaful brings the same direct-sourced ceremonial program to midtown — a reliable anchor for the area. Clean space, consistent drinks, and a visual identity that holds up.'},instagram_handle:'matchaful',trending:true},
 
     // ── NYC — Brooklyn (Williamsburg / Greenpoint) Matcha ─
-    {id:'219',name:'Kettl Williamsburg',city:'New York',country:'United States',neighborhood:'Williamsburg',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin matcha, gyokuro bowl',best_time:'Weekday mornings or early afternoons',content_tips:'The Williamsburg outpost of Kettl carries the same farm-direct Japanese sourcing as the Nolita original. A rare serious tea destination in Brooklyn. Go for the ceremony, not the latte.'},instagram_handle:'kettlny',trending:false},
-    {id:'220',name:'Buddies Coffee',city:'New York',country:'United States',neighborhood:'Williamsburg',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Matcha latte, their signature creative drink',best_time:'Weekend mornings — Williamsburg energy',content_tips:'Buddies is Williamsburg\'s strongest matcha content stop — strong visual identity, photogenic drinks, and a collab-friendly sensibility. The space photographs well and the crowd is right.'},instagram_handle:'buddiescoffeenyc',trending:true},
-    {id:'221',name:'Hungry Ghost',city:'New York',country:'United States',neighborhood:'Greenpoint',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Matcha latte, their house espresso',best_time:'Weekday mornings in Greenpoint',content_tips:'Hungry Ghost has been a neighborhood anchor in Greenpoint for years — the matcha program is solid and the space has a warm, honest aesthetic. Not a flashy stop, but a reliable one.'},instagram_handle:'hungryghostcoffee',trending:false},
+    {id:'219',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/ptwrBWV-ZshLgOk3LGd0LQ/1000s.jpg',name:'Kettl Williamsburg',city:'New York',country:'United States',neighborhood:'Williamsburg',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin matcha, gyokuro bowl',best_time:'Weekday mornings or early afternoons',content_tips:'The Williamsburg outpost of Kettl carries the same farm-direct Japanese sourcing as the Nolita original. A rare serious tea destination in Brooklyn. Go for the ceremony, not the latte.'},instagram_handle:'kettlny',trending:false},
+    {id:'220',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/6b66jGudEUre_a_bL8TOvw/1000s.jpg',name:'Buddies Coffee',city:'New York',country:'United States',neighborhood:'Williamsburg',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','collab_worthy'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Matcha latte, their signature creative drink',best_time:'Weekend mornings — Williamsburg energy',content_tips:'Buddies is Williamsburg\'s strongest matcha content stop — strong visual identity, photogenic drinks, and a collab-friendly sensibility. The space photographs well and the crowd is right.'},instagram_handle:'buddiescoffeenyc',trending:true},
+    {id:'221',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/_cpF17j1qo_1NFTz7hWjww/1000s.jpg',name:'Hungry Ghost',city:'New York',country:'United States',neighborhood:'Greenpoint',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Matcha latte, their house espresso',best_time:'Weekday mornings in Greenpoint',content_tips:'Hungry Ghost has been a neighborhood anchor in Greenpoint for years — the matcha program is solid and the space has a warm, honest aesthetic. Not a flashy stop, but a reliable one.'},instagram_handle:'hungryghostcoffee',trending:false},
 
     // ── NYC — Upper East Side Matcha ──────────────────────
-    {id:'222',name:'Matchaful Upper East Side',city:'New York',country:'United States',neighborhood:'Upper East Side',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','specialty_coffee'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial matcha latte, matcha bowl',best_time:'Weekday mornings',content_tips:'The UES extension of Matchaful — same direct-sourced ceremonial program, different neighborhood energy. Quieter crowd, more residential feel. The drink quality is consistent across all locations.'},instagram_handle:'matchaful',trending:false},
+    {id:'222',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/cGMK2YeqOksTlaWSEhsP-w/1000s.jpg',name:'Matchaful Upper East Side',city:'New York',country:'United States',neighborhood:'Upper East Side',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','specialty_coffee'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial matcha latte, matcha bowl',best_time:'Weekday mornings',content_tips:'The UES extension of Matchaful — same direct-sourced ceremonial program, different neighborhood energy. Quieter crowd, more residential feel. The drink quality is consistent across all locations.'},instagram_handle:'matchaful',trending:false},
 
     // ── Seattle — Extended Matcha ─────────────────────────
     {id:'223',name:'Atulea',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/31YOLCGKNZHcWQFxWtO-DA/1000s.jpg',city:'Seattle',country:'United States',neighborhood:'Capitol Hill',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','specialty_coffee'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial-grade matcha, seasonal matcha drink',best_time:'Weekday mornings',content_tips:'Consistently called out as Seattle\'s ceremonial matcha destination — the sourcing is real and the space photographs cleanly. A strong anchor for any Seattle matcha trail.'},instagram_handle:'atulea',trending:true},
@@ -1219,11 +1229,13 @@
     {id:'273',name:'Blue Bottle Studio Kyoto',photo_url:'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1a/5e/0c/78/photo2jpg.jpg',city:'Kyoto',country:'Japan',neighborhood:'Nanzenji',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Pour-over, espresso, Japanese-style iced coffee',best_time:'Weekday mornings',content_tips:'Blue Bottle\'s most beautiful location globally — a restored machiya townhouse in Nanzenji with a zen garden. The architecture alone is worth the visit. Thoughtful menu, meditative pace, exceptional photography.'},instagram_handle:'bluebottlecoffee',trending:true},
   ];
 
+  let CAFES = CAFES_INLINE;
+
   const VIBE_EMOJI = {specialty_coffee:'☕',pour_over:'🫖',matcha_specialist:'🍵',viral_aesthetic:'📸',creative_drinks:'🧋',cozy_quiet:'🌿',hidden_gem:'✨',collab_worthy:'🤝'};
   const VIBE_LABEL = {specialty_coffee:'Specialty Coffee',pour_over:'Pour-Over',matcha_specialist:'Matcha',viral_aesthetic:'Viral & Aesthetic',creative_drinks:'Creative Drinks',cozy_quiet:'Cozy & Quiet',hidden_gem:'Hidden Gem',collab_worthy:'Collab-Worthy'};
 
   // ── LOCATION DATA ─────────────────────────────────────
-  const COUNTRIES = [
+  const COUNTRIES_INLINE = [
     // ── Visited ───────────────────────────────────────────
     {name:'United States',flag:'🇺🇸',visited:true,
      aliases:['united states','usa','us','u.s','america','states','seattle','new york','nyc','ny','nj','new jersey','jersey city','jc','hoboken','hob','wa','washington','kirkland','eastside','east side','bellevue','redmond','manhattan','brooklyn','williamsburg','dumbo','soho','nolita','west village','east village','lower east side','les','palo alto','pa','cal ave','university ave','mountain view','mv','castro street','silicon valley','bay area','sf bay','peninsula','san francisco','sf','frisco','mission','hayes valley','soma','north beach','san jose','sj','sjc','arizona','az','phoenix','scottsdale','tempe','mesa','chandler','tucson','east valley','las vegas','vegas','nv','nevada','the strip'],
@@ -1415,6 +1427,23 @@
      message:"New Zealand's café culture runs deep — Wellington especially is extraordinary for its size. On the list."},
   ];
 
+  let COUNTRIES = COUNTRIES_INLINE;
+
+  async function loadFromSupabase() {
+    try {
+      const { data: cafesData, error: cafesErr } = await _sb.from('cafes').select('*');
+      if (!cafesErr && cafesData && cafesData.length > 0) {
+        CAFES = cafesData;
+        CAFES_LOADED = true;
+      }
+      const { data: countriesData, error: countriesErr } = await _sb.from('countries').select('*');
+      if (!countriesErr && countriesData && countriesData.length > 0) {
+        COUNTRIES = countriesData;
+      }
+    } catch (e) {}
+  }
+  loadFromSupabase();
+
   // Build a flat city → country lookup from visited countries
   function getCityLookup() {
     const map = {};
@@ -1590,9 +1619,10 @@
       renderBrowseList();
     } else {
       swipeArea.style.display = '';
-      swipeActions.style.display = '';
-      progressDots.style.display = '';
       browseWrap.classList.remove('visible');
+      const hasCards = deck.length > 0 && currentIndex < deck.length;
+      swipeActions.style.display = hasCards ? '' : 'none';
+      progressDots.style.display = hasCards ? '' : 'none';
     }
   }
 
@@ -1661,18 +1691,21 @@
     openCardDetail(c.id);
   }
 
+  function redealDeck() {
+    deck = [...currentDeck];
+    currentIndex = 0;
+    renderStack();
+  }
+
     function startSwiping() {
     selectedVibes = [...document.querySelectorAll('.ob-vibe.selected')].map(v => v.dataset.vibe);
     buildDeck();
-    currentDeck = [...deck];
     browseListCity = 'all';
     currentViewMode = 'cards';
     document.getElementById('vt-cards').classList.add('active');
     document.getElementById('vt-list').classList.remove('active');
     document.getElementById('browse-list-wrap').classList.remove('visible');
     document.getElementById('swipe-area-wrap').style.display = '';
-    document.querySelector('.swipe-actions').style.display = '';
-    document.getElementById('progress-dots').style.display = '';
     renderStack();
     const locPart = selectedLocation?.visited
       ? ` · ${selectedLocation.city || selectedLocation.country}` : '';
@@ -1697,32 +1730,28 @@
   // ── DECK BUILDING ─────────────────────────────────────
   function buildDeck() {
     let filtered = CAFES.filter(c => {
-      // Skip permanently closed cafes
       if (c.is_active === false) return false;
-      // Drink filter
+      const tags = c.vibe_tags || [];
       const drinkMatch = selectedDrink === 'matcha'
-        ? c.drink === 'matcha' || c.vibe_tags.includes('matcha_specialist')
-        : c.drink === 'coffee' || !c.vibe_tags.includes('matcha_specialist');
+        ? c.drink === 'matcha' || tags.includes('matcha_specialist')
+        : c.drink === 'coffee' || !tags.includes('matcha_specialist');
       if (!drinkMatch) return false;
-      // Location filter
       if (selectedLocation?.visited) {
         if (selectedLocation.type === 'city' && c.city !== selectedLocation.city) return false;
         if (selectedLocation.type === 'country' && c.country !== selectedLocation.country) return false;
       }
-      // Vibe filter
       if (selectedVibes.length === 0) return true;
       return selectedVibes.some(v => {
         if (v === 'trending')  return c.trending;
         if (v === 'picks')     return c.curator_pick === true;
-        if (v === 'aesthetic') return c.vibe_tags.includes('viral_aesthetic');
-        if (v === 'hidden')    return c.vibe_tags.includes('hidden_gem');
+        if (v === 'aesthetic') return tags.includes('viral_aesthetic');
+        if (v === 'hidden')    return tags.includes('hidden_gem');
         return false;
       });
     });
-    // Remove already swiped
+    currentDeck = [...filtered];
     const swiped = [...wishlist, ...beenThere];
-    filtered = filtered.filter(c => !swiped.includes(c.id));
-    deck = filtered;
+    deck = filtered.filter(c => !swiped.includes(c.id));
     currentIndex = 0;
   }
 
@@ -1735,6 +1764,7 @@
     if (deck.length === 0) {
       const isMorocco = selectedLocation && selectedLocation.country === 'Morocco';
       const isMoroccoMatcha = isMorocco && selectedDrink === 'matcha';
+      const allSwiped = currentDeck.length > 0 && deck.length === 0;
       stack.innerHTML = isMoroccoMatcha ? `
         <div class="swipe-empty">
           <div class="swipe-empty-icon">🍃</div>
@@ -1742,6 +1772,13 @@
           <div class="swipe-empty-sub" style="max-width:280px;line-height:1.7">Matcha isn't part of the tradition here — and honestly, that's not a gap. Morocco has one of the world's great tea rituals: fresh mint, gunpowder green tea, poured high from a silver pot into a small glass. It's a ceremony in its own right.<br><br>My honest advice: skip the matcha hunt, find a rooftop café or a Medina terrace, and order the mint tea. It's the real cup of this place.<br><br>I didn't find a dedicated matcha spot worth recommending here — I'd rather say nothing than send you somewhere average.</div>
           <button class="swipe-empty-btn" onclick="selectedDrink='coffee';buildDeck();renderStack()" style="margin-bottom:10px">See coffee spots instead</button>
           <button class="swipe-empty-btn" style="background:var(--card);border:1px solid var(--primary);color:var(--primary)" onclick="goBack()">Change location</button>
+        </div>` : allSwiped ? `
+        <div class="swipe-empty">
+          <div class="swipe-empty-icon">✦</div>
+          <div class="swipe-empty-title">You've seen them all</div>
+          <div class="swipe-empty-sub" style="margin-bottom:20px">You've been through every cafe for this filter. Re-deal to swipe again, or switch to list view.</div>
+          <button class="swipe-empty-btn" onclick="redealDeck()" style="margin-bottom:10px">Re-deal cards</button>
+          <button class="swipe-empty-btn" style="background:var(--card);border:1px solid var(--primary);color:var(--primary)" onclick="setViewMode('list')">Switch to list view</button>
         </div>` : `
         <div class="swipe-empty">
           <div class="swipe-empty-icon">☕</div>
@@ -1792,7 +1829,7 @@
   ];
   function getCafePhoto(cafe) {
     if (cafe.photo_url) return cafe.photo_url;
-    const arr = (cafe.drink === 'matcha' || cafe.vibe_tags.includes('matcha_specialist'))
+    const arr = (cafe.drink === 'matcha' || (cafe.vibe_tags || []).includes('matcha_specialist'))
       ? MATCHA_PHOTOS : COFFEE_PHOTOS;
     return arr[cafe.id % arr.length];
   }
@@ -1801,7 +1838,7 @@
     const el = document.createElement('div');
     el.className = 'swipe-card';
     el.dataset.id = cafe.id;
-    const tags = cafe.vibe_tags.slice(0, 3).map(t =>
+    const tags = (cafe.vibe_tags || []).slice(0, 3).map(t =>
       `<span class="card-tag">${VIBE_EMOJI[t] || ''} ${VIBE_LABEL[t] || t}</span>`).join('');
     const badge = !cafe.is_active
       ? ''
@@ -1838,8 +1875,8 @@
         <div class="card-location">${cafe.neighborhood} · ${cafe.city}</div>
         ${orderSection}
         <div class="card-tags">${tags}</div>
-        <div class="card-tap-hint"><span class="card-tap-hint-icon">↑</span> Tap card for full details</div>
-      </div>`;
+      </div>
+      <div class="card-tap-hint"><span class="card-tap-hint-icon">↑</span> Tap for details</div>`;
     return el;
   }
 
@@ -2125,11 +2162,16 @@
     const cafe = CAFES.find(c => c.id === id);
     if (!cafe) return;
     const n = cafe.curator_notes;
+    const photoUrl = getCafePhoto(cafe);
+    const detailImg = document.getElementById('detail-photo-img');
+    detailImg.src = photoUrl;
+    detailImg.alt = cafe.name;
+    detailImg.style.display = 'block';
     document.getElementById('detail-photo-emoji').textContent = cafe.drink === 'matcha' ? '🍵' : '☕';
     document.getElementById('detail-pick-badge').style.display = cafe.curator_pick ? 'block' : 'none';
     document.getElementById('detail-name').textContent = cafe.name;
     document.getElementById('detail-loc').textContent = `${cafe.neighborhood} · ${cafe.city}`;
-    document.getElementById('detail-tags').innerHTML = cafe.vibe_tags.map(t =>
+    document.getElementById('detail-tags').innerHTML = (cafe.vibe_tags || []).map(t =>
       `<span class="detail-tag">${VIBE_EMOJI[t] || ''} ${VIBE_LABEL[t] || t}</span>`).join('');
     document.getElementById('dn-order').textContent = n.what_to_order || '—';
     document.getElementById('dn-time').textContent  = n.best_time || '—';
@@ -2193,9 +2235,12 @@
     };
     nominationData = data;
     try {
-      await fetch('https://formspree.io/f/YOUR_FORM_ID', {
-        method:'POST', headers:{'Accept':'application/json','Content-Type':'application/json'},
-        body: JSON.stringify(data),
+      await _sb.from('nominations').insert({
+        cafe_name: data.cafe_name, city: data.city, country: data.country,
+        neighborhood: data.neighborhood || null,
+        what_makes_it_special: data.what_makes_it_special,
+        must_order: data.must_order, best_time: data.best_time || null,
+        your_name: data.your_name, instagram_handle: data.instagram_handle || null,
       });
     } catch(err) {}
     showNominationSuccess(data);
