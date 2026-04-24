@@ -1691,10 +1691,15 @@
     openCardDetail(c.id);
   }
 
+  function redealDeck() {
+    deck = [...currentDeck];
+    currentIndex = 0;
+    renderStack();
+  }
+
     function startSwiping() {
     selectedVibes = [...document.querySelectorAll('.ob-vibe.selected')].map(v => v.dataset.vibe);
     buildDeck();
-    currentDeck = [...deck];
     browseListCity = 'all';
     currentViewMode = 'cards';
     document.getElementById('vt-cards').classList.add('active');
@@ -1725,20 +1730,16 @@
   // ── DECK BUILDING ─────────────────────────────────────
   function buildDeck() {
     let filtered = CAFES.filter(c => {
-      // Skip permanently closed cafes
       if (c.is_active === false) return false;
-      // Drink filter
       const tags = c.vibe_tags || [];
       const drinkMatch = selectedDrink === 'matcha'
         ? c.drink === 'matcha' || tags.includes('matcha_specialist')
         : c.drink === 'coffee' || !tags.includes('matcha_specialist');
       if (!drinkMatch) return false;
-      // Location filter
       if (selectedLocation?.visited) {
         if (selectedLocation.type === 'city' && c.city !== selectedLocation.city) return false;
         if (selectedLocation.type === 'country' && c.country !== selectedLocation.country) return false;
       }
-      // Vibe filter
       if (selectedVibes.length === 0) return true;
       return selectedVibes.some(v => {
         if (v === 'trending')  return c.trending;
@@ -1748,10 +1749,9 @@
         return false;
       });
     });
-    // Remove already swiped
+    currentDeck = [...filtered];
     const swiped = [...wishlist, ...beenThere];
-    filtered = filtered.filter(c => !swiped.includes(c.id));
-    deck = filtered;
+    deck = filtered.filter(c => !swiped.includes(c.id));
     currentIndex = 0;
   }
 
@@ -1764,6 +1764,7 @@
     if (deck.length === 0) {
       const isMorocco = selectedLocation && selectedLocation.country === 'Morocco';
       const isMoroccoMatcha = isMorocco && selectedDrink === 'matcha';
+      const allSwiped = currentDeck.length > 0 && deck.length === 0;
       stack.innerHTML = isMoroccoMatcha ? `
         <div class="swipe-empty">
           <div class="swipe-empty-icon">🍃</div>
@@ -1771,6 +1772,13 @@
           <div class="swipe-empty-sub" style="max-width:280px;line-height:1.7">Matcha isn't part of the tradition here — and honestly, that's not a gap. Morocco has one of the world's great tea rituals: fresh mint, gunpowder green tea, poured high from a silver pot into a small glass. It's a ceremony in its own right.<br><br>My honest advice: skip the matcha hunt, find a rooftop café or a Medina terrace, and order the mint tea. It's the real cup of this place.<br><br>I didn't find a dedicated matcha spot worth recommending here — I'd rather say nothing than send you somewhere average.</div>
           <button class="swipe-empty-btn" onclick="selectedDrink='coffee';buildDeck();renderStack()" style="margin-bottom:10px">See coffee spots instead</button>
           <button class="swipe-empty-btn" style="background:var(--card);border:1px solid var(--primary);color:var(--primary)" onclick="goBack()">Change location</button>
+        </div>` : allSwiped ? `
+        <div class="swipe-empty">
+          <div class="swipe-empty-icon">✦</div>
+          <div class="swipe-empty-title">You've seen them all</div>
+          <div class="swipe-empty-sub" style="margin-bottom:20px">You've been through every cafe for this filter. Re-deal to swipe again, or switch to list view.</div>
+          <button class="swipe-empty-btn" onclick="redealDeck()" style="margin-bottom:10px">Re-deal cards</button>
+          <button class="swipe-empty-btn" style="background:var(--card);border:1px solid var(--primary);color:var(--primary)" onclick="setViewMode('list')">Switch to list view</button>
         </div>` : `
         <div class="swipe-empty">
           <div class="swipe-empty-icon">☕</div>
