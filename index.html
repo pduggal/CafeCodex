@@ -1619,9 +1619,10 @@
       renderBrowseList();
     } else {
       swipeArea.style.display = '';
-      swipeActions.style.display = '';
-      progressDots.style.display = '';
       browseWrap.classList.remove('visible');
+      const hasCards = deck.length > 0 && currentIndex < deck.length;
+      swipeActions.style.display = hasCards ? '' : 'none';
+      progressDots.style.display = hasCards ? '' : 'none';
     }
   }
 
@@ -1700,8 +1701,6 @@
     document.getElementById('vt-list').classList.remove('active');
     document.getElementById('browse-list-wrap').classList.remove('visible');
     document.getElementById('swipe-area-wrap').style.display = '';
-    document.querySelector('.swipe-actions').style.display = '';
-    document.getElementById('progress-dots').style.display = '';
     renderStack();
     const locPart = selectedLocation?.visited
       ? ` · ${selectedLocation.city || selectedLocation.country}` : '';
@@ -1729,9 +1728,10 @@
       // Skip permanently closed cafes
       if (c.is_active === false) return false;
       // Drink filter
+      const tags = c.vibe_tags || [];
       const drinkMatch = selectedDrink === 'matcha'
-        ? c.drink === 'matcha' || c.vibe_tags.includes('matcha_specialist')
-        : c.drink === 'coffee' || !c.vibe_tags.includes('matcha_specialist');
+        ? c.drink === 'matcha' || tags.includes('matcha_specialist')
+        : c.drink === 'coffee' || !tags.includes('matcha_specialist');
       if (!drinkMatch) return false;
       // Location filter
       if (selectedLocation?.visited) {
@@ -1743,8 +1743,8 @@
       return selectedVibes.some(v => {
         if (v === 'trending')  return c.trending;
         if (v === 'picks')     return c.curator_pick === true;
-        if (v === 'aesthetic') return c.vibe_tags.includes('viral_aesthetic');
-        if (v === 'hidden')    return c.vibe_tags.includes('hidden_gem');
+        if (v === 'aesthetic') return tags.includes('viral_aesthetic');
+        if (v === 'hidden')    return tags.includes('hidden_gem');
         return false;
       });
     });
@@ -1821,7 +1821,7 @@
   ];
   function getCafePhoto(cafe) {
     if (cafe.photo_url) return cafe.photo_url;
-    const arr = (cafe.drink === 'matcha' || cafe.vibe_tags.includes('matcha_specialist'))
+    const arr = (cafe.drink === 'matcha' || (cafe.vibe_tags || []).includes('matcha_specialist'))
       ? MATCHA_PHOTOS : COFFEE_PHOTOS;
     return arr[cafe.id % arr.length];
   }
@@ -1830,7 +1830,7 @@
     const el = document.createElement('div');
     el.className = 'swipe-card';
     el.dataset.id = cafe.id;
-    const tags = cafe.vibe_tags.slice(0, 3).map(t =>
+    const tags = (cafe.vibe_tags || []).slice(0, 3).map(t =>
       `<span class="card-tag">${VIBE_EMOJI[t] || ''} ${VIBE_LABEL[t] || t}</span>`).join('');
     const badge = !cafe.is_active
       ? ''
@@ -2163,7 +2163,7 @@
     document.getElementById('detail-pick-badge').style.display = cafe.curator_pick ? 'block' : 'none';
     document.getElementById('detail-name').textContent = cafe.name;
     document.getElementById('detail-loc').textContent = `${cafe.neighborhood} · ${cafe.city}`;
-    document.getElementById('detail-tags').innerHTML = cafe.vibe_tags.map(t =>
+    document.getElementById('detail-tags').innerHTML = (cafe.vibe_tags || []).map(t =>
       `<span class="detail-tag">${VIBE_EMOJI[t] || ''} ${VIBE_LABEL[t] || t}</span>`).join('');
     document.getElementById('dn-order').textContent = n.what_to_order || '—';
     document.getElementById('dn-time').textContent  = n.best_time || '—';
