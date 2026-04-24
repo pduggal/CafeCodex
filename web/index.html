@@ -6,6 +6,10 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Café Codex" />
+  <meta name="theme-color" content="#1A0F0A" />
   <title>Café Codex</title>
   <!-- v4.2 Apr 23 2026 Supabase backend, detail photos, improved tap hint -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,7 +23,11 @@
       --success: #6B9E6B; --tag-bg: #221510;
     }
     html, body { height: 100%; }
-    body { background: var(--bg); color: var(--cream); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+    body { background: #0D0705; color: var(--cream); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; overflow: hidden; -webkit-text-size-adjust: 100%; }
+    .app-shell { width: 100%; max-width: 430px; height: 100%; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); position: relative; }
+    @media (min-width: 481px) {
+      .app-shell { border-left: 1px solid var(--border); border-right: 1px solid var(--border); box-shadow: 0 0 80px rgba(201,151,58,0.06); }
+    }
 
     /* ── Screens ── */
     .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
@@ -51,7 +59,7 @@
     .ob-loc-input {
       width: 100%; background: var(--card); border: 1px solid var(--border);
       border-radius: 12px; padding: 12px 36px 12px 14px; color: var(--cream);
-      font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.2s;
+      font-size: 16px; font-family: inherit; outline: none; transition: border-color 0.2s;
       -webkit-appearance: none;
     }
     .ob-loc-input:focus { border-color: var(--primary); }
@@ -195,7 +203,15 @@
     .card-note { background: var(--bg); border-radius: 10px; padding: 10px 12px; margin-top: 2px; }
     .card-note-label { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
     .card-note-value { color: var(--cream); font-size: 13px; line-height: 1.4; }
-    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; padding-top: 4px; padding-bottom: 4px; }
+    .card-extras { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+    .card-extra-pill { display: flex; align-items: center; gap: 4px; background: var(--bg); border-radius: 8px; padding: 5px 10px; }
+    .card-extra-icon { font-size: 11px; }
+    .card-extra-text { color: var(--cream); font-size: 11px; font-weight: 500; }
+    .card-extra-label { color: var(--muted); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-rating { display: flex; align-items: center; gap: 3px; background: rgba(201,151,58,0.12); border: 1px solid rgba(201,151,58,0.3); border-radius: 8px; padding: 5px 10px; }
+    .card-rating-num { color: var(--primary); font-size: 13px; font-weight: 800; }
+    .card-rating-of { color: var(--muted); font-size: 10px; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 4px; padding-bottom: 4px; }
     .card-tag { background: var(--tag-bg); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
     .must-try-callout { background: linear-gradient(135deg,rgba(201,151,58,0.18),rgba(201,151,58,0.06)); border: 1px solid rgba(201,151,58,0.55); border-radius: 10px; padding: 10px 12px; margin-top: 2px; }
     .must-try-label { color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px; }
@@ -262,7 +278,7 @@
     .list-tab { flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
     .list-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
     .list-search-wrap { padding: 10px 16px; flex-shrink: 0; border-bottom: 1px solid var(--border); }
-    .list-search-input { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px 10px 36px; color: var(--cream); font-size: 14px; outline: none; box-sizing: border-box; }
+    .list-search-input { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px 10px 36px; color: var(--cream); font-size: 16px; outline: none; box-sizing: border-box; }
     .list-search-input::placeholder { color: var(--muted); }
     .list-search-input:focus { border-color: var(--primary); }
     .list-search-wrap { position: relative; }
@@ -298,8 +314,8 @@
     .author-scroll-wrap { flex: 1; overflow-y: auto; }
     .author-hero { display: flex; flex-direction: column; align-items: center; padding: 32px 20px 24px; }
     .author-ring { width: 88px; height: 88px; border-radius: 50%; border: 1.5px solid var(--primary); padding: 3px; margin-bottom: 12px; }
-    .author-photo { width: 100%; height: 100%; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; }
-    .author-initial { color: var(--primary); font-size: 32px; font-weight: 700; }
+    .author-photo { width: 100%; height: 100%; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .author-photo img { width: 100%; height: 100%; object-fit: cover; }
     .author-name { color: var(--cream); font-size: 19px; font-weight: 700; margin-bottom: 2px; }
     .author-handle { color: var(--muted); font-size: 13px; margin-bottom: 14px; }
     .social-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
@@ -316,15 +332,28 @@
     .signature { margin-top: 20px; margin-bottom: 32px; }
     .sig-dash { color: var(--muted); font-size: 15px; margin-bottom: 3px; }
     .sig-name { color: var(--primary); font-size: 24px; font-weight: 800; font-style: italic; }
-    /* Press section */
-    .press-section { padding: 20px 20px 4px; }
-    .press-eyebrow { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 12px; }
-    .press-card { background: linear-gradient(135deg, rgba(201,151,58,0.12), rgba(201,151,58,0.05)); border: 1px solid rgba(201,151,58,0.3); border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
-    .press-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--primary); color: #1A0F0A; font-size: 11px; font-weight: 800; letter-spacing: 0.3px; padding: 4px 10px; border-radius: 20px; align-self: flex-start; }
-    .press-quote { color: var(--cream); font-size: 15px; font-weight: 700; line-height: 1.45; }
-    .press-source { color: var(--muted); font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .press-source-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--primary); }
-
+    .world-best { margin: 0 20px 28px; }
+    .world-best-toggle { display: flex; align-items: center; justify-content: space-between; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .world-best-toggle-left { display: flex; align-items: center; gap: 8px; }
+    .world-best-title { color: var(--primary); font-size: 12px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; }
+    .world-best-subtitle { color: var(--muted); font-size: 10px; }
+    .world-best-chevron { color: var(--muted); font-size: 14px; transition: transform 0.3s ease; }
+    .world-best.open .world-best-chevron { transform: rotate(180deg); }
+    .world-best.open .world-best-toggle { border-radius: 14px 14px 0 0; border-bottom: none; }
+    .world-best-card { background: var(--card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 14px 14px; display: none; max-height: 55vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .world-best.open .world-best-card { display: block; }
+    .world-best-row { display: flex; align-items: flex-start; padding: 12px 16px; gap: 10px; border-bottom: 1px solid var(--border); }
+    .world-best-row:last-child { border-bottom: none; }
+    .world-best-row.top3 { background: linear-gradient(135deg, rgba(201,151,58,0.06), transparent); }
+    .world-best-rank { color: var(--primary); font-size: 13px; font-weight: 800; width: 22px; text-align: center; flex-shrink: 0; padding-top: 1px; }
+    .world-best-row.top3 .world-best-rank { font-size: 16px; }
+    .world-best-info { flex: 1; min-width: 0; }
+    .world-best-name { color: var(--cream); font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .world-best-loc { color: var(--muted); font-size: 10px; display: flex; align-items: center; gap: 4px; margin-bottom: 3px; }
+    .world-best-flag { font-size: 12px; }
+    .world-best-known { color: var(--cream); font-size: 10px; opacity: 0.6; font-style: italic; line-height: 1.35; }
+    .world-best-source { text-align: center; padding: 10px 16px; border-top: 1px solid var(--border); }
+    .world-best-source a { color: var(--muted); font-size: 10px; text-decoration: none; letter-spacing: 0.3px; }
     .stats-row { display: flex; align-items: center; margin: 0 20px 32px; background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px 0; }
     .stat-item { flex: 1; text-align: center; }
     .stat-num { color: var(--primary); font-size: 17px; font-weight: 800; margin-bottom: 3px; }
@@ -334,7 +363,7 @@
     /* ══════════════════════════════════════════
        CARD DETAIL SHEET
     ══════════════════════════════════════════ */
-    .detail-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:flex-end; justify-content:center; }
+    .detail-overlay { display:none; position:absolute; inset:0; background:rgba(0,0,0,0.6); z-index:300; align-items:flex-end; justify-content:center; }
     .detail-overlay.open { display:flex; }
     .detail-sheet { background:var(--bg); border-radius:22px 22px 0 0; width:100%; max-height:88dvh; overflow-y:auto; padding-bottom:calc(24px + env(safe-area-inset-bottom)); }
     .detail-photo { height:200px; background:var(--card); border-radius:22px 22px 0 0; position:relative; overflow:hidden; }
@@ -361,7 +390,7 @@
     /* ══════════════════════════════════════════
        NOMINATE MODAL
     ══════════════════════════════════════════ */
-    .nominate-overlay { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 400; overflow-y: auto; flex-direction: column; }
+    .nominate-overlay { display: none; position: absolute; inset: 0; background: var(--bg); z-index: 400; overflow-y: auto; flex-direction: column; }
     .nominate-overlay.open { display: flex; }
     .nominate-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 16px; position: sticky; top: 0; background: var(--bg); border-bottom: 1px solid var(--border); z-index: 1; }
     .nominate-title { font-size: 18px; font-weight: 800; color: var(--cream); }
@@ -374,7 +403,7 @@
     .form-row .form-group { flex: 1; }
     .form-label { color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 7px; display: block; }
     .form-label span { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 10px; }
-    .form-input, .form-textarea { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--cream); font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+    .form-input, .form-textarea { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--cream); font-size: 16px; font-family: inherit; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
     .form-input:focus, .form-textarea:focus { border-color: var(--primary); }
     .form-input::placeholder, .form-textarea::placeholder { color: var(--muted); }
     .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
@@ -398,11 +427,51 @@
     .draft-by { color: var(--success); font-size: 12px; font-style: italic; }
     .share-btn { width: 100%; background: var(--card); border: 1px solid var(--primary); color: var(--primary); border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
     .back-btn { width: 100%; background: var(--primary); color: var(--bg); border: none; border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
-    .share-toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--success); color: #fff; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 999; }
+    .share-toast { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--success); color: #fff; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 999; }
     .share-toast.show { opacity: 1; }
+
+    @media (max-width: 480px) {
+      .swipe-header { padding: 12px 14px 8px; }
+      .swipe-logo { font-size: 18px; }
+      .swipe-filter-pill { padding: 8px 12px; }
+      .card-photo { height: 40%; }
+      .card-body { padding: 10px 14px 36px; gap: 5px; overflow: hidden; }
+      .card-name { font-size: 18px; }
+      .card-location { font-size: 12px; }
+      .card-note { padding: 6px 10px; }
+      .card-note-label { font-size: 9px; margin-bottom: 2px; }
+      .card-note-value { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .must-try-callout { padding: 6px 10px; }
+      .must-try-label { font-size: 9px; margin-bottom: 2px; }
+      .must-try-drink { font-size: 12px; }
+      .must-try-note { display: none; }
+      .card-extras { gap: 4px; }
+      .card-extra-pill { padding: 4px 8px; }
+      .card-extra-text { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+      .card-extra-icon { font-size: 10px; }
+      .card-rating { padding: 4px 8px; }
+      .card-rating-num { font-size: 12px; }
+      .card-tags { gap: 4px; padding-top: 4px; padding-bottom: 6px; }
+      .card-tag { font-size: 9px; padding: 3px 7px; }
+      .action-circle { width: 56px; height: 56px; }
+      .action-circle.want { width: 64px; height: 64px; }
+      .ac-icon { font-size: 18px; }
+      .ac-label { font-size: 9px; }
+      .swipe-actions { gap: 16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
+      .ob-wrap { padding: 24px 20px 32px; }
+      .browse-save-btn, .browse-been-btn { width: 42px; height: 42px; }
+      .detail-name { font-size: 20px; }
+      .share-toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+    }
+    @media (max-width: 375px) {
+      .card-photo { height: 36%; }
+      .card-name { font-size: 17px; }
+      .ob-wrap { padding: 20px 16px 28px; }
+    }
   </style>
 </head>
 <body>
+<div class="app-shell">
 
   <!-- ══ SCREEN 1: Pick drink + location ══════════════ -->
   <div class="screen active" id="screen-drink">
@@ -558,7 +627,7 @@
   <div class="screen" id="screen-author">
     <div class="author-scroll-wrap">
       <div class="author-hero">
-        <div class="author-ring"><div class="author-photo"><span class="author-initial">P</span></div></div>
+        <div class="author-ring"><div class="author-photo"><img src="assets/author.jpg" alt="Pallavi Duggal"></div></div>
         <div class="author-name">Pallavi Duggal</div>
         <div class="author-handle">@honestcoffeestop</div>
         <div class="social-row">
@@ -595,12 +664,98 @@
       </div>
     </div>
 
-    <div class="press-section">
-      <div class="press-eyebrow">In the Press</div>
-      <div class="press-card">
-        <div class="press-badge">🏆 #5 Best Coffee City in the US</div>
-        <div class="press-quote">"Seattle ranks at number five on the list of the country's best coffee cities."</div>
-        <div class="press-source"><div class="press-source-dot"></div>@secretseattle_ · Secret Seattle</div>
+    <div class="world-best" id="worldBest">
+      <div class="world-best-toggle" onclick="document.getElementById('worldBest').classList.toggle('open')">
+        <div class="world-best-toggle-left">
+          <div>
+            <div class="world-best-title">✦ World's Best Coffee Shops 2026</div>
+            <div class="world-best-subtitle">Top 10 from 100+ shops worldwide — tap to explore</div>
+          </div>
+        </div>
+        <span class="world-best-chevron">▼</span>
+      </div>
+      <div class="world-best-card">
+        <div class="world-best-row top3">
+          <span class="world-best-rank">1</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Onyx Coffee Lab</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇺🇸</span> Rogers, Arkansas, USA</div>
+            <div class="world-best-known">Multi-award-winning roaster known for sourcing the world's rarest lots</div>
+          </div>
+        </div>
+        <div class="world-best-row top3">
+          <span class="world-best-rank">2</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Tim Wendelboe</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇳🇴</span> Grünerløkka, Oslo, Norway</div>
+            <div class="world-best-known">Legendary Nordic micro-roastery — single-origin light roasts, no milk menu</div>
+          </div>
+        </div>
+        <div class="world-best-row top3">
+          <span class="world-best-rank">3</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Alquimia Coffee</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇸🇻</span> Santa Ana, El Salvador</div>
+            <div class="world-best-known">Farm-to-cup at origin — brews from their own volcanic-soil estate</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">4</span>
+          <div class="world-best-info">
+            <div class="world-best-name">ONA Coffee</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇦🇺</span> Marrickville, Sydney, Australia</div>
+            <div class="world-best-known">World Barista Championship winners — precision-driven specialty</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">5</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Toby's Estate Roasters</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇦🇺</span> Chippendale, Sydney, Australia</div>
+            <div class="world-best-known">Warehouse roastery with seasonal blends and single origins</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">6</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Apartment Coffee</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇸🇬</span> Lavender, Singapore</div>
+            <div class="world-best-known">Minimalist café bar serving refined espresso and batch brews</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">7</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Gota Coffee Experts</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇦🇹</span> Neubau, Vienna, Austria</div>
+            <div class="world-best-known">Third-wave pioneer in a city famous for traditional coffeehouses</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">8</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Story of Ono</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇲🇾</span> Kuala Lumpur, Malaysia</div>
+            <div class="world-best-known">Japanese-inspired pour-over bar with single-estate Malaysian beans</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">9</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Tropicalia Coffee</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇨🇴</span> Chapinero, Bogotá, Colombia</div>
+            <div class="world-best-known">Colombian specialty at origin — fruit-forward roasts and cascara</div>
+          </div>
+        </div>
+        <div class="world-best-row">
+          <span class="world-best-rank">10</span>
+          <div class="world-best-info">
+            <div class="world-best-name">Tanat</div>
+            <div class="world-best-loc"><span class="world-best-flag">🇫🇷</span> Le Marais, Paris, France</div>
+            <div class="world-best-known">New-wave Parisian espresso bar redefining café culture in the Marais</div>
+          </div>
+        </div>
+        <div class="world-best-source"><a href="https://theworlds100bestcoffeeshops.com/top-100-coffee-shops/" target="_blank">Source: The World's 100 Best Coffee Shops 2026 →</a></div>
       </div>
     </div>
 
@@ -957,18 +1112,18 @@
     // ── Mesa / Tempe / East Valley, AZ ─────────────────────
     {id:'164',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/ZWxO1bI_7ITs6elGr3WoeA/1000s.jpg',name:'Pair Cupworks',city:'Mesa',country:'United States',neighborhood:'Mesa',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, their seasonal espresso',best_time:'Weekday mornings at the roastery bar',content_tips:'The specialty coffee anchor for Mesa and the broader East Valley — an active roastery with a real brewing program and a visual identity that holds up for content. This is the address that proves the East Valley belongs in the Arizona coffee conversation.'},instagram_handle:'paircupworks',trending:true},
     {id:'165',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/zgZg2pJLoL8Lt3_ghhFRVQ/1000s.jpg',name:'Peixoto Coffee Roasters',city:'Chandler',country:'United States',neighborhood:'Chandler',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','hidden_gem'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, their estate espresso',best_time:'Weekday mornings',content_tips:'One of the most distinctive coffee stories in Arizona — a family-owned Brazilian farm-to-cup operation roasting in Chandler. The sourcing is genuinely unique and the space reflects that intentionality. A must if you care about where coffee actually comes from.'},instagram_handle:'peixotocoffee',trending:false},
-    {id:'166',name:'Cartel Coffee Lab',city:'Tempe',country:'United States',neighborhood:'Tempe',drink:'coffee',vibe_tags:['specialty_coffee','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Espresso, house filter',best_time:'Weekday mornings',content_tips:'Cartel\'s Tempe location serves the university crowd well without compromising the sourcing — consistent quality across all their Arizona presence.'},instagram_handle:'cartelcoffeelab',trending:false},
-    {id:'167',name:'Press Coffee',city:'Tempe',country:'United States',neighborhood:'Tempe',drink:'coffee',vibe_tags:['specialty_coffee','pour_over'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Pour-over, house espresso',best_time:'Weekday mornings',content_tips:'Press brings their roastery-level consistency to Tempe — solid coffee-first stop for the East Valley.'},instagram_handle:'presscoffeeroasters',trending:false},
-    {id:'168',name:'Mythical Coffee',city:'Tempe',country:'United States',neighborhood:'Tempe',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Espresso, their signature specialty drink',best_time:'Weekday mornings',content_tips:'Sits in the aesthetic-but-serious bucket — a current East Valley name with a visual identity that works and coffee that passes the test.'},instagram_handle:'mythicalcoffee',trending:true},
+    {id:'166',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/cxaT-2LeBb94ArUnmFwzIg/1000s.jpg',name:'Cartel Coffee Lab',city:'Tempe',country:'United States',neighborhood:'Tempe',drink:'coffee',vibe_tags:['specialty_coffee','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Espresso, house filter',best_time:'Weekday mornings',content_tips:'Cartel\'s Tempe location serves the university crowd well without compromising the sourcing — consistent quality across all their Arizona presence.'},instagram_handle:'cartelcoffeelab',trending:false},
+    {id:'167',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/PgU-8tEzFAAJx3pvHL_Nhw/1000s.jpg',name:'Press Coffee',city:'Tempe',country:'United States',neighborhood:'Tempe',drink:'coffee',vibe_tags:['specialty_coffee','pour_over'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Pour-over, house espresso',best_time:'Weekday mornings',content_tips:'Press brings their roastery-level consistency to Tempe — solid coffee-first stop for the East Valley.'},instagram_handle:'presscoffeeroasters',trending:false},
+    {id:'168',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/oaa85VbZjQLYx6HahkvTeA/1000s.jpg',name:'Mythical Coffee',city:'Tempe',country:'United States',neighborhood:'Tempe',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Espresso, their signature specialty drink',best_time:'Weekday mornings',content_tips:'Sits in the aesthetic-but-serious bucket — a current East Valley name with a visual identity that works and coffee that passes the test.'},instagram_handle:'mythicalcoffee',trending:true},
 
     // ── Tucson, AZ ─────────────────────────────────────────
     {id:'169',name:'Presta Coffee Roasters',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/HPJ3hUTGpx8Zu-t5DW1XNQ/1000s.jpg',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, house espresso',best_time:'Weekday mornings',content_tips:'Presta is Tucson\'s flagship specialty roaster — repeatedly named across local threads as the top coffee destination in the city. Beautiful space, serious sourcing, and a visual identity that holds up. The Tucson stop.'},instagram_handle:'prestacoffee',trending:true},
     {id:'170',name:'Exo Roast Co.',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/cpkW6WPC0k-ETTYX6LtgeQ/1000s.jpg',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin filter, espresso',best_time:'Weekday mornings',content_tips:'Exo is the other top-tier local name in Tucson specialty coffee — a consistent presence in local recommendations and a genuine roastery operation. Go to Presta and Exo on the same Tucson morning.'},instagram_handle:'exoroast',trending:false},
     {id:'171',name:'Savaya Coffee Market',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/i4adYOEAJkWiRpiwDejNBA/1000s.jpg',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','creative_drinks'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Espresso, cold brew, their seasonal specialty',best_time:'Weekday mornings',content_tips:'Recent Tucson Reddit has a self-described coffee snob calling Savaya the best in town — that\'s the kind of local validation worth noting. Strong on the espresso and cold brew side.'},instagram_handle:'savayacoffee',trending:true},
-    {id:'172',name:'Caffe Luce',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','cozy_quiet','hidden_gem'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, espresso',best_time:'Weekday mornings',content_tips:'A Tucson coffee classic — keeps showing up in older and newer local threads alike. Understated, consistent, worth the stop.'},instagram_handle:'caffeluce',trending:false},
-    {id:'173',name:'Yellow Brick Coffee',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','hidden_gem','cozy_quiet'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Pour-over, espresso',best_time:'Weekday mornings',content_tips:'A neighborhood specialty find in Tucson — the kind of place locals go when they want good coffee without the scene.'},instagram_handle:'yellowbrickcoffee',trending:false},
-    {id:'174',name:'Sonoran House',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','cozy_quiet'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, espresso',best_time:'Weekend mornings',content_tips:'The visual identity reflects the Sonoran Desert setting — warm tones, natural materials, distinctive aesthetic. Coffee is genuinely solid alongside the design.'},instagram_handle:'sonoranhouse',trending:true},
-    {id:'175',name:'Tucson Coffee Roasters',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','pour_over'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Single-origin filter, house espresso',best_time:'Weekday mornings',content_tips:'An active local roastery completing the Tucson specialty picture — honest coffee, no performance.'},instagram_handle:'tucsoncoffeeroasters',trending:false},
+    {id:'172',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/uC9_rm53oZgXLTK6RJmVKw/1000s.jpg',name:'Caffe Luce',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','cozy_quiet','hidden_gem'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, espresso',best_time:'Weekday mornings',content_tips:'A Tucson coffee classic — keeps showing up in older and newer local threads alike. Understated, consistent, worth the stop.'},instagram_handle:'caffeluce',trending:false},
+    {id:'173',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/bVhiPaPIRQBOSQPhqKKW0w/1000s.jpg',name:'Yellow Brick Coffee',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','hidden_gem','cozy_quiet'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Pour-over, espresso',best_time:'Weekday mornings',content_tips:'A neighborhood specialty find in Tucson — the kind of place locals go when they want good coffee without the scene.'},instagram_handle:'yellowbrickcoffee',trending:false},
+    {id:'174',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/Ped0uLtZU6XEzr93jIdyLg/1000s.jpg',name:'Sonoran House',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','cozy_quiet'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Filter coffee, espresso',best_time:'Weekend mornings',content_tips:'The visual identity reflects the Sonoran Desert setting — warm tones, natural materials, distinctive aesthetic. Coffee is genuinely solid alongside the design.'},instagram_handle:'sonoranhouse',trending:true},
+    {id:'175',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/ejcOvzW_gnx0Z4Uatz5Kzw/1000s.jpg',name:'Tucson Coffee Roasters',city:'Tucson',country:'United States',neighborhood:'Tucson',drink:'coffee',vibe_tags:['specialty_coffee','pour_over'],curator_pick:false,curator_rating:4,curator_notes:{what_to_order:'Single-origin filter, house espresso',best_time:'Weekday mornings',content_tips:'An active local roastery completing the Tucson specialty picture — honest coffee, no performance.'},instagram_handle:'tucsoncoffeeroasters',trending:false},
 
     // ── Las Vegas, NV ──────────────────────────────────────
     {id:'176',name:'Vesta Coffee Roasters',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/7p12mKaf1HZrAEZ65TJnxg/1000s.jpg',city:'Las Vegas',country:'United States',neighborhood:'Arts District',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','pour_over'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin pour-over, house espresso',best_time:'Weekday mornings in the Arts District',content_tips:'The anchor of Las Vegas specialty coffee — roasting on-site in a city that doesn\'t always reward serious coffee. The Arts District location has strong natural light and a visual identity that works. This is the stop.'},instagram_handle:'vestacoffee',trending:true},
@@ -976,8 +1131,8 @@
     {id:'178',name:'Mothership Coffee Roasters',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/OFfMyDWTgxhoo8gD__QJxA/1000s.jpg',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'coffee',vibe_tags:['specialty_coffee','creative_drinks','viral_aesthetic'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Single-origin espresso, cold brew',best_time:'Weekday mornings',content_tips:'Mothership is one of Las Vegas\'s most active local roasters — multiple locations, consistent quality, and a visual identity strong enough for content. The space-themed aesthetic is distinctive without being a gimmick.'},instagram_handle:'mothershipcoffee',trending:false},
     {id:'179',name:'Dark Moon Coffee Roasters',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/L2xhWKbWn7LgEc4MAG6Yaw/1000s.jpg',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'coffee',vibe_tags:['specialty_coffee','pour_over','hidden_gem'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Pour-over, single-origin espresso',best_time:'Weekday mornings',content_tips:'Dark Moon is Las Vegas\'s quieter specialty roaster — less visible than Vesta or Mothership, more serious about the bean. The pour-over program is where they shine.'},instagram_handle:'darkmoonroasters',trending:false},
     {id:'180',name:'Take It Easy Roasters',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/f--ocCK5nbe0M8nsz-ZVuw/1000s.jpg',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'coffee',vibe_tags:['specialty_coffee','viral_aesthetic','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'House filter, espresso',best_time:'Weekday mornings',content_tips:'The name is misleading — the coffee is taken very seriously. A well-designed Las Vegas specialty spot with a relaxed aesthetic that photographs well.'},instagram_handle:'takeiteasyroasters',trending:true},
-    {id:'181',name:'Desert Wind Coffee Roasters',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'coffee',vibe_tags:['specialty_coffee','pour_over'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Single-origin filter, espresso',best_time:'Weekday mornings',content_tips:'Desert Wind rounds out the Las Vegas local roaster picture — honest beans, no Strip pricing, no performance.'},instagram_handle:'desertwndcoffee',trending:false},
-    {id:'182',name:'Urth Caffé',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'coffee',vibe_tags:['creative_drinks','viral_aesthetic','collab_worthy','matcha_specialist'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Matcha latte, their signature blended drink',best_time:'Weekend mornings for the full aesthetic crowd',content_tips:'Urth is here for the audience demand, not the coffee-snob credential — and that\'s fine. The aesthetic is consistently strong, the drinks photograph well, and it captures a crowd that matters. Know the difference between this and Vesta before you walk in.'},instagram_handle:'urthcaffe',trending:true},
+    {id:'181',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/ycnP_wmZOAlVrVXk0iVZ0A/1000s.jpg',name:'Desert Wind Coffee Roasters',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'coffee',vibe_tags:['specialty_coffee','pour_over'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Single-origin filter, espresso',best_time:'Weekday mornings',content_tips:'Desert Wind rounds out the Las Vegas local roaster picture — honest beans, no Strip pricing, no performance.'},instagram_handle:'desertwndcoffee',trending:false},
+    {id:'182',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/hAHyxQWokrI4BIwrWR4WGg/1000s.jpg',name:'Urth Caffé',city:'Las Vegas',country:'United States',neighborhood:'Las Vegas',drink:'coffee',vibe_tags:['creative_drinks','viral_aesthetic','collab_worthy','matcha_specialist'],curator_pick:false,curator_rating:3,curator_notes:{what_to_order:'Matcha latte, their signature blended drink',best_time:'Weekend mornings for the full aesthetic crowd',content_tips:'Urth is here for the audience demand, not the coffee-snob credential — and that\'s fine. The aesthetic is consistently strong, the drinks photograph well, and it captures a crowd that matters. Know the difference between this and Vesta before you walk in.'},instagram_handle:'urthcaffe',trending:true},
 
     // ── NYC — Matcha Specialists ──────────────────────────
     {id:'183',name:'Maiko Matcha Cafe',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/Gt0cgXZMp4srmRbYOlPmbA/1000s.jpg',city:'New York',country:'United States',neighborhood:'East Village',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','hidden_gem'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial Uji matcha bowl, matcha dessert of the day',best_time:'Weekday mornings before the East Village wakes up',content_tips:'Authentic Kyoto sourcing — Uji-grade, not a latte operation dressed up. The ceramic presentation is beautiful and the desserts are worth filming. One of the most legitimate matcha stops in the city.'},instagram_handle:'maikomatchacafe',trending:true},
@@ -987,8 +1142,8 @@
 
     // ── New Jersey — Hoboken / Heights Matcha ─────────────
     {id:'187',name:"Jane's Matcha",city:'Hoboken',country:'United States',neighborhood:'Jersey City Heights',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Hand-whisked ceremonial matcha, matcha latte',best_time:'Weekend mornings — pop-up timing varies, check their stories',content_tips:'The most serious matcha stop in the Hoboken-adjacent orbit — hand-whisked, proper sourcing, no shortcuts. A pop-up format means limited windows; follow them closely. When you\'re there, the preparation is worth filming.'},instagram_handle:'janesmatcha',trending:false},
-    {id:'188',name:'bwè kafe',city:'Hoboken',country:'United States',neighborhood:'Hoboken',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial matcha, their house espresso',best_time:'Weekday mornings',content_tips:'One of Hoboken\'s strongest crossover spots — serious about both sides of the menu. The matcha here is notably well-sourced for a neighborhood café. Low-key aesthetic, consistent quality.'},instagram_handle:'bwekafe',trending:false},
-    {id:'189',name:'Hidden Grounds',city:'Hoboken',country:'United States',neighborhood:'Hoboken',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Matcha latte, desi-inspired specialty drink',best_time:'Weekday mornings',content_tips:'The Hoboken location extends the Hidden Grounds matcha story beyond Journal Square — community-rooted with a creative menu. The matcha drinks have a distinctive identity that photographs well.'},instagram_handle:'hiddengroundscoffee',trending:false},
+    {id:'188',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/ZHVW4ZhTPHMBPjFPDBf0jA/1000s.jpg',name:'bwè kafe',city:'Hoboken',country:'United States',neighborhood:'Hoboken',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','cozy_quiet'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial matcha, their house espresso',best_time:'Weekday mornings',content_tips:'One of Hoboken\'s strongest crossover spots — serious about both sides of the menu. The matcha here is notably well-sourced for a neighborhood café. Low-key aesthetic, consistent quality.'},instagram_handle:'bwekafe',trending:false},
+    {id:'189',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/bsv7445ZhG7rvRDQIvh7yw/1000s.jpg',name:'Hidden Grounds',city:'Hoboken',country:'United States',neighborhood:'Hoboken',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Matcha latte, desi-inspired specialty drink',best_time:'Weekday mornings',content_tips:'The Hoboken location extends the Hidden Grounds matcha story beyond Journal Square — community-rooted with a creative menu. The matcha drinks have a distinctive identity that photographs well.'},instagram_handle:'hiddengroundscoffee',trending:false},
     {id:'190',name:"madi's matcha",city:'Jersey City',country:'United States',neighborhood:'Jersey City Heights',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'First-harvest ceremonial matcha, seasonal matcha drink',best_time:'Pop-up schedule — check Instagram before you go',content_tips:'First-harvest ceremonial sourcing in a pop-up format — this is as serious as North Jersey gets about matcha. A rare find in the Heights orbit. The intimacy of the pop-up makes for content that stands apart from the high-volume spots.'},instagram_handle:'madismatcha',trending:false},
 
     // ── Seattle — Matcha ──────────────────────────────────
@@ -998,10 +1153,10 @@
     {id:'192',name:'Matcha Magic',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/9fCRpH9su_hBrkW7yAPZZQ/1000s.jpg',city:'Bellevue',country:'United States',neighborhood:'Downtown Bellevue',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','creative_drinks'],curator_pick:true,curator_rating:4,curator_notes:{what_to_order:'Ceremonial matcha latte, signature matcha drink',best_time:'Weekday mornings',content_tips:'Bellevue\'s dedicated matcha flagship — a full matcha-focused menu in a market that usually buries matcha under coffee. The visual identity is strong and the drinks photograph consistently well. They also do occasional Seattle popups if you follow their feed.'},instagram_handle:'matchamagicbellevue',trending:true},
 
     // ── Palo Alto — Matcha ────────────────────────────────
-    {id:'193',name:'Maruwu Seicha',city:'Palo Alto',country:'United States',neighborhood:'University Ave',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial Uji matcha, single-origin matcha bowl',best_time:'Weekday mornings — University Ave is quieter early',content_tips:'Kyoto/Uji-rooted matcha on University Ave — the strongest matcha identity in the Peninsula. The sourcing is taken seriously and the preparation shows it. A rare find in Silicon Valley. The ceramics and light make for understated but beautiful content.'},instagram_handle:'maruwuseicha',trending:false},
+    {id:'193',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/OeI5dBm0MsmtGGnt46XaVw/1000s.jpg',name:'Maruwu Seicha',city:'Palo Alto',country:'United States',neighborhood:'University Ave',drink:'matcha',vibe_tags:['matcha_specialist','hidden_gem','cozy_quiet'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Ceremonial Uji matcha, single-origin matcha bowl',best_time:'Weekday mornings — University Ave is quieter early',content_tips:'Kyoto/Uji-rooted matcha on University Ave — the strongest matcha identity in the Peninsula. The sourcing is taken seriously and the preparation shows it. A rare find in Silicon Valley. The ceramics and light make for understated but beautiful content.'},instagram_handle:'maruwuseicha',trending:false},
 
     // ── Mountain View — Matcha ────────────────────────────
-    {id:'194',name:'Junbi',city:'Mountain View',country:'United States',neighborhood:'Castro Street',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','viral_aesthetic'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'100% shade-grown ceremonial matcha, daily matcha bowl',best_time:'Weekday mornings on Castro Street',content_tips:'Junbi uses 100% pure shade-grown ceremonial matcha daily — no compromises on the leaf source. The Castro Street location is bright and well-designed. This is Mountain View\'s most serious matcha address.'},instagram_handle:'junbi.co',trending:true},
+    {id:'194',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/W2BES5ni1zu5OYb-jzmmKA/1000s.jpg',name:'Junbi',city:'Mountain View',country:'United States',neighborhood:'Castro Street',drink:'matcha',vibe_tags:['matcha_specialist','specialty_coffee','viral_aesthetic'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'100% shade-grown ceremonial matcha, daily matcha bowl',best_time:'Weekday mornings on Castro Street',content_tips:'Junbi uses 100% pure shade-grown ceremonial matcha daily — no compromises on the leaf source. The Castro Street location is bright and well-designed. This is Mountain View\'s most serious matcha address.'},instagram_handle:'junbi.co',trending:true},
 
     // ── Las Vegas — Matcha ────────────────────────────────
     {id:'195',name:'LEEV Matcha Atelier',photo_url:'https://s3-media0.fl.yelpcdn.com/bphoto/mWPdCK07rNTbb1AHfLlOXw/1000s.jpg',city:'Las Vegas',country:'United States',neighborhood:'Arts District',drink:'matcha',vibe_tags:['matcha_specialist','viral_aesthetic','hidden_gem'],curator_pick:true,curator_rating:5,curator_notes:{what_to_order:'Shizuoka ceremonial-grade matcha, signature atelier drink',best_time:'Weekday mornings in the Arts District',content_tips:'The most refined matcha-only positioning in Las Vegas — Shizuoka ceremonial grade, atelier sensibility, no Strip gimmicks. The Arts District location is the right setting for it. This is the stop for a serious matcha moment in Vegas.'},instagram_handle:'leevmatcha',trending:true},
@@ -1861,6 +2016,14 @@
           <div class="card-note-label">Order this</div>
           <div class="card-note-value">${cafe.curator_notes.what_to_order}</div>
         </div>`;
+    const extras = [];
+    if (cafe.curator_rating) extras.push(
+      `<div class="card-rating"><span class="card-rating-num">${cafe.curator_rating}</span><span class="card-rating-of">/5</span></div>`);
+    if (cafe.curator_notes && cafe.curator_notes.best_time) extras.push(
+      `<div class="card-extra-pill"><span class="card-extra-icon">⏰</span><span class="card-extra-text">${cafe.curator_notes.best_time}</span></div>`);
+    if (cafe.curator_notes && cafe.curator_notes.content_tips) extras.push(
+      `<div class="card-extra-pill"><span class="card-extra-icon">📸</span><span class="card-extra-text">${cafe.curator_notes.content_tips}</span></div>`);
+    const extrasHtml = extras.length ? `<div class="card-extras">${extras.join('')}</div>` : '';
     el.innerHTML = `
       <div class="card-photo">
         <img class="card-photo-img" src="${photoUrl}" alt="${cafe.name}" loading="lazy" draggable="false" onerror="this.style.display='none'">
@@ -1874,6 +2037,7 @@
         <div class="card-name">${cafe.name}</div>
         <div class="card-location">${cafe.neighborhood} · ${cafe.city}</div>
         ${orderSection}
+        ${extrasHtml}
         <div class="card-tags">${tags}</div>
       </div>
       <div class="card-tap-hint"><span class="card-tap-hint-icon">↑</span> Tap for details</div>`;
@@ -2243,6 +2407,20 @@
         your_name: data.your_name, instagram_handle: data.instagram_handle || null,
       });
     } catch(err) {}
+    fetch('https://api.web3forms.com/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        access_key: 'df232092-355f-4f5c-8d0a-70b739d24294',
+        subject: '☕ New Café Codex Nomination: ' + data.cafe_name,
+        from_name: 'Café Codex',
+        'Café': data.cafe_name, 'City': data.city, 'Country': data.country,
+        'Neighborhood': data.neighborhood || '—',
+        'What makes it special': data.what_makes_it_special,
+        'Must order': data.must_order, 'Best time': data.best_time || '—',
+        'Nominated by': data.your_name, 'Instagram': data.instagram_handle || '—',
+      }),
+    }).catch(() => {});
     showNominationSuccess(data);
   }
   function showNominationSuccess(data) {
@@ -2263,5 +2441,6 @@
     }).catch(() => prompt('Copy this:', text));
   }
   </script>
+</div>
 </body>
 </html>
