@@ -51,7 +51,7 @@
     .ob-loc-input {
       width: 100%; background: var(--card); border: 1px solid var(--border);
       border-radius: 12px; padding: 12px 36px 12px 14px; color: var(--cream);
-      font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.2s;
+      font-size: 16px; font-family: inherit; outline: none; transition: border-color 0.2s;
       -webkit-appearance: none;
     }
     .ob-loc-input:focus { border-color: var(--primary); }
@@ -262,7 +262,7 @@
     .list-tab { flex: 1; padding: 12px; text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; }
     .list-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
     .list-search-wrap { padding: 10px 16px; flex-shrink: 0; border-bottom: 1px solid var(--border); }
-    .list-search-input { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px 10px 36px; color: var(--cream); font-size: 14px; outline: none; box-sizing: border-box; }
+    .list-search-input { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px 10px 36px; color: var(--cream); font-size: 16px; outline: none; box-sizing: border-box; }
     .list-search-input::placeholder { color: var(--muted); }
     .list-search-input:focus { border-color: var(--primary); }
     .list-search-wrap { position: relative; }
@@ -387,7 +387,7 @@
     .form-row .form-group { flex: 1; }
     .form-label { color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 7px; display: block; }
     .form-label span { color: var(--muted); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 10px; }
-    .form-input, .form-textarea { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--cream); font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
+    .form-input, .form-textarea { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--cream); font-size: 16px; font-family: inherit; outline: none; transition: border-color 0.2s; -webkit-appearance: none; }
     .form-input:focus, .form-textarea:focus { border-color: var(--primary); }
     .form-input::placeholder, .form-textarea::placeholder { color: var(--muted); }
     .form-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
@@ -413,6 +413,39 @@
     .back-btn { width: 100%; background: var(--primary); color: var(--bg); border: none; border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
     .share-toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--success); color: #fff; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.3s; pointer-events: none; white-space: nowrap; z-index: 999; }
     .share-toast.show { opacity: 1; }
+
+    @media (max-width: 480px) {
+      .swipe-header { padding: 12px 14px 8px; }
+      .swipe-logo { font-size: 18px; }
+      .swipe-filter-pill { padding: 8px 12px; }
+      .card-photo { height: 44%; }
+      .card-body { padding: 10px 14px 20px; gap: 5px; overflow: hidden; }
+      .card-name { font-size: 18px; }
+      .card-location { font-size: 12px; }
+      .card-note { padding: 6px 10px; }
+      .card-note-label { font-size: 9px; margin-bottom: 2px; }
+      .card-note-value { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .must-try-callout { padding: 6px 10px; }
+      .must-try-label { font-size: 9px; margin-bottom: 2px; }
+      .must-try-drink { font-size: 12px; }
+      .must-try-note { display: none; }
+      .card-tags { gap: 4px; padding-top: 4px; padding-bottom: 6px; }
+      .card-tag { font-size: 9px; padding: 3px 7px; }
+      .action-circle { width: 56px; height: 56px; }
+      .action-circle.want { width: 64px; height: 64px; }
+      .ac-icon { font-size: 18px; }
+      .ac-label { font-size: 9px; }
+      .swipe-actions { gap: 16px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
+      .ob-wrap { padding: 24px 20px 32px; }
+      .browse-save-btn, .browse-been-btn { width: 42px; height: 42px; }
+      .detail-name { font-size: 20px; }
+      .share-toast { bottom: calc(80px + env(safe-area-inset-bottom)); }
+    }
+    @media (max-width: 375px) {
+      .card-photo { height: 40%; }
+      .card-name { font-size: 17px; }
+      .ob-wrap { padding: 20px 16px 28px; }
+    }
   </style>
 </head>
 <body>
