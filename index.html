@@ -203,7 +203,15 @@
     .card-note { background: var(--bg); border-radius: 10px; padding: 10px 12px; margin-top: 2px; }
     .card-note-label { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
     .card-note-value { color: var(--cream); font-size: 13px; line-height: 1.4; }
-    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: auto; padding-top: 4px; padding-bottom: 4px; }
+    .card-extras { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+    .card-extra-pill { display: flex; align-items: center; gap: 4px; background: var(--bg); border-radius: 8px; padding: 5px 10px; }
+    .card-extra-icon { font-size: 11px; }
+    .card-extra-text { color: var(--cream); font-size: 11px; font-weight: 500; }
+    .card-extra-label { color: var(--muted); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .card-rating { display: flex; align-items: center; gap: 3px; background: rgba(201,151,58,0.12); border: 1px solid rgba(201,151,58,0.3); border-radius: 8px; padding: 5px 10px; }
+    .card-rating-num { color: var(--primary); font-size: 13px; font-weight: 800; }
+    .card-rating-of { color: var(--muted); font-size: 10px; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 5px; padding-top: 4px; padding-bottom: 4px; }
     .card-tag { background: var(--tag-bg); border: 1px solid var(--border); color: var(--muted); font-size: 10px; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
     .must-try-callout { background: linear-gradient(135deg,rgba(201,151,58,0.18),rgba(201,151,58,0.06)); border: 1px solid rgba(201,151,58,0.55); border-radius: 10px; padding: 10px 12px; margin-top: 2px; }
     .must-try-label { color: var(--primary); font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 3px; }
@@ -437,6 +445,12 @@
       .must-try-label { font-size: 9px; margin-bottom: 2px; }
       .must-try-drink { font-size: 12px; }
       .must-try-note { display: none; }
+      .card-extras { gap: 4px; }
+      .card-extra-pill { padding: 4px 8px; }
+      .card-extra-text { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+      .card-extra-icon { font-size: 10px; }
+      .card-rating { padding: 4px 8px; }
+      .card-rating-num { font-size: 12px; }
       .card-tags { gap: 4px; padding-top: 4px; padding-bottom: 6px; }
       .card-tag { font-size: 9px; padding: 3px 7px; }
       .action-circle { width: 56px; height: 56px; }
@@ -2002,6 +2016,14 @@
           <div class="card-note-label">Order this</div>
           <div class="card-note-value">${cafe.curator_notes.what_to_order}</div>
         </div>`;
+    const extras = [];
+    if (cafe.curator_rating) extras.push(
+      `<div class="card-rating"><span class="card-rating-num">${cafe.curator_rating}</span><span class="card-rating-of">/5</span></div>`);
+    if (cafe.curator_notes && cafe.curator_notes.best_time) extras.push(
+      `<div class="card-extra-pill"><span class="card-extra-icon">⏰</span><span class="card-extra-text">${cafe.curator_notes.best_time}</span></div>`);
+    if (cafe.curator_notes && cafe.curator_notes.content_tips) extras.push(
+      `<div class="card-extra-pill"><span class="card-extra-icon">📸</span><span class="card-extra-text">${cafe.curator_notes.content_tips}</span></div>`);
+    const extrasHtml = extras.length ? `<div class="card-extras">${extras.join('')}</div>` : '';
     el.innerHTML = `
       <div class="card-photo">
         <img class="card-photo-img" src="${photoUrl}" alt="${cafe.name}" loading="lazy" draggable="false" onerror="this.style.display='none'">
@@ -2015,6 +2037,7 @@
         <div class="card-name">${cafe.name}</div>
         <div class="card-location">${cafe.neighborhood} · ${cafe.city}</div>
         ${orderSection}
+        ${extrasHtml}
         <div class="card-tags">${tags}</div>
       </div>
       <div class="card-tap-hint"><span class="card-tap-hint-icon">↑</span> Tap for details</div>`;
