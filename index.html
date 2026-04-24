@@ -324,7 +324,7 @@
     .world-best-chevron { color: var(--muted); font-size: 14px; transition: transform 0.3s ease; }
     .world-best.open .world-best-chevron { transform: rotate(180deg); }
     .world-best.open .world-best-toggle { border-radius: 14px 14px 0 0; border-bottom: none; }
-    .world-best-card { background: var(--card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 14px 14px; display: none; }
+    .world-best-card { background: var(--card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 14px 14px; display: none; max-height: 55vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .world-best.open .world-best-card { display: block; }
     .world-best-row { display: flex; align-items: flex-start; padding: 12px 16px; gap: 10px; border-bottom: 1px solid var(--border); }
     .world-best-row:last-child { border-bottom: none; }
