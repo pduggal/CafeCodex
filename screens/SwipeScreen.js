@@ -86,7 +86,6 @@ export default function SwipeScreen({ navigation }) {
 
   const redealDeck = useCallback(() => {
     pan.setValue({ x: 0, y: 0 });
-    setCurrentIndex(0);
     setSwipedThisRound(new Set());
     setShuffleSeed((s) => s + 1);
   }, [pan]);
@@ -105,7 +104,6 @@ export default function SwipeScreen({ navigation }) {
     }
     setSwipedThisRound((prev) => new Set(prev).add(currentCafe.id));
     pan.setValue({ x: 0, y: 0 });
-    setCurrentIndex((prev) => prev + 1);
     if (showTip) setShowTip(false);
   }, [currentCafe, toggleSaved, toggleVisited, pan, showTip]);
 
@@ -255,7 +253,7 @@ export default function SwipeScreen({ navigation }) {
           ) : null}
 
           <View style={styles.cardTags}>
-            {(cafe.vibe_tags || []).slice(0, 3).map((tag) => (
+            {(cafe.vibe_tags || []).slice(0, 2).map((tag) => (
               <View key={tag} style={styles.cardTag}>
                 <Text style={styles.cardTagText}>{vibeLabel(tag)}</Text>
               </View>
@@ -263,7 +261,7 @@ export default function SwipeScreen({ navigation }) {
           </View>
         </View>
 
-        <Text style={styles.tapHint}>↑ Tap card for full details</Text>
+        <Text style={styles.tapHint}>Tap for details</Text>
 
         {isTop && (
           <>
@@ -355,13 +353,18 @@ export default function SwipeScreen({ navigation }) {
       {/* Progress dots */}
       <View style={styles.dots}>
         {deck.slice(0, 7).map((_, i) => (
-          <View key={i} style={[styles.dot, i === (currentIndex % 7) && styles.dotActive]} />
+          <View key={i} style={[styles.dot, i === (swipedThisRound.size % 7) && styles.dotActive]} />
         ))}
       </View>
 
       {viewMode === 'list' ? (
         <View style={styles.browseWrap}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.browseCityBar}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.browseCityBar}
+            contentContainerStyle={styles.browseCityBarContent}
+          >
             {browseCities.map((city) => (
               <TouchableOpacity
                 key={city}
@@ -528,7 +531,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20,
   },
   cardTagText: { color: Colors.textMuted, fontSize: 10 },
-  tapHint: { color: Colors.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 0.3, textAlign: 'center', paddingTop: 6, paddingBottom: 10 },
+  tapHint: { color: Colors.textMuted, fontSize: 10, fontWeight: '600', letterSpacing: 0.3, textAlign: 'center', paddingVertical: 6 },
 
   swipeOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -560,7 +563,8 @@ const styles = StyleSheet.create({
   },
 
   browseWrap: { flex: 1 },
-  browseCityBar: { flexShrink: 0, paddingHorizontal: 16, paddingBottom: 10 },
+  browseCityBar: { flexGrow: 0, flexShrink: 0 },
+  browseCityBarContent: { paddingHorizontal: 16, paddingVertical: 10, alignItems: 'center' },
   browseCityChip: {
     backgroundColor: Colors.cardBackground, borderWidth: 1, borderColor: Colors.cardBorder,
     borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5, marginRight: 6,
