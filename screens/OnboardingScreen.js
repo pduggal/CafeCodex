@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  FlatList,
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,15 +18,26 @@ const ONBOARDING_VIBES = [
   { id: 'hidden', icon: '✨', label: 'Hidden Gems', sub: 'Off the radar, worth the detour' },
 ];
 
-export default function OnboardingScreen({ navigation }) {
-  const { countries, setSelectedDrink, setSelectedVibes, setSelectedLocation } = useCafes();
+export default function OnboardingScreen({ navigation, route }) {
+  const {
+    countries, hasOnboarded, savePreferences,
+    selectedDrink, selectedVibes, selectedLocation,
+  } = useCafes();
+  const forceShow = route?.params?.forceShow === true;
   const [step, setStep] = useState(1);
-  const [drink, setDrink] = useState('coffee');
-  const [vibes, setVibes] = useState([]);
+  const [drink, setDrink] = useState(selectedDrink || 'coffee');
+  const [vibes, setVibes] = useState(selectedVibes || []);
   const [locQuery, setLocQuery] = useState('');
   const [locResults, setLocResults] = useState([]);
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(selectedLocation || null);
   const [notVisited, setNotVisited] = useState(null);
+
+  // Skip onboarding on return visits unless user explicitly tapped "change"
+  useEffect(() => {
+    if (hasOnboarded && !forceShow) {
+      navigation.replace('SwipeHome');
+    }
+  }, [hasOnboarded, forceShow]);
 
   const matchLocation = (q) => {
     if (!q || q.length < 2) return [];
@@ -99,9 +109,7 @@ export default function OnboardingScreen({ navigation }) {
   };
 
   const startSwiping = () => {
-    setSelectedDrink(drink);
-    setSelectedVibes(vibes);
-    setSelectedLocation(location);
+    savePreferences(drink, vibes, location);
     navigation.navigate('SwipeHome');
   };
 

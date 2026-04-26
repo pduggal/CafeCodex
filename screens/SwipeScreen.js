@@ -324,7 +324,7 @@ export default function SwipeScreen({ navigation }) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <Text style={styles.headerLogo}>Café Codex</Text>
-        <TouchableOpacity style={styles.filterPill} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.filterPill} onPress={() => navigation.navigate('OnboardingHome', { forceShow: true })}>
           <Text style={styles.filterLabel}>{filterLabel}</Text>
           <Text style={styles.filterChange}> · change</Text>
         </TouchableOpacity>

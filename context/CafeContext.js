@@ -17,6 +17,7 @@ export function CafeProvider({ children }) {
   const [selectedDrink, setSelectedDrink] = useState('coffee');
   const [selectedVibes, setSelectedVibes] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [hasOnboarded, setHasOnboarded] = useState(false);
 
   useEffect(() => {
     loadPersistedData();
@@ -71,18 +72,46 @@ export function CafeProvider({ children }) {
 
   const loadPersistedData = async () => {
     try {
-      const [saved, visited, favs] = await Promise.all([
+      const [saved, visited, favs, drink, vibes, location, onboarded] = await Promise.all([
         AsyncStorage.getItem('savedCafes'),
         AsyncStorage.getItem('visitedCafes'),
         AsyncStorage.getItem('favorites'),
+        AsyncStorage.getItem('selectedDrink'),
+        AsyncStorage.getItem('selectedVibes'),
+        AsyncStorage.getItem('selectedLocation'),
+        AsyncStorage.getItem('hasOnboarded'),
       ]);
       if (saved) setSavedCafes(JSON.parse(saved));
       if (visited) setVisitedCafes(JSON.parse(visited));
       if (favs) setFavorites(JSON.parse(favs));
+      if (drink) setSelectedDrink(JSON.parse(drink));
+      if (vibes) setSelectedVibes(JSON.parse(vibes));
+      if (location) setSelectedLocation(JSON.parse(location));
+      if (onboarded) setHasOnboarded(JSON.parse(onboarded));
     } catch (e) {
-      console.log('Error loading data', e);
+      console.log('Error loading persisted data', e);
     }
   };
+
+  const persistPreferences = useCallback((drink, vibes, location) => {
+    AsyncStorage.setItem('selectedDrink', JSON.stringify(drink)).catch(() => {});
+    AsyncStorage.setItem('selectedVibes', JSON.stringify(vibes)).catch(() => {});
+    AsyncStorage.setItem('selectedLocation', JSON.stringify(location)).catch(() => {});
+    AsyncStorage.setItem('hasOnboarded', JSON.stringify(true)).catch(() => {});
+  }, []);
+
+  const savePreferences = useCallback((drink, vibes, location) => {
+    setSelectedDrink(drink);
+    setSelectedVibes(vibes);
+    setSelectedLocation(location);
+    setHasOnboarded(true);
+    persistPreferences(drink, vibes, location);
+  }, [persistPreferences]);
+
+  const resetOnboarding = useCallback(() => {
+    setHasOnboarded(false);
+    AsyncStorage.setItem('hasOnboarded', JSON.stringify(false)).catch(() => {});
+  }, []);
 
   const toggleSaved = useCallback((cafeId) => {
     setSavedCafes((prev) => {
@@ -171,6 +200,9 @@ export function CafeProvider({ children }) {
     setSelectedVibes,
     selectedLocation,
     setSelectedLocation,
+    hasOnboarded,
+    savePreferences,
+    resetOnboarding,
     toggleSaved,
     toggleVisited,
     toggleFavorite,
@@ -184,6 +216,7 @@ export function CafeProvider({ children }) {
     cafes, countries, loading,
     savedCafes, visitedCafes, favorites,
     selectedCity, selectedDrink, selectedVibes, selectedLocation,
+    hasOnboarded, savePreferences, resetOnboarding,
     toggleSaved, toggleVisited, toggleFavorite, moveToVisited, moveToWishlist,
     isSaved, isVisited, isFavorite, cities,
   ]);
