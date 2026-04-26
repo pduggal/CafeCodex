@@ -198,7 +198,11 @@
     .swipe-overlay.left  .overlay-label { color: var(--primary); border-color: var(--primary); transform: rotate(12deg); }
 
     .card-body { flex: 1; padding: 16px 18px 28px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
-    .card-name { color: var(--white); font-size: 22px; font-weight: 800; line-height: 1.15; }
+    .card-name-row { display: flex; align-items: center; gap: 8px; }
+    .card-name { color: var(--white); font-size: 22px; font-weight: 800; line-height: 1.15; flex: 1; }
+    .card-status-badge { font-size: 10px; font-weight: 700; border-radius: 20px; padding: 2px 8px; white-space: nowrap; }
+    .card-status-saved { background: rgba(201,151,58,0.12); border: 1px solid rgba(201,151,58,0.4); color: var(--primary); }
+    .card-status-visited { background: rgba(107,158,107,0.12); border: 1px solid rgba(107,158,107,0.4); color: #6B9E6B; }
     .card-location { color: var(--muted); font-size: 13px; }
     .card-note { background: var(--bg); border-radius: 10px; padding: 10px 12px; margin-top: 2px; }
     .card-note-label { color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-bottom: 3px; }
@@ -1848,6 +1852,10 @@
 
   function redealDeck() {
     deck = [...currentDeck];
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
     currentIndex = 0;
     renderStack();
   }
@@ -1907,6 +1915,10 @@
     currentDeck = [...filtered];
     const swiped = [...wishlist, ...beenThere];
     deck = filtered.filter(c => !swiped.includes(c.id));
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
     currentIndex = 0;
   }
 
@@ -1993,6 +2005,13 @@
     const el = document.createElement('div');
     el.className = 'swipe-card';
     el.dataset.id = cafe.id;
+    const isWish = wishlist.includes(cafe.id);
+    const isBeen = beenThere.includes(cafe.id);
+    const statusBadge = isWish
+      ? `<span class="card-status-badge card-status-saved">❤️ Saved</span>`
+      : isBeen
+        ? `<span class="card-status-badge card-status-visited">✓ Visited</span>`
+        : '';
     const tags = (cafe.vibe_tags || []).slice(0, 3).map(t =>
       `<span class="card-tag">${VIBE_EMOJI[t] || ''} ${VIBE_LABEL[t] || t}</span>`).join('');
     const badge = !cafe.is_active
@@ -2034,7 +2053,7 @@
         <div class="swipe-overlay left"><div class="overlay-label">BEEN THERE</div></div>
       </div>
       <div class="card-body">
-        <div class="card-name">${cafe.name}</div>
+        <div class="card-name-row"><div class="card-name">${cafe.name}</div>${statusBadge}</div>
         <div class="card-location">${cafe.neighborhood} · ${cafe.city}</div>
         ${orderSection}
         ${extrasHtml}

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { VIBE_TAGS, getCafePhoto } from '../data/cafes';
 import { useCafes } from '../context/CafeContext';
@@ -29,12 +30,13 @@ export default function SwipeScreen({ navigation }) {
   const [viewMode, setViewMode] = useState('cards');
   const [browseCity, setBrowseCity] = useState('All');
   const [showTip, setShowTip] = useState(true);
+  const [shuffleSeed, setShuffleSeed] = useState(0);
+  const [swipedThisRound, setSwipedThisRound] = useState(new Set());
   const pan = useRef(new Animated.ValueXY()).current;
 
   const deck = useMemo(() => {
-    const swiped = new Set([...savedCafes, ...visitedCafes]);
-    return cafes.filter((cafe) => {
-      if (swiped.has(cafe.id)) return false;
+    const filtered = cafes.filter((cafe) => {
+      if (swipedThisRound.has(cafe.id)) return false;
       if (selectedDrink && cafe.drink && cafe.drink !== selectedDrink) return false;
       if (selectedLocation && selectedLocation.type === 'city' && cafe.city !== selectedLocation.city) return false;
       if (selectedVibes.length > 0) {
@@ -47,18 +49,47 @@ export default function SwipeScreen({ navigation }) {
       }
       return true;
     });
-  }, [cafes, savedCafes, visitedCafes, selectedDrink, selectedVibes, selectedLocation]);
+    const shuffled = [...filtered];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, [cafes, swipedThisRound, selectedDrink, selectedVibes, selectedLocation, shuffleSeed]);
+
+  const allFilteredCafes = useMemo(() => {
+    return cafes.filter((cafe) => {
+      if (selectedDrink && cafe.drink && cafe.drink !== selectedDrink) return false;
+      if (selectedLocation && selectedLocation.type === 'city' && cafe.city !== selectedLocation.city) return false;
+      if (selectedVibes.length > 0) {
+        for (const v of selectedVibes) {
+          if (v === 'trending' && !cafe.trending) return false;
+          if (v === 'picks' && !cafe.curator_pick) return false;
+          if (v === 'aesthetic' && !(cafe.vibe_tags || []).includes('viral_aesthetic')) return false;
+          if (v === 'hidden' && !(cafe.vibe_tags || []).includes('hidden_gem')) return false;
+        }
+      }
+      return true;
+    });
+  }, [cafes, selectedDrink, selectedVibes, selectedLocation]);
 
   const browseCafes = useMemo(() => {
-    if (browseCity === 'All') return deck;
-    return deck.filter((c) => c.city === browseCity);
-  }, [deck, browseCity]);
+    if (browseCity === 'All') return allFilteredCafes;
+    return allFilteredCafes.filter((c) => c.city === browseCity);
+  }, [allFilteredCafes, browseCity]);
 
   const browseCities = useMemo(() => {
-    return ['All', ...new Set(deck.map((c) => c.city))];
-  }, [deck]);
+    return ['All', ...new Set(allFilteredCafes.map((c) => c.city))];
+  }, [allFilteredCafes]);
 
   const currentCafe = deck[currentIndex];
+
+  const redealDeck = useCallback(() => {
+    pan.setValue({ x: 0, y: 0 });
+    setCurrentIndex(0);
+    setSwipedThisRound(new Set());
+    setShuffleSeed((s) => s + 1);
+  }, [pan]);
 
   const vibeLabel = (tagId) => {
     const found = VIBE_TAGS.find((t) => t.id === tagId);
@@ -72,40 +103,59 @@ export default function SwipeScreen({ navigation }) {
     } else {
       toggleVisited(currentCafe.id);
     }
+    setSwipedThisRound((prev) => new Set(prev).add(currentCafe.id));
     pan.setValue({ x: 0, y: 0 });
     setCurrentIndex((prev) => prev + 1);
     if (showTip) setShowTip(false);
   }, [currentCafe, toggleSaved, toggleVisited, pan, showTip]);
 
+  const commitSwipeRef = useRef(commitSwipe);
+  useEffect(() => { commitSwipeRef.current = commitSwipe; }, [commitSwipe]);
+
+  const currentCafeRef = useRef(currentCafe);
+  useEffect(() => { currentCafeRef.current = currentCafe; }, [currentCafe]);
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, gesture) => {
-        pan.setValue({ x: gesture.dx, y: 0 });
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        Math.abs(gesture.dx) > Math.abs(gesture.dy) && Math.abs(gesture.dx) > 10,
+      onPanResponderGrant: () => {
+        pan.setOffset({ x: pan.x._value, y: 0 });
+        pan.setValue({ x: 0, y: 0 });
       },
+      onPanResponderMove: Animated.event(
+        [null, { dx: pan.x }],
+        { useNativeDriver: false }
+      ),
       onPanResponderRelease: (_, gesture) => {
-        if (Math.abs(gesture.dx) < 8) {
-          pan.setValue({ x: 0, y: 0 });
-          if (currentCafe) {
-            navigation.navigate('CafeDetail', { cafe: currentCafe });
+        pan.flattenOffset();
+        if (Math.abs(gesture.dx) < 10 && Math.abs(gesture.dy) < 10) {
+          Animated.spring(pan, {
+            toValue: { x: 0, y: 0 },
+            useNativeDriver: true,
+          }).start();
+          if (currentCafeRef.current) {
+            navigation.navigate('CafeDetail', { cafe: currentCafeRef.current });
           }
           return;
         }
-        if (gesture.dx > SWIPE_THRESHOLD) {
+        if (gesture.dx > SWIPE_THRESHOLD || gesture.vx > 0.7) {
           Animated.timing(pan, {
             toValue: { x: SCREEN_WIDTH * 1.2, y: 0 },
-            duration: 300,
+            duration: 200,
             useNativeDriver: true,
-          }).start(() => commitSwipe('right'));
-        } else if (gesture.dx < -SWIPE_THRESHOLD) {
+          }).start(() => commitSwipeRef.current('right'));
+        } else if (gesture.dx < -SWIPE_THRESHOLD || gesture.vx < -0.7) {
           Animated.timing(pan, {
             toValue: { x: -SCREEN_WIDTH * 1.2, y: 0 },
-            duration: 300,
+            duration: 200,
             useNativeDriver: true,
-          }).start(() => commitSwipe('left'));
+          }).start(() => commitSwipeRef.current('left'));
         } else {
           Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
+            friction: 5,
             useNativeDriver: true,
           }).start();
         }
@@ -136,6 +186,8 @@ export default function SwipeScreen({ navigation }) {
 
   const renderCard = (cafe, isTop) => {
     const photo = getCafePhoto(cafe);
+    const isCafeSaved = savedCafes.includes(cafe.id);
+    const isCafeVisited = visitedCafes.includes(cafe.id);
     const animStyle = isTop
       ? { transform: [{ translateX: pan.x }, { rotate: cardRotate }] }
       : {};
@@ -171,19 +223,34 @@ export default function SwipeScreen({ navigation }) {
         </View>
 
         <View style={styles.cardBody}>
-          <Text style={styles.cardName} numberOfLines={1}>{cafe.name}</Text>
+          <View style={styles.cardNameRow}>
+            <Text style={styles.cardName} numberOfLines={1}>{cafe.name}</Text>
+            {isCafeSaved && (
+              <View style={styles.cardStatusBadge}>
+                <Text style={styles.cardStatusSaved}>❤️ Saved</Text>
+              </View>
+            )}
+            {isCafeVisited && (
+              <View style={[styles.cardStatusBadge, styles.cardStatusVisitedBg]}>
+                <Text style={styles.cardStatusVisited}>✓ Visited</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.cardLoc}>{cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}</Text>
+          {cafe.instagram_handle && (
+            <Text style={styles.cardInsta}>@{cafe.instagram_handle}</Text>
+          )}
 
           {cafe.must_try ? (
             <View style={styles.mustTry}>
               <Text style={styles.mustTryLabel}>✦ ORDER THIS</Text>
               <Text style={styles.mustTryDrink}>{cafe.must_try.drink}</Text>
-              <Text style={styles.mustTryNote} numberOfLines={2}>{cafe.must_try.note}</Text>
+              <Text style={styles.mustTryNote} numberOfLines={1}>{cafe.must_try.note}</Text>
             </View>
           ) : cafe.curator_notes?.what_to_order ? (
             <View style={styles.cardNote}>
               <Text style={styles.cardNoteLabel}>ORDER THIS</Text>
-              <Text style={styles.cardNoteValue} numberOfLines={2}>{cafe.curator_notes.what_to_order}</Text>
+              <Text style={styles.cardNoteValue} numberOfLines={1}>{cafe.curator_notes.what_to_order}</Text>
             </View>
           ) : null}
 
@@ -200,10 +267,10 @@ export default function SwipeScreen({ navigation }) {
 
         {isTop && (
           <>
-            <Animated.View style={[styles.swipeOverlay, styles.overlayRight, { opacity: rightOverlayOpacity }]}>
+            <Animated.View pointerEvents="none" style={[styles.swipeOverlay, styles.overlayRight, { opacity: rightOverlayOpacity }]}>
               <Text style={[styles.overlayLabel, styles.overlayLabelRight]}>WANT IT</Text>
             </Animated.View>
-            <Animated.View style={[styles.swipeOverlay, styles.overlayLeft, { opacity: leftOverlayOpacity }]}>
+            <Animated.View pointerEvents="none" style={[styles.swipeOverlay, styles.overlayLeft, { opacity: leftOverlayOpacity }]}>
               <Text style={[styles.overlayLabel, styles.overlayLabelLeft]}>BEEN THERE</Text>
             </Animated.View>
           </>
@@ -226,6 +293,12 @@ export default function SwipeScreen({ navigation }) {
         <View style={styles.browseInfo}>
           <Text style={styles.browseName} numberOfLines={1}>{cafe.name}</Text>
           <Text style={styles.browseLoc}>{cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}</Text>
+          {(isWish || isBeen) && (
+            <View style={styles.browseStatusRow}>
+              {isWish && <Text style={styles.browseStatusSaved}>Saved</Text>}
+              {isBeen && <Text style={styles.browseStatusVisited}>Visited</Text>}
+            </View>
+          )}
           <View style={styles.browseRating}>
             <Text style={styles.browseStars}>{'★'.repeat(cafe.curator_rating || 0)}</Text>
             {cafe.curator_pick && <View style={styles.browsePickDot} />}
@@ -253,26 +326,30 @@ export default function SwipeScreen({ navigation }) {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <Text style={styles.headerLogo}>Café Codex</Text>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.filterPill} onPress={() => navigation.goBack()}>
-            <Text style={styles.filterLabel}>{filterLabel}</Text>
-            <Text style={styles.filterChange}> · change</Text>
+        <TouchableOpacity style={styles.filterPill} onPress={() => navigation.goBack()}>
+          <Text style={styles.filterLabel}>{filterLabel}</Text>
+          <Text style={styles.filterChange}> · change</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.subHeader}>
+        <View style={styles.viewToggle}>
+          <TouchableOpacity
+            style={[styles.vtBtn, viewMode === 'cards' && styles.vtBtnActive]}
+            onPress={() => setViewMode('cards')}
+          >
+            <Ionicons name={viewMode === 'cards' ? 'grid' : 'grid-outline'} size={14} color={viewMode === 'cards' ? Colors.background : Colors.textMuted} />
+            <Text style={[styles.vtLabel, viewMode === 'cards' && styles.vtLabelActive]}>Cards</Text>
           </TouchableOpacity>
-          <View style={styles.viewToggle}>
-            <TouchableOpacity
-              style={[styles.vtBtn, viewMode === 'cards' && styles.vtBtnActive]}
-              onPress={() => setViewMode('cards')}
-            >
-              <Text style={styles.vtText}>🃏</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.vtBtn, viewMode === 'list' && styles.vtBtnActive]}
-              onPress={() => setViewMode('list')}
-            >
-              <Text style={styles.vtText}>≡</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[styles.vtBtn, viewMode === 'list' && styles.vtBtnActive]}
+            onPress={() => setViewMode('list')}
+          >
+            <Ionicons name={viewMode === 'list' ? 'list' : 'list-outline'} size={14} color={viewMode === 'list' ? Colors.background : Colors.textMuted} />
+            <Text style={[styles.vtLabel, viewMode === 'list' && styles.vtLabelActive]}>List</Text>
+          </TouchableOpacity>
         </View>
+        <Text style={styles.deckCount}>{deck.length} cafes</Text>
       </View>
 
       {/* Progress dots */}
@@ -318,12 +395,18 @@ export default function SwipeScreen({ navigation }) {
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyIcon}>✦</Text>
               <Text style={styles.emptyTitle}>That's all for now</Text>
-              <Text style={styles.emptySub}>You've seen every cafe in this set. Check your list!</Text>
+              <Text style={styles.emptySub}>You've seen every cafe in this set.</Text>
               <TouchableOpacity
                 style={styles.emptyBtn}
+                onPress={redealDeck}
+              >
+                <Text style={styles.emptyBtnText}>Reshuffle deck</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.emptyBtn, styles.emptyBtnSecondary]}
                 onPress={() => navigation.getParent()?.navigate('My List')}
               >
-                <Text style={styles.emptyBtnText}>See my list</Text>
+                <Text style={styles.emptyBtnSecondaryText}>See my list</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -345,6 +428,12 @@ export default function SwipeScreen({ navigation }) {
             <Text style={styles.actionLabel}>Been there</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            style={styles.reshuffleBtn}
+            onPress={redealDeck}
+          >
+            <Ionicons name="shuffle-outline" size={18} color={Colors.textMuted} />
+          </TouchableOpacity>
+          <TouchableOpacity
             style={[styles.actionCircle, styles.actionWant]}
             onPress={() => commitSwipe('right')}
           >
@@ -364,17 +453,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12,
   },
   headerLogo: { color: Colors.primary, fontSize: 20, fontWeight: '800' },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   filterPill: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 20, backgroundColor: Colors.cardBackground, borderWidth: 1, borderColor: Colors.cardBorder,
+    flexShrink: 1,
   },
   filterLabel: { color: Colors.cream, fontSize: 12, fontWeight: '600' },
   filterChange: { color: Colors.textMuted, fontSize: 12 },
+  subHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingBottom: 8,
+  },
+  deckCount: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
   viewToggle: { flexDirection: 'row', borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: Colors.cardBorder },
-  vtBtn: { backgroundColor: Colors.cardBackground, paddingHorizontal: 12, paddingVertical: 7 },
+  vtBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.cardBackground, paddingHorizontal: 12, paddingVertical: 7 },
   vtBtnActive: { backgroundColor: Colors.primary },
-  vtText: { fontSize: 16 },
+  vtLabel: { fontSize: 11, fontWeight: '700', color: Colors.textMuted },
+  vtLabelActive: { color: Colors.background },
   dots: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 6 },
   dot: { width: 5, height: 5, borderRadius: 3, backgroundColor: Colors.cardBorder },
   dotActive: { backgroundColor: Colors.primary, transform: [{ scale: 1.4 }] },
@@ -388,7 +483,7 @@ const styles = StyleSheet.create({
   },
   cardTop: { zIndex: 2 },
   cardBehind: { zIndex: 1, transform: [{ scale: 0.94 }, { translateY: 12 }] },
-  cardPhoto: { height: 220, backgroundColor: Colors.cardBackground, position: 'relative', overflow: 'hidden' },
+  cardPhoto: { height: 180, backgroundColor: Colors.cardBackground, position: 'relative', overflow: 'hidden' },
   cardPhotoImg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, width: '100%', height: '100%', resizeMode: 'cover' },
   cardPhotoGradient: {
     position: 'absolute', bottom: 0, left: 0, right: 0, height: 80,
@@ -405,9 +500,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9, paddingVertical: 4, borderRadius: 20,
   },
   cardPressText: { color: Colors.background, fontSize: 10, fontWeight: '800' },
-  cardBody: { flex: 1, padding: 16, paddingHorizontal: 18, gap: 8 },
-  cardName: { color: Colors.white, fontSize: 22, fontWeight: '800', lineHeight: 25 },
+  cardBody: { flex: 1, padding: 16, paddingHorizontal: 18, paddingBottom: 4, gap: 6 },
+  cardNameRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  cardName: { color: Colors.white, fontSize: 22, fontWeight: '800', lineHeight: 25, flex: 1 },
+  cardStatusBadge: {
+    backgroundColor: 'rgba(201,151,58,0.12)', borderWidth: 1, borderColor: 'rgba(201,151,58,0.4)',
+    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2,
+  },
+  cardStatusSaved: { color: Colors.primary, fontSize: 10, fontWeight: '700' },
+  cardStatusVisitedBg: { backgroundColor: 'rgba(107,158,107,0.12)', borderColor: 'rgba(107,158,107,0.4)' },
+  cardStatusVisited: { color: Colors.success, fontSize: 10, fontWeight: '700' },
   cardLoc: { color: Colors.textMuted, fontSize: 13 },
+  cardInsta: { color: Colors.textMuted, fontSize: 11, marginTop: 2 },
   cardNote: { backgroundColor: Colors.background, borderRadius: 10, padding: 10, paddingHorizontal: 12, marginTop: 2 },
   cardNoteLabel: { color: Colors.primary, fontSize: 10, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 3 },
   cardNoteValue: { color: Colors.cream, fontSize: 13, lineHeight: 18 },
@@ -418,13 +522,13 @@ const styles = StyleSheet.create({
   mustTryLabel: { color: Colors.primary, fontSize: 10, fontWeight: '800', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 3 },
   mustTryDrink: { color: Colors.white, fontSize: 14, fontWeight: '700' },
   mustTryNote: { color: Colors.textMuted, fontSize: 12, marginTop: 3, lineHeight: 17 },
-  cardTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginTop: 'auto', paddingTop: 4 },
+  cardTags: { flexDirection: 'row', flexWrap: 'wrap', gap: 5, paddingTop: 4 },
   cardTag: {
     backgroundColor: Colors.tagBackground, borderWidth: 1, borderColor: Colors.cardBorder,
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 20,
   },
   cardTagText: { color: Colors.textMuted, fontSize: 10 },
-  tapHint: { color: Colors.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 0.3, textAlign: 'center', paddingVertical: 8 },
+  tapHint: { color: Colors.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 0.3, textAlign: 'center', paddingTop: 6, paddingBottom: 10 },
 
   swipeOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
@@ -450,6 +554,10 @@ const styles = StyleSheet.create({
   actionIconLg: { fontSize: 26 },
   actionLabel: { color: Colors.primary, fontSize: 8, fontWeight: '700', letterSpacing: 0.3 },
   actionLabelGreen: { color: Colors.success, fontSize: 8, fontWeight: '700', letterSpacing: 0.3 },
+  reshuffleBtn: {
+    width: 40, height: 40, borderRadius: 20, borderWidth: 1.5, borderColor: Colors.cardBorder,
+    alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.cardBackground,
+  },
 
   browseWrap: { flex: 1 },
   browseCityBar: { flexShrink: 0, paddingHorizontal: 16, paddingBottom: 10 },
@@ -470,6 +578,9 @@ const styles = StyleSheet.create({
   browseInfo: { flex: 1 },
   browseName: { color: Colors.white, fontSize: 14, fontWeight: '700' },
   browseLoc: { color: Colors.textMuted, fontSize: 11, marginTop: 2 },
+  browseStatusRow: { flexDirection: 'row', gap: 6, marginTop: 2 },
+  browseStatusSaved: { color: Colors.primary, fontSize: 10, fontWeight: '700' },
+  browseStatusVisited: { color: Colors.success, fontSize: 10, fontWeight: '700' },
   browseRating: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 },
   browseStars: { color: Colors.primary, fontSize: 11 },
   browsePickDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.primary },
@@ -491,4 +602,8 @@ const styles = StyleSheet.create({
   emptySub: { color: Colors.textMuted, fontSize: 14, lineHeight: 22, textAlign: 'center', maxWidth: 260, marginBottom: 16 },
   emptyBtn: { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 13, paddingHorizontal: 28 },
   emptyBtnText: { color: Colors.background, fontSize: 15, fontWeight: '700' },
+  emptyBtnSecondary: {
+    backgroundColor: 'transparent', borderWidth: 1, borderColor: Colors.primary, marginTop: 10,
+  },
+  emptyBtnSecondaryText: { color: Colors.primary, fontSize: 15, fontWeight: '700' },
 });

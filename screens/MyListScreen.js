@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   headerSub: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
   tabs: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: Colors.cardBorder },
   tab: {
-    flex: 1, padding: 12, alignItems: 'center',
+    flex: 1, paddingVertical: 10, paddingHorizontal: 8, alignItems: 'center',
     borderBottomWidth: 2, borderBottomColor: 'transparent',
   },
   tabActive: { borderBottomColor: Colors.primary },
@@ -233,9 +233,9 @@ const styles = StyleSheet.create({
     color: Colors.cream, fontSize: 14,
   },
   cityFilter: {
-    flexShrink: 0, borderBottomWidth: 1, borderBottomColor: Colors.cardBorder,
+    flexGrow: 0, flexShrink: 0, borderBottomWidth: 1, borderBottomColor: Colors.cardBorder,
   },
-  cityFilterContent: { padding: 10, paddingHorizontal: 16, gap: 8 },
+  cityFilterContent: { paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' },
   cityChip: {
     backgroundColor: Colors.cardBackground, borderWidth: 1, borderColor: Colors.cardBorder,
     borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, marginRight: 8,
@@ -260,14 +260,14 @@ const styles = StyleSheet.create({
   listCardActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   lcaBtn: {
     backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.cardBorder,
-    borderRadius: 20, paddingHorizontal: 11, paddingVertical: 4,
+    borderRadius: 20, paddingHorizontal: 9, paddingVertical: 3,
   },
-  lcaBtnText: { color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
+  lcaBtnText: { color: Colors.textMuted, fontSize: 10, fontWeight: '600' },
   lcaFav: { borderColor: 'rgba(201,151,58,0.4)' },
   lcaFavOn: { backgroundColor: 'rgba(201,151,58,0.12)', borderColor: Colors.primary },
   lcaFavOnText: { color: Colors.primary },
   lcaMove: { borderColor: 'rgba(107,158,107,0.4)' },
-  lcaMoveText: { color: 'rgba(107,158,107,0.8)', fontSize: 11, fontWeight: '600' },
+  lcaMoveText: { color: 'rgba(107,158,107,0.8)', fontSize: 10, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 60 },
   emptyIcon: { fontSize: 40, opacity: 0.3, marginBottom: 12 },
   emptyTitle: { color: Colors.cream, fontSize: 16, fontWeight: '600', marginBottom: 6 },

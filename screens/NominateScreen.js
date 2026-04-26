@@ -16,6 +16,7 @@ import { supabase } from '../lib/supabase';
 
 export default function NominateScreen() {
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [nominationData, setNominationData] = useState(null);
   const [form, setForm] = useState({
     cafe_name: '', city: '', country: '', neighborhood: '',
@@ -33,6 +34,7 @@ export default function NominateScreen() {
       Alert.alert('Missing fields', 'Please fill in all required fields.');
       return;
     }
+    setSubmitting(true);
     try {
       await supabase.from('nominations').insert({
         cafe_name: form.cafe_name.trim(),
@@ -45,9 +47,11 @@ export default function NominateScreen() {
         your_name: form.your_name.trim(),
         instagram_handle: form.instagram_handle.trim() || null,
       });
-    } catch (e) {}
+    } catch (e) {
+      console.log('Supabase nomination insert failed:', e);
+    }
     try {
-      await fetch('https://api.web3forms.com/submit', {
+      const response = await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
@@ -65,9 +69,20 @@ export default function NominateScreen() {
           'Instagram': form.instagram_handle.trim() || '—',
         }),
       });
-    } catch (e) {}
-    setNominationData(form);
-    setSubmitted(true);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Email delivery failed');
+      setNominationData(form);
+      setSubmitted(true);
+    } catch (e) {
+      console.log('Web3Forms email failed:', e);
+      Alert.alert(
+        'Could not send nomination',
+        'Please check your connection and try again. If the problem persists, DM @honestcoffeestop on Instagram.'
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const shareNomination = async () => {
@@ -178,11 +193,11 @@ export default function NominateScreen() {
         <FormField label="Your @handle" value={form.instagram_handle} onChange={(v) => update('instagram_handle', v)} placeholder="@yourhandle" />
 
         <TouchableOpacity
-          style={[styles.submitBtn, !isValid && styles.submitBtnDisabled]}
+          style={[styles.submitBtn, (!isValid || submitting) && styles.submitBtnDisabled]}
           onPress={submit}
-          disabled={!isValid}
+          disabled={!isValid || submitting}
         >
-          <Text style={styles.submitBtnText}>Send to Pallavi ✦</Text>
+          <Text style={styles.submitBtnText}>{submitting ? 'Sending…' : 'Send to Pallavi ✦'}</Text>
         </TouchableOpacity>
         <Text style={styles.submitNote}>
           Pallavi personally reviews every nomination. If it makes the Codex, you'll be credited.

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 
@@ -84,92 +84,112 @@ export function CafeProvider({ children }) {
     }
   };
 
-  const toggleSaved = async (cafeId) => {
-    const updated = savedCafes.includes(cafeId)
-      ? savedCafes.filter((id) => id !== cafeId)
-      : [...savedCafes.filter((id) => id !== cafeId), cafeId];
-    const updatedVisited = visitedCafes.filter((id) => id !== cafeId);
-    setSavedCafes(updated);
-    setVisitedCafes(updatedVisited);
-    await AsyncStorage.setItem('savedCafes', JSON.stringify(updated));
-    await AsyncStorage.setItem('visitedCafes', JSON.stringify(updatedVisited));
-  };
+  const toggleSaved = useCallback((cafeId) => {
+    setSavedCafes((prev) => {
+      const updated = prev.includes(cafeId)
+        ? prev.filter((id) => id !== cafeId)
+        : [...prev, cafeId];
+      AsyncStorage.setItem('savedCafes', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+    setVisitedCafes((prev) => {
+      const updated = prev.filter((id) => id !== cafeId);
+      AsyncStorage.setItem('visitedCafes', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+  }, []);
 
-  const toggleVisited = async (cafeId) => {
-    const updated = visitedCafes.includes(cafeId)
-      ? visitedCafes.filter((id) => id !== cafeId)
-      : [...visitedCafes.filter((id) => id !== cafeId), cafeId];
-    const updatedSaved = savedCafes.filter((id) => id !== cafeId);
-    setVisitedCafes(updated);
-    setSavedCafes(updatedSaved);
-    await AsyncStorage.setItem('visitedCafes', JSON.stringify(updated));
-    await AsyncStorage.setItem('savedCafes', JSON.stringify(updatedSaved));
-  };
+  const toggleVisited = useCallback((cafeId) => {
+    setVisitedCafes((prev) => {
+      const updated = prev.includes(cafeId)
+        ? prev.filter((id) => id !== cafeId)
+        : [...prev, cafeId];
+      AsyncStorage.setItem('visitedCafes', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+    setSavedCafes((prev) => {
+      const updated = prev.filter((id) => id !== cafeId);
+      AsyncStorage.setItem('savedCafes', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+  }, []);
 
-  const toggleFavorite = async (cafeId) => {
-    const updated = favorites.includes(cafeId)
-      ? favorites.filter((id) => id !== cafeId)
-      : [...favorites, cafeId];
-    setFavorites(updated);
-    await AsyncStorage.setItem('favorites', JSON.stringify(updated));
-  };
+  const toggleFavorite = useCallback((cafeId) => {
+    setFavorites((prev) => {
+      const updated = prev.includes(cafeId)
+        ? prev.filter((id) => id !== cafeId)
+        : [...prev, cafeId];
+      AsyncStorage.setItem('favorites', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+  }, []);
 
-  const moveToVisited = async (cafeId) => {
-    const updatedSaved = savedCafes.filter((id) => id !== cafeId);
-    const updatedVisited = visitedCafes.includes(cafeId)
-      ? visitedCafes
-      : [...visitedCafes, cafeId];
-    setSavedCafes(updatedSaved);
-    setVisitedCafes(updatedVisited);
-    await AsyncStorage.setItem('savedCafes', JSON.stringify(updatedSaved));
-    await AsyncStorage.setItem('visitedCafes', JSON.stringify(updatedVisited));
-  };
+  const moveToVisited = useCallback((cafeId) => {
+    setSavedCafes((prev) => {
+      const updated = prev.filter((id) => id !== cafeId);
+      AsyncStorage.setItem('savedCafes', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+    setVisitedCafes((prev) => {
+      const updated = prev.includes(cafeId) ? prev : [...prev, cafeId];
+      AsyncStorage.setItem('visitedCafes', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+  }, []);
 
-  const moveToWishlist = async (cafeId) => {
-    const updatedVisited = visitedCafes.filter((id) => id !== cafeId);
-    const updatedSaved = savedCafes.includes(cafeId)
-      ? savedCafes
-      : [...savedCafes, cafeId];
-    setVisitedCafes(updatedVisited);
-    setSavedCafes(updatedSaved);
-    await AsyncStorage.setItem('visitedCafes', JSON.stringify(updatedVisited));
-    await AsyncStorage.setItem('savedCafes', JSON.stringify(updatedSaved));
-  };
+  const moveToWishlist = useCallback((cafeId) => {
+    setVisitedCafes((prev) => {
+      const updated = prev.filter((id) => id !== cafeId);
+      AsyncStorage.setItem('visitedCafes', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+    setSavedCafes((prev) => {
+      const updated = prev.includes(cafeId) ? prev : [...prev, cafeId];
+      AsyncStorage.setItem('savedCafes', JSON.stringify(updated)).catch(() => {});
+      return updated;
+    });
+  }, []);
 
-  const isSaved = (cafeId) => savedCafes.includes(cafeId);
-  const isVisited = (cafeId) => visitedCafes.includes(cafeId);
-  const isFavorite = (cafeId) => favorites.includes(cafeId);
+  const isSaved = useCallback((cafeId) => savedCafes.includes(cafeId), [savedCafes]);
+  const isVisited = useCallback((cafeId) => visitedCafes.includes(cafeId), [visitedCafes]);
+  const isFavorite = useCallback((cafeId) => favorites.includes(cafeId), [favorites]);
 
-  const cities = ['All', ...new Set(cafes.map((c) => c.city))];
+  const cities = useMemo(() => ['All', ...new Set(cafes.map((c) => c.city))], [cafes]);
+
+  const contextValue = useMemo(() => ({
+    cafes,
+    countries,
+    loading,
+    savedCafes,
+    visitedCafes,
+    favorites,
+    selectedCity,
+    setSelectedCity,
+    selectedDrink,
+    setSelectedDrink,
+    selectedVibes,
+    setSelectedVibes,
+    selectedLocation,
+    setSelectedLocation,
+    toggleSaved,
+    toggleVisited,
+    toggleFavorite,
+    moveToVisited,
+    moveToWishlist,
+    isSaved,
+    isVisited,
+    isFavorite,
+    cities,
+  }), [
+    cafes, countries, loading,
+    savedCafes, visitedCafes, favorites,
+    selectedCity, selectedDrink, selectedVibes, selectedLocation,
+    toggleSaved, toggleVisited, toggleFavorite, moveToVisited, moveToWishlist,
+    isSaved, isVisited, isFavorite, cities,
+  ]);
 
   return (
-    <CafeContext.Provider
-      value={{
-        cafes,
-        countries,
-        loading,
-        savedCafes,
-        visitedCafes,
-        favorites,
-        selectedCity,
-        setSelectedCity,
-        selectedDrink,
-        setSelectedDrink,
-        selectedVibes,
-        setSelectedVibes,
-        selectedLocation,
-        setSelectedLocation,
-        toggleSaved,
-        toggleVisited,
-        toggleFavorite,
-        moveToVisited,
-        moveToWishlist,
-        isSaved,
-        isVisited,
-        isFavorite,
-        cities,
-      }}
-    >
+    <CafeContext.Provider value={contextValue}>
       {children}
     </CafeContext.Provider>
   );

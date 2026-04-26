@@ -11,7 +11,7 @@ import { Colors } from '../constants/colors';
 import { VIBE_TAGS, getCafePhoto } from '../data/cafes';
 import { useCafes } from '../context/CafeContext';
 
-export default function CafeCard({ cafe, onPress }) {
+function CafeCard({ cafe, onPress }) {
   const { isSaved, toggleSaved, isVisited } = useCafes();
   const saved = isSaved(cafe.id);
   const visited = isVisited(cafe.id);
@@ -85,6 +85,10 @@ export default function CafeCard({ cafe, onPress }) {
             </View>
           )}
         </View>
+
+        {cafe.instagram_handle && (
+          <Text style={styles.instagramHandle}>@{cafe.instagram_handle}</Text>
+        )}
 
         {cafe.must_try && (
           <View style={styles.mustTryRow}>
@@ -237,6 +241,11 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 12,
   },
+  instagramHandle: {
+    color: Colors.textMuted,
+    fontSize: 11,
+    marginBottom: 6,
+  },
   visitedBadge: {
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -283,3 +292,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+export default React.memo(CafeCard);
