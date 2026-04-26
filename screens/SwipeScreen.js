@@ -96,10 +96,11 @@ export default function SwipeScreen({ navigation }) {
 
   const currentCafe = deck[currentIndex];
 
+  const animating = useRef(false);
+
   const redealDeck = useCallback(() => {
-    pan.stopAnimation();
-    pan.setOffset({ x: 0, y: 0 });
-    pan.setValue({ x: 0, y: 0 });
+    animating.current = false;
+    pan.x.setValue(0);
     setSwipedThisRound(new Set());
     setShuffleSeed((s) => s + 1);
   }, [pan]);
@@ -117,9 +118,8 @@ export default function SwipeScreen({ navigation }) {
       toggleVisited(currentCafe.id);
     }
     setSwipedThisRound((prev) => new Set(prev).add(currentCafe.id));
-    pan.stopAnimation();
-    pan.setOffset({ x: 0, y: 0 });
-    pan.setValue({ x: 0, y: 0 });
+    pan.x.setValue(0);
+    animating.current = false;
     if (showTip) setShowTip(false);
   }, [currentCafe, toggleSaved, toggleVisited, pan, showTip]);
 
@@ -131,46 +131,39 @@ export default function SwipeScreen({ navigation }) {
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gesture) =>
-        Math.abs(gesture.dx) > Math.abs(gesture.dy) && Math.abs(gesture.dx) > 10,
-      onPanResponderGrant: () => {
-        pan.stopAnimation();
-        pan.setOffset({ x: pan.x._value, y: 0 });
-        pan.setValue({ x: 0, y: 0 });
+      onStartShouldSetPanResponder: () => !animating.current,
+      onMoveShouldSetPanResponder: (_, g) =>
+        !animating.current && Math.abs(g.dx) > Math.abs(g.dy) && Math.abs(g.dx) > 10,
+      onPanResponderGrant: () => {},
+      onPanResponderMove: (_, g) => {
+        if (!animating.current) pan.x.setValue(g.dx);
       },
-      onPanResponderMove: Animated.event(
-        [null, { dx: pan.x }],
-        { useNativeDriver: false }
-      ),
-      onPanResponderRelease: (_, gesture) => {
-        pan.flattenOffset();
-        if (Math.abs(gesture.dx) < 10 && Math.abs(gesture.dy) < 10) {
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            useNativeDriver: true,
-          }).start();
+      onPanResponderRelease: (_, g) => {
+        if (animating.current) return;
+        if (Math.abs(g.dx) < 10 && Math.abs(g.dy) < 10) {
           if (currentCafeRef.current) {
             navigation.navigate('CafeDetail', { cafe: currentCafeRef.current });
           }
           return;
         }
-        if (gesture.dx > SWIPE_THRESHOLD || gesture.vx > 0.7) {
-          Animated.timing(pan, {
-            toValue: { x: SCREEN_WIDTH * 1.2, y: 0 },
-            duration: 200,
+        if (g.dx > SWIPE_THRESHOLD || g.vx > 0.7) {
+          animating.current = true;
+          Animated.timing(pan.x, {
+            toValue: SCREEN_WIDTH * 1.5,
+            duration: 250,
             useNativeDriver: true,
           }).start(() => commitSwipeRef.current('right'));
-        } else if (gesture.dx < -SWIPE_THRESHOLD || gesture.vx < -0.7) {
-          Animated.timing(pan, {
-            toValue: { x: -SCREEN_WIDTH * 1.2, y: 0 },
-            duration: 200,
+        } else if (g.dx < -SWIPE_THRESHOLD || g.vx < -0.7) {
+          animating.current = true;
+          Animated.timing(pan.x, {
+            toValue: -SCREEN_WIDTH * 1.5,
+            duration: 250,
             useNativeDriver: true,
           }).start(() => commitSwipeRef.current('left'));
         } else {
-          Animated.spring(pan, {
-            toValue: { x: 0, y: 0 },
-            friction: 5,
+          Animated.spring(pan.x, {
+            toValue: 0,
+            friction: 6,
             useNativeDriver: true,
           }).start();
         }
