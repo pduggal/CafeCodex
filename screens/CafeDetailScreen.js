@@ -32,9 +32,14 @@ export default function CafeDetailScreen({ route, navigation }) {
     }
   };
 
-  const openMaps = () => {
+  const openGoogleMaps = () => {
     const q = encodeURIComponent(`${cafe.name} ${cafe.city}`);
     Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${q}`);
+  };
+
+  const openAppleMaps = () => {
+    const q = encodeURIComponent(`${cafe.name} ${cafe.city}`);
+    Linking.openURL(`maps://?q=${q}`);
   };
 
   return (
@@ -168,13 +173,29 @@ export default function CafeDetailScreen({ route, navigation }) {
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Location</Text>
-            <TouchableOpacity style={styles.mapPlaceholder} onPress={openMaps}>
-              <Ionicons name="map-outline" size={32} color={Colors.primary} />
-              <Text style={styles.mapText}>
-                {cafe.neighborhood ? `${cafe.neighborhood}, ` : ''}{cafe.city}
-              </Text>
-              <Text style={styles.mapLink}>📍 Open in Google Maps</Text>
-            </TouchableOpacity>
+            <View style={styles.locationCard}>
+              <View style={styles.locationRow}>
+                <Ionicons name="location" size={18} color={Colors.primary} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.locationName}>{cafe.name}</Text>
+                  <Text style={styles.locationAddr}>
+                    {[cafe.neighborhood, cafe.city, cafe.country].filter(Boolean).join(', ')}
+                  </Text>
+                </View>
+              </View>
+              <View style={styles.locationDivider} />
+              <View style={styles.locationBtns}>
+                <TouchableOpacity style={styles.locationBtn} onPress={openGoogleMaps}>
+                  <Ionicons name="navigate-outline" size={14} color={Colors.primary} />
+                  <Text style={styles.locationBtnText}>Google Maps</Text>
+                </TouchableOpacity>
+                <View style={styles.locationBtnDivider} />
+                <TouchableOpacity style={styles.locationBtn} onPress={openAppleMaps}>
+                  <Ionicons name="map-outline" size={14} color={Colors.primary} />
+                  <Text style={styles.locationBtnText}>Apple Maps</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -256,11 +277,19 @@ const styles = StyleSheet.create({
   },
   noteValue: { color: Colors.cream, fontSize: 14, lineHeight: 20 },
   noteDivider: { height: 1, backgroundColor: Colors.cardBorder },
-  mapPlaceholder: {
+  locationCard: {
     backgroundColor: Colors.cardBackground, borderRadius: 12,
-    borderWidth: 1, borderColor: Colors.cardBorder, height: 120,
-    alignItems: 'center', justifyContent: 'center', gap: 6,
+    borderWidth: 1, borderColor: Colors.cardBorder, overflow: 'hidden',
   },
-  mapText: { color: Colors.white, fontSize: 14, fontWeight: '600' },
-  mapLink: { color: Colors.primary, fontSize: 12, fontWeight: '600' },
+  locationRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14 },
+  locationName: { color: Colors.white, fontSize: 14, fontWeight: '700', marginBottom: 3 },
+  locationAddr: { color: Colors.textMuted, fontSize: 13, lineHeight: 18 },
+  locationDivider: { height: 1, backgroundColor: Colors.cardBorder },
+  locationBtns: { flexDirection: 'row' },
+  locationBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, paddingVertical: 13,
+  },
+  locationBtnText: { color: Colors.primary, fontSize: 13, fontWeight: '600' },
+  locationBtnDivider: { width: 1, backgroundColor: Colors.cardBorder },
 });
