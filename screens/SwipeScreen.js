@@ -24,7 +24,7 @@ const SWIPE_THRESHOLD = 75;
 export default function SwipeScreen({ navigation }) {
   const {
     cafes, selectedDrink, selectedVibes, selectedLocation,
-    savedCafes, visitedCafes, toggleSaved, toggleVisited,
+    savedCafes, visitedCafes, toggleSaved, toggleVisited, isOffline,
   } = useCafes();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -340,7 +340,14 @@ export default function SwipeScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <Text style={styles.headerLogo}>Café Codex</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerLogo}>Café Codex</Text>
+          {isOffline && (
+            <View style={styles.offlineBadge}>
+              <Text style={styles.offlineBadgeText}>· cached</Text>
+            </View>
+          )}
+        </View>
         <TouchableOpacity style={styles.filterPill} onPress={() => navigation.navigate('OnboardingHome', { forceShow: true })}>
           <Text style={styles.filterLabel}>{filterLabel}</Text>
           <Text style={styles.filterChange}> · change</Text>
@@ -489,7 +496,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12,
   },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   headerLogo: { color: Colors.primary, fontSize: 20, fontWeight: '800' },
+  offlineBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: Colors.cardBackground },
+  offlineBadgeText: { color: Colors.textMuted, fontSize: 10, fontWeight: '600' },
   filterPill: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 20, backgroundColor: Colors.cardBackground, borderWidth: 1, borderColor: Colors.cardBorder,

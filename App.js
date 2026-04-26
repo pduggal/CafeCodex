@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, ActivityIndicator, Animated } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -46,12 +46,37 @@ const TAB_ICONS = {
   Recommend: 'add-circle-outline',
 };
 
+const LOADING_MESSAGES = [
+  'Finding the best cups…',
+  'Curating your list…',
+  "Checking Pallavi's picks…",
+  'Almost ready…',
+];
+
 function LoadingScreen() {
+  const [msgIndex, setMsgIndex] = useState(0);
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const cycle = () => {
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      ]).start();
+      setMsgIndex((i) => (i + 1) % LOADING_MESSAGES.length);
+    };
+    const interval = setInterval(cycle, 2000);
+    return () => clearInterval(interval);
+  }, [opacity]);
+
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ color: Colors.primary, fontSize: 26, fontWeight: '800', marginBottom: 8 }}>Café Codex</Text>
-      <Text style={{ color: Colors.textMuted, fontSize: 13, marginBottom: 24 }}>Loading your cafes...</Text>
-      <ActivityIndicator size="large" color={Colors.primary} />
+    <View style={{ flex: 1, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+      <Text style={{ color: Colors.primary, fontSize: 28, fontWeight: '800', letterSpacing: 0.5, marginBottom: 6 }}>Café Codex</Text>
+      <Text style={{ color: Colors.textMuted, fontSize: 13, marginBottom: 40 }}>Your record of the world's best cups</Text>
+      <ActivityIndicator size="large" color={Colors.primary} style={{ marginBottom: 24 }} />
+      <Animated.Text style={{ color: Colors.textMuted, fontSize: 13, opacity }}>
+        {LOADING_MESSAGES[msgIndex]}
+      </Animated.Text>
     </View>
   );
 }

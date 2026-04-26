@@ -13,6 +13,8 @@ export function CafeProvider({ children }) {
   const [visitedCafes, setVisitedCafes] = useState([]);
   const [favorites, setFavorites] = useState([]);
 
+  const [isOffline, setIsOffline] = useState(false);
+
   const [selectedCity, setSelectedCity] = useState('All');
   const [selectedDrink, setSelectedDrink] = useState('coffee');
   const [selectedVibes, setSelectedVibes] = useState([]);
@@ -43,7 +45,10 @@ export function CafeProvider({ children }) {
       console.log('Supabase cafes failed, loading cache', e);
       try {
         const cached = await AsyncStorage.getItem('cafes_cache');
-        if (cached) setCafes(JSON.parse(cached));
+        if (cached) {
+          setCafes(JSON.parse(cached));
+          setIsOffline(true);
+        }
       } catch (ce) {}
     } finally {
       setLoading(false);
@@ -189,6 +194,7 @@ export function CafeProvider({ children }) {
     cafes,
     countries,
     loading,
+    isOffline,
     savedCafes,
     visitedCafes,
     favorites,
@@ -213,7 +219,7 @@ export function CafeProvider({ children }) {
     isFavorite,
     cities,
   }), [
-    cafes, countries, loading,
+    cafes, countries, loading, isOffline,
     savedCafes, visitedCafes, favorites,
     selectedCity, selectedDrink, selectedVibes, selectedLocation,
     hasOnboarded, savePreferences, resetOnboarding,
