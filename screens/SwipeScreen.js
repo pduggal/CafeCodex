@@ -10,6 +10,7 @@ import {
   Dimensions,
   ScrollView,
   FlatList,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,6 +30,7 @@ export default function SwipeScreen({ navigation }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [viewMode, setViewMode] = useState('cards');
   const [browseCity, setBrowseCity] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [showTip, setShowTip] = useState(true);
   const [shuffleSeed, setShuffleSeed] = useState(0);
   const [swipedThisRound, setSwipedThisRound] = useState(new Set());
@@ -74,9 +76,19 @@ export default function SwipeScreen({ navigation }) {
   }, [cafes, selectedDrink, selectedVibes, selectedLocation]);
 
   const browseCafes = useMemo(() => {
-    if (browseCity === 'All') return allFilteredCafes;
-    return allFilteredCafes.filter((c) => c.city === browseCity);
-  }, [allFilteredCafes, browseCity]);
+    let list = browseCity === 'All' ? allFilteredCafes : allFilteredCafes.filter((c) => c.city === browseCity);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          c.city.toLowerCase().includes(q) ||
+          (c.neighborhood || '').toLowerCase().includes(q) ||
+          (c.instagram_handle || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [allFilteredCafes, browseCity, searchQuery]);
 
   const browseCities = useMemo(() => {
     return ['All', ...new Set(allFilteredCafes.map((c) => c.city))];
@@ -359,6 +371,23 @@ export default function SwipeScreen({ navigation }) {
 
       {viewMode === 'list' ? (
         <View style={styles.browseWrap}>
+          <View style={styles.searchWrap}>
+            <Ionicons name="search-outline" size={15} color={Colors.textMuted} style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search cafes, cities, neighborhoods…"
+              placeholderTextColor={Colors.textMuted}
+              value={searchQuery}
+              onChangeText={(t) => { setSearchQuery(t); setBrowseCity('All'); }}
+              autoCorrect={false}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={16} color={Colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -563,6 +592,14 @@ const styles = StyleSheet.create({
   },
 
   browseWrap: { flex: 1 },
+  searchWrap: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginHorizontal: 16, marginTop: 10, marginBottom: 2,
+    backgroundColor: Colors.cardBackground, borderWidth: 1, borderColor: Colors.cardBorder,
+    borderRadius: 12, paddingHorizontal: 12, height: 40,
+  },
+  searchIcon: { flexShrink: 0 },
+  searchInput: { flex: 1, color: Colors.cream, fontSize: 14 },
   browseCityBar: { flexGrow: 0, flexShrink: 0 },
   browseCityBarContent: { paddingHorizontal: 16, paddingVertical: 10, alignItems: 'center' },
   browseCityChip: {
