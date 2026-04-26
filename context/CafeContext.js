@@ -32,9 +32,18 @@ export function CafeProvider({ children }) {
       const query = supabase.from('cafes').select('*').order('name');
       const { data, error } = await Promise.race([query, timeout]);
       if (error) throw error;
-      setCafes(data || []);
+      if (data && data.length > 0) {
+        setCafes(data);
+        AsyncStorage.setItem('cafes_cache', JSON.stringify(data)).catch(() => {});
+      } else {
+        throw new Error('empty');
+      }
     } catch (e) {
-      console.log('Error fetching cafes', e);
+      console.log('Supabase cafes failed, loading cache', e);
+      try {
+        const cached = await AsyncStorage.getItem('cafes_cache');
+        if (cached) setCafes(JSON.parse(cached));
+      } catch (ce) {}
     } finally {
       setLoading(false);
     }
@@ -47,9 +56,16 @@ export function CafeProvider({ children }) {
         .select('*')
         .order('name');
       if (error) throw error;
-      setCountries(data || []);
+      if (data && data.length > 0) {
+        setCountries(data);
+        AsyncStorage.setItem('countries_cache', JSON.stringify(data)).catch(() => {});
+      }
     } catch (e) {
-      console.log('Error fetching countries', e);
+      console.log('Supabase countries failed, loading cache', e);
+      try {
+        const cached = await AsyncStorage.getItem('countries_cache');
+        if (cached) setCountries(JSON.parse(cached));
+      } catch (ce) {}
     }
   };
 

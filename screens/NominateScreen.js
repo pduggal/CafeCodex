@@ -45,9 +45,27 @@ export default function NominateScreen() {
         your_name: form.your_name.trim(),
         instagram_handle: form.instagram_handle.trim() || null,
       });
-    } catch (e) {
-      // Still show success even if network fails
-    }
+    } catch (e) {}
+    try {
+      await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          access_key: 'df232092-355f-4f5c-8d0a-70b739d24294',
+          subject: '☕ New Café Codex Nomination: ' + form.cafe_name.trim(),
+          from_name: 'Café Codex',
+          'Café': form.cafe_name.trim(),
+          'City': form.city.trim(),
+          'Country': form.country.trim(),
+          'Neighborhood': form.neighborhood.trim() || '—',
+          'What makes it special': form.what_makes_it_special.trim(),
+          'Must order': form.must_order.trim(),
+          'Best time': form.best_time.trim() || '—',
+          'Nominated by': form.your_name.trim(),
+          'Instagram': form.instagram_handle.trim() || '—',
+        }),
+      });
+    } catch (e) {}
     setNominationData(form);
     setSubmitted(true);
   };

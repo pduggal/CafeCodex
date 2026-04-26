@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,28 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 
+const WORLD_BEST = [
+  { rank: 1, name: 'Onyx Coffee Lab', loc: 'Rogers, Arkansas, USA', flag: '\u{1F1FA}\u{1F1F8}', known: 'Multi-award-winning roaster known for sourcing the world’s rarest lots', top3: true },
+  { rank: 2, name: 'Tim Wendelboe', loc: 'Grünerløkka, Oslo, Norway', flag: '\u{1F1F3}\u{1F1F4}', known: 'Legendary Nordic micro-roastery — single-origin light roasts, no milk menu', top3: true },
+  { rank: 3, name: 'Alquimia Coffee', loc: 'Santa Ana, El Salvador', flag: '\u{1F1F8}\u{1F1FB}', known: 'Farm-to-cup at origin — brews from their own volcanic-soil estate', top3: true },
+  { rank: 4, name: 'ONA Coffee', loc: 'Marrickville, Sydney, Australia', flag: '\u{1F1E6}\u{1F1FA}', known: 'World Barista Championship winners — precision-driven specialty' },
+  { rank: 5, name: 'Toby’s Estate Roasters', loc: 'Chippendale, Sydney, Australia', flag: '\u{1F1E6}\u{1F1FA}', known: 'Warehouse roastery with seasonal blends and single origins' },
+  { rank: 6, name: 'Apartment Coffee', loc: 'Lavender, Singapore', flag: '\u{1F1F8}\u{1F1EC}', known: 'Minimalist café bar serving refined espresso and batch brews' },
+  { rank: 7, name: 'Gota Coffee Experts', loc: 'Neubau, Vienna, Austria', flag: '\u{1F1E6}\u{1F1F9}', known: 'Third-wave pioneer in a city famous for traditional coffeehouses' },
+  { rank: 8, name: 'Story of Ono', loc: 'Kuala Lumpur, Malaysia', flag: '\u{1F1F2}\u{1F1FE}', known: 'Japanese-inspired pour-over bar with single-estate Malaysian beans' },
+  { rank: 9, name: 'Tropicalia Coffee', loc: 'Chapinero, Bogotá, Colombia', flag: '\u{1F1E8}\u{1F1F4}', known: 'Colombian specialty at origin — fruit-forward roasts and cascara' },
+  { rank: 10, name: 'Tanat', loc: 'Le Marais, Paris, France', flag: '\u{1F1EB}\u{1F1F7}', known: 'New-wave Parisian espresso bar redefining café culture in the Marais' },
+];
+
 export default function AuthorScreen() {
+  const [worldBestOpen, setWorldBestOpen] = useState(false);
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
@@ -22,9 +38,10 @@ export default function AuthorScreen() {
         {/* ── Avatar + name ── */}
         <View style={styles.hero}>
           <View style={styles.photoRing}>
-            <View style={styles.photoPlaceholder}>
-              <Text style={styles.photoInitial}>P</Text>
-            </View>
+            <Image
+              source={require('../assets/author.jpg')}
+              style={styles.photoImage}
+            />
           </View>
           <Text style={styles.heroName}>Pallavi Duggal</Text>
           <Text style={styles.heroHandle}>@honestcoffeestop</Text>
@@ -56,8 +73,6 @@ export default function AuthorScreen() {
 
         {/* ── Story body ── */}
         <View style={styles.body}>
-
-          {/* Opening — inline first-letter styling, no broken float */}
           <Text style={styles.openingPara}>
             <Text style={styles.firstLetter}>I </Text>
             don't remember the exact moment I fell in love with coffee. It wasn't
@@ -81,7 +96,6 @@ export default function AuthorScreen() {
             place at all.
           </Text>
 
-          {/* Pull quote */}
           <View style={styles.pullQuote}>
             <Text style={styles.pullQuoteText}>
               "Every cafe has a story.{'\n'}I love knowing it."
@@ -104,7 +118,6 @@ export default function AuthorScreen() {
             where do I actually go?
           </Text>
 
-          {/* Second pull quote */}
           <View style={styles.pullQuote}>
             <Text style={styles.pullQuoteText}>
               "I built Café Codex so you don't{'\n'}have to do that anymore."
@@ -121,7 +134,6 @@ export default function AuthorScreen() {
             My record. And now it's yours to use.
           </Text>
 
-          {/* Signature */}
           <View style={styles.signature}>
             <Text style={styles.signatureDash}>—</Text>
             <Text style={styles.signatureName}>Pallavi</Text>
@@ -131,10 +143,10 @@ export default function AuthorScreen() {
         {/* ── Stats ── */}
         <View style={styles.statsRow}>
           {[
-            { value: '6',    label: 'Countries' },
-            { value: '362',  label: 'Cafes in Codex' },
-            { value: '∞',   label: 'Coffees tried' },
-            { value: '∞',   label: 'Matchas tried' },
+            { value: '7+',   label: 'Countries' },
+            { value: '50+',  label: 'Cafes visited' },
+            { value: '∞', label: 'Coffees tried' },
+            { value: '∞', label: 'Matchas tried' },
           ].map(({ value, label }, i, arr) => (
             <React.Fragment key={label}>
               <View style={styles.statItem}>
@@ -146,19 +158,42 @@ export default function AuthorScreen() {
           ))}
         </View>
 
-        {/* ── In the Press ── */}
-        <View style={styles.pressSection}>
-          <Text style={styles.pressTitle}>In the Press</Text>
-          <View style={styles.pressCard}>
-            <View style={styles.pressBadge}>
-              <Text style={styles.pressBadgeText}>Featured</Text>
+        {/* ── World's Best Coffee Shops 2026 ── */}
+        <View style={styles.worldBest}>
+          <TouchableOpacity
+            style={styles.worldBestToggle}
+            onPress={() => setWorldBestOpen(!worldBestOpen)}
+            activeOpacity={0.7}
+          >
+            <View>
+              <Text style={styles.worldBestTitle}>{'✦'} World's Best Coffee Shops 2026</Text>
+              <Text style={styles.worldBestSubtitle}>Top 10 from 100+ shops worldwide — tap to explore</Text>
             </View>
-            <Text style={styles.pressQuote}>
-              "One of the most thoughtfully curated cafe guides we've seen —
-              part travel journal, part love letter to coffee culture."
+            <Text style={[styles.worldBestChevron, worldBestOpen && styles.worldBestChevronOpen]}>
+              {'▼'}
             </Text>
-            <Text style={styles.pressSource}>— Honest Coffee Stop</Text>
-          </View>
+          </TouchableOpacity>
+
+          {worldBestOpen && (
+            <View style={styles.worldBestCard}>
+              {WORLD_BEST.map((item) => (
+                <View key={item.rank} style={[styles.wbRow, item.top3 && styles.wbRowTop3]}>
+                  <Text style={[styles.wbRank, item.top3 && styles.wbRankTop3]}>{item.rank}</Text>
+                  <View style={styles.wbInfo}>
+                    <Text style={[styles.wbName, item.top3 && styles.wbNameTop3]}>{item.name}</Text>
+                    <Text style={styles.wbLoc}>{item.flag} {item.loc}</Text>
+                    <Text style={styles.wbKnown}>{item.known}</Text>
+                  </View>
+                </View>
+              ))}
+              <TouchableOpacity
+                style={styles.wbSource}
+                onPress={() => Linking.openURL('https://theworlds100bestcoffeeshops.com/top-100-coffee-shops/')}
+              >
+                <Text style={styles.wbSourceText}>Source: The World's 100 Best Coffee Shops 2026 {'→'}</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         <View style={{ height: 40 }} />
@@ -176,7 +211,6 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 
-  // ── Hero ──────────────────────────────────────────────────────────────
   hero: {
     alignItems: 'center',
     paddingTop: 32,
@@ -190,18 +224,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
     padding: 3,
     marginBottom: 14,
+    overflow: 'hidden',
   },
-  photoPlaceholder: {
-    flex: 1,
+  photoImage: {
+    width: '100%',
+    height: '100%',
     borderRadius: 48,
-    backgroundColor: Colors.cardBackground,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  photoInitial: {
-    color: Colors.primary,
-    fontSize: 34,
-    fontWeight: '700',
   },
   heroName: {
     color: Colors.cream,
@@ -236,7 +264,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Letter header ─────────────────────────────────────────────────────
   letterHeader: {
     paddingHorizontal: 26,
     marginBottom: 28,
@@ -263,7 +290,6 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
 
-  // ── Body ──────────────────────────────────────────────────────────────
   body: {
     paddingHorizontal: 26,
   },
@@ -295,7 +321,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // Pull quote
   pullQuote: {
     alignItems: 'center',
     marginVertical: 28,
@@ -311,23 +336,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // Highlight — same style as pull quote, centered, no box
-  highlight: {
-    alignItems: 'center',
-    marginVertical: 28,
-    paddingHorizontal: 12,
-  },
-  highlightText: {
-    color: Colors.primary,
-    fontSize: 19,
-    fontStyle: 'italic',
-    fontWeight: '600',
-    textAlign: 'center',
-    lineHeight: 30,
-    letterSpacing: 0.3,
-  },
-
-  // Signature
   signature: {
     marginTop: 24,
     marginBottom: 36,
@@ -345,7 +353,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // ── Stats ─────────────────────────────────────────────────────────────
   statsRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -378,52 +385,106 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.cardBorder,
   },
 
-  pressSection: {
+  worldBest: {
     marginHorizontal: 26,
     marginTop: 28,
   },
-  pressTitle: {
-    color: Colors.primary,
-    fontSize: 13,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-  },
-  pressCard: {
+  worldBestToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: Colors.cardBackground,
-    borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.cardBorder,
-    padding: 18,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
-  pressBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(201,151,58,0.15)',
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    marginBottom: 12,
-  },
-  pressBadgeText: {
+  worldBestTitle: {
     color: Colors.primary,
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
+    marginBottom: 3,
   },
-  pressQuote: {
-    color: Colors.cream,
-    fontSize: 15,
-    fontStyle: 'italic',
-    lineHeight: 24,
-    marginBottom: 10,
+  worldBestSubtitle: {
+    color: Colors.textMuted,
+    fontSize: 10,
   },
-  pressSource: {
+  worldBestChevron: {
     color: Colors.textMuted,
     fontSize: 12,
-    fontWeight: '600',
+  },
+  worldBestChevronOpen: {
+    transform: [{ rotate: '180deg' }],
+  },
+  worldBestCard: {
+    backgroundColor: Colors.cardBackground,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: Colors.cardBorder,
+    borderBottomLeftRadius: 14,
+    borderBottomRightRadius: 14,
+    overflow: 'hidden',
+  },
+  wbRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.cardBorder,
+  },
+  wbRowTop3: {
+    backgroundColor: 'rgba(201,151,58,0.06)',
+  },
+  wbRank: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '800',
+    width: 22,
+    textAlign: 'center',
+    paddingTop: 1,
+  },
+  wbRankTop3: {
+    fontSize: 16,
+  },
+  wbInfo: {
+    flex: 1,
+  },
+  wbName: {
+    color: Colors.cream,
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  wbNameTop3: {
+    fontSize: 14,
+  },
+  wbLoc: {
+    color: Colors.textMuted,
+    fontSize: 10,
+    marginBottom: 3,
+  },
+  wbKnown: {
+    color: Colors.cream,
+    fontSize: 10,
+    fontStyle: 'italic',
+    opacity: 0.6,
+    lineHeight: 14,
+  },
+  wbSource: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: Colors.cardBorder,
+    alignItems: 'center',
+  },
+  wbSourceText: {
+    color: Colors.textMuted,
+    fontSize: 10,
+    letterSpacing: 0.3,
   },
 });

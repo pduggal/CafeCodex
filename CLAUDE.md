@@ -7,7 +7,7 @@
 
 ## What This App Is
 
-**Café Codex** is a curated coffee and matcha cafe discovery app for iOS and Android.
+**Café Codex** is a curated coffee and matcha cafe discovery app for iOS and Android + a webapp.
 Built by Pallavi Duggal (@honestcoffeestop).
 
 The concept: a codex — an ancient handwritten manuscript — is Pallavi's personal record of every great cafe she's visited around the world. Not crowd-sourced noise. Editorial curation from a trusted firsthand voice.
@@ -18,14 +18,23 @@ The concept: a codex — an ancient handwritten manuscript — is Pallavi's pers
 
 ## Tech Stack
 
+### React Native App
 | Layer | Technology |
 |---|---|
 | Framework | React Native + Expo (managed workflow — never eject) |
 | Navigation | React Navigation — bottom tabs + native stack |
-| State | Context API + AsyncStorage |
-| Backend | Supabase (Postgres, Auth, Storage) — not yet wired up |
-| Maps | react-native-maps + Google Maps API — placeholder for now |
+| State | Context API + AsyncStorage (with Supabase cache fallback) |
+| Backend | Supabase (Postgres, Auth, Storage) |
 | Icons | @expo/vector-icons (Ionicons) |
+
+### Webapp
+| Layer | Technology |
+|---|---|
+| Framework | Single-file HTML/CSS/JS |
+| Hosting | GitHub Pages (gh-pages branch) |
+| Backend | Supabase (same instance as RN app) |
+| Analytics | GoatCounter (cafecodex.goatcounter.com) |
+| Email | Web3Forms (nomination notifications) |
 
 **Node version:** v25.9.0
 **Expo SDK:** 54
@@ -38,26 +47,35 @@ The concept: a codex — an ancient handwritten manuscript — is Pallavi's pers
 
 ```
 CafeCodex/
-├── App.js                  # Root — NavigationContainer + CafeProvider + bottom tabs
+├── index.html              # Webapp (HTML + CSS + JS all inline, hosted on GitHub Pages)
+├── App.js                  # RN root — NavigationContainer + CafeProvider + bottom tabs
 ├── app.json                # Expo config (slug: cafecodex, bundle: com.honestcoffeestop.cafecodex)
 ├── package.json
 ├── babel.config.js
-├── assets/                 # Icon, splash (placeholders for now)
+├── assets/
+│   ├── icon.png            # App icon (placeholder)
+│   ├── splash.png          # Splash screen (placeholder)
+│   └── author.jpg          # Pallavi's author photo
 ├── constants/
 │   └── colors.js           # Full brand palette
 ├── context/
-│   └── CafeContext.js      # Global state: saved, visited, selectedCity — persisted via AsyncStorage
+│   └── CafeContext.js      # Global state: cafes, countries, saved, visited, favorites
+│                           # Supabase fetch with AsyncStorage cache fallback
+├── lib/
+│   └── supabase.js         # Supabase client init
 ├── data/
-│   └── cafes.js            # Seed data: 7 cafes, 3 city guides, 8 vibe tags
+│   └── cafes.js            # Vibe tag definitions, photo fallback helpers (no cafe records)
 ├── components/
-│   └── CafeCard.js         # Reusable cafe card with photo, badges, vibe tags, heart save
-└── screens/
-    ├── DiscoverScreen.js    # Search + city filter + vibe chips + filtered cafe list
-    ├── CafeDetailScreen.js  # Full detail: curator notes, actions, vibe tags, map placeholder
-    ├── MapScreen.js         # Map placeholder (react-native-maps not yet wired)
-    ├── CityGuidesScreen.js  # Ranked city guides (Seattle + NYC)
-    ├── TrendingScreen.js    # Trending Now + Pallavi's All-Time Picks
-    └── MySipsScreen.js      # Stats + Visited + Want to Try lists
+│   └── CafeCard.js         # Reusable cafe card with photo, badges, vibe tags
+├── screens/
+│   ├── OnboardingScreen.js # 2-step: drink preference + location + vibe selection
+│   ├── SwipeScreen.js      # Swipe cards + list/browse toggle + city filter
+│   ├── CafeDetailScreen.js # Full detail: curator notes, must-try, rating, actions
+│   ├── MyListScreen.js     # 3 tabs: Want to Go, Been There, Saved
+│   ├── AuthorScreen.js     # Author story, photo, stats, World's Best list
+│   └── NominateScreen.js   # Nomination form + email notification + share
+└── scripts/
+    └── seed-supabase.js    # Seeds Supabase from inline data
 ```
 
 ---
@@ -79,23 +97,19 @@ CafeCodex/
 
 ---
 
-## Navigation Structure
+## Navigation Structure (RN App)
 
 ```
 Bottom Tabs
 ├── Discover (stack)
-│   ├── DiscoverHome
-│   └── CafeDetail
-├── Map (single screen — placeholder)
-├── City Guides (stack)
-│   ├── CityGuidesHome
-│   └── CafeDetail
-├── Trending (stack)
-│   ├── TrendingHome
-│   └── CafeDetail
-└── My Sips (stack)
-    ├── MySipsHome
-    └── CafeDetail
+│   ├── OnboardingHome (OnboardingScreen)
+│   ├── SwipeHome (SwipeScreen)
+│   └── CafeDetail (CafeDetailScreen)
+├── My List (stack)
+│   ├── MyListHome (MyListScreen)
+│   └── CafeDetail (CafeDetailScreen)
+├── Author (single screen: AuthorScreen)
+└── Recommend (single screen: NominateScreen)
 ```
 
 ---
@@ -104,21 +118,21 @@ Bottom Tabs
 
 ```js
 {
-  id, name, city, country, neighborhood,
-  coordinates: { lat, lng },
+  id, name, city, country, neighborhood, drink,
+  photo_url: string,
   vibe_tags: [],         // see vibe tags below
   curator_pick: boolean,
   curator_rating: 1-5,
   curator_notes: {
     what_to_order,
-    what_to_skip,
     best_time,
     content_tips,
   },
-  photos: [],
+  must_try: { drink, note },
   instagram_handle: string,
   is_active: boolean,
   trending: boolean,
+  press_mention: string,
 }
 ```
 
@@ -128,38 +142,35 @@ Bottom Tabs
 
 ---
 
-## Seed Data (data/cafes.js)
+## Current State (last updated: April 2025)
 
-**Seattle:** Elm Coffee Roasters, Koda Cafe, Broadcast Coffee, Ichi-ni-san
-**New York:** Stoneground Matcha, Blue Bottle Coffee (Chelsea), Tandem Coffee (Williamsburg)
+### Webapp (index.html)
+- All features working and deployed to GitHub Pages
+- Supabase backend with 362+ cafes (inline fallback data)
+- Mobile responsive (480px + 375px breakpoints)
+- App shell (430px max-width, centered on desktop)
+- Apple PWA meta tags
+- GoatCounter analytics
+- Web3Forms email on nominations
+- Author page: real photo, story, stats, collapsible World's Best list
+- iOS auto-zoom prevention (16px inputs)
+- Android swipe fix (touch-action: none)
 
-**City Guides:** Top 5 Matcha Seattle, Best Pour-Over Seattle, Top Matcha NYC
-
----
-
-## Current State (last updated: April 2026)
-
-### Working
-- All 5 tabs navigate correctly
-- Discover: search, city filter, vibe filter chips, live filtering
-- Cafe Detail: curator notes, save/visited toggle, Instagram link
-- Trending: trending + all-time picks sections
-- City Guides: ranked lists per city
-- My Sips: stats row (visited/saved/cities) + lists
-- Save + Visited state persists via AsyncStorage
+### React Native App
+- All 4 tabs working: Discover, My List, Author, Recommend
+- Supabase live data with AsyncStorage cache fallback
+- Swipe cards with PanResponder
+- List/browse view toggle
+- Save/visited/favorites with AsyncStorage persistence
+- Author page: real photo, story, stats, World's Best 2026 collapsible list
+- Nomination form with Supabase insert + Web3Forms email
+- City filter, vibe filter, search
 
 ### Placeholder / Not Yet Built
-- Map screen: shows placeholder UI, no real map pins yet (react-native-maps needs Google Maps API key)
-- Photos: all cafe photo areas show emoji placeholder (no real images)
-- Supabase: not connected — all data is local in data/cafes.js
-- Auth: no user accounts yet
-- Community submissions: not built
-- Real assets: icon.png / splash.png are 1px placeholders
-
-### Known Issues / To Fix
-- [ ] App not yet tested on real device — fix any runtime errors first
-- [ ] react-native-maps removed from dependencies (incompatible with Expo Go) — add back when using dev build
-- [ ] Asset files are placeholder 1px PNGs
+- Real assets: icon.png / splash.png are placeholders
+- Nomination approval pipeline (validate via Google Places + Instagram, approve from email)
+- User auth (Supabase)
+- Community submissions review workflow
 
 ---
 
@@ -172,19 +183,24 @@ Bottom Tabs
 - Use colors from constants/colors.js — never hardcode hex values
 - No TypeScript for now — plain JS
 - When adding a new screen that navigates to CafeDetail, add it as a stack in App.js
+- When pushing changes, always push to BOTH main and gh-pages branches
+- After making changes, verify nothing was lost from previous enhancements
 
 ---
 
 ## Roadmap
 
 ### Phase 1 — MVP (current)
-- Fix runtime errors, get running on device
-- Wire up real cafe photos
-- Add Google Maps API key + real map pins
-- Connect Supabase for data
+- ✅ Core app working (swipe, list, detail, save, nominate)
+- ✅ Webapp deployed and mobile-responsive
+- ✅ Supabase backend with 362+ cafes
+- ✅ Email notifications on nominations
+- ✅ Analytics (GoatCounter)
+- [ ] Fix runtime errors on real device
+- [ ] Real app icon and splash screen
 
 ### Phase 2 — Features
-- Community submission form
+- Nomination approval pipeline (Google Places + Instagram validation)
 - User auth (Supabase)
 - Pro tier (Freemium — $3.99/mo)
 
