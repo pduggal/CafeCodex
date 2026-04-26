@@ -28,12 +28,14 @@ export function CafeProvider({ children }) {
   }, []);
 
   const fetchCafes = async () => {
+    let timeoutId;
     try {
-      const timeout = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('timeout')), 8000)
-      );
+      const timeout = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('timeout')), 8000);
+      });
       const query = supabase.from('cafes').select('*').order('name');
       const { data, error } = await Promise.race([query, timeout]);
+      clearTimeout(timeoutId);
       if (error) throw error;
       if (data && data.length > 0) {
         setCafes(data);
@@ -42,6 +44,7 @@ export function CafeProvider({ children }) {
         throw new Error('empty');
       }
     } catch (e) {
+      clearTimeout(timeoutId);
       console.log('Supabase cafes failed, loading cache', e);
       try {
         const cached = await AsyncStorage.getItem('cafes_cache');
