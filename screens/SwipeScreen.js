@@ -97,6 +97,8 @@ export default function SwipeScreen({ navigation }) {
   const currentCafe = deck[currentIndex];
 
   const redealDeck = useCallback(() => {
+    pan.stopAnimation();
+    pan.setOffset({ x: 0, y: 0 });
     pan.setValue({ x: 0, y: 0 });
     setSwipedThisRound(new Set());
     setShuffleSeed((s) => s + 1);
@@ -115,6 +117,8 @@ export default function SwipeScreen({ navigation }) {
       toggleVisited(currentCafe.id);
     }
     setSwipedThisRound((prev) => new Set(prev).add(currentCafe.id));
+    pan.stopAnimation();
+    pan.setOffset({ x: 0, y: 0 });
     pan.setValue({ x: 0, y: 0 });
     if (showTip) setShowTip(false);
   }, [currentCafe, toggleSaved, toggleVisited, pan, showTip]);
@@ -131,6 +135,7 @@ export default function SwipeScreen({ navigation }) {
       onMoveShouldSetPanResponder: (_, gesture) =>
         Math.abs(gesture.dx) > Math.abs(gesture.dy) && Math.abs(gesture.dx) > 10,
       onPanResponderGrant: () => {
+        pan.stopAnimation();
         pan.setOffset({ x: pan.x._value, y: 0 });
         pan.setValue({ x: 0, y: 0 });
       },
