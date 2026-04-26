@@ -41,9 +41,9 @@ function MyListStack() {
 
 const TAB_ICONS = {
   Discover: 'compass-outline',
-  'My List': 'list-outline',
-  Author: 'person-outline',
-  Recommend: 'star-outline',
+  Author: 'person-circle-outline',
+  'My List': 'bookmark-outline',
+  Recommend: 'add-circle-outline',
 };
 
 function LoadingScreen() {
@@ -88,8 +88,8 @@ function AppContent() {
             })}
           >
             <Tab.Screen name="Discover" component={DiscoverStack} />
-            <Tab.Screen name="My List" component={MyListStack} />
             <Tab.Screen name="Author" component={AuthorScreen} />
+            <Tab.Screen name="My List" component={MyListStack} />
             <Tab.Screen name="Recommend" component={NominateScreen} />
           </Tab.Navigator>
     </>
