@@ -1649,35 +1649,41 @@
     if (!q || q.length < 2) return [];
     const lq = q.toLowerCase().trim();
     const results = [];
-    COUNTRIES.forEach(c => {
-      if (c.visited) {
-        // First: check if any city name directly matches — show only those cities
-        const matchedCities = (c.cities || []).filter(city =>
-          city.toLowerCase().includes(lq)
-        );
-        if (matchedCities.length > 0) {
-          matchedCities.forEach(city =>
-            results.push({type:'city', city, country:c.name, flag:c.flag, visited:true})
-          );
-          return; // skip alias/country fallback for this country
-        }
-        // Fallback: country name or alias match → show all cities
-        const nameMatch  = c.name.toLowerCase().includes(lq);
-        const aliasMatch = (c.aliases||[]).some(a => a.includes(lq));
-        if (nameMatch || aliasMatch) {
-          (c.cities || []).forEach(city =>
-            results.push({type:'city', city, country:c.name, flag:c.flag, visited:true})
-          );
-        }
-      } else {
-        const nameMatch  = c.name.toLowerCase().includes(lq);
-        const aliasMatch = (c.aliases||[]).some(a => a.includes(lq));
-        if (nameMatch || aliasMatch) {
-          results.push({type:'country', country:c.name, flag:c.flag, visited:false,
-            planned_cities:c.planned_cities, message:c.message});
+    const seenCityKeys = new Set();
+    const seenCountries = new Set();
+
+    // Step 1: Search actual cafe data — city, neighborhood, or country matches
+    // This makes every city with cafes searchable automatically
+    CAFES.forEach(c => {
+      if (c.is_active === false) return;
+      const cityMatch  = c.city && c.city.toLowerCase().includes(lq);
+      const neighMatch = c.neighborhood && c.neighborhood.toLowerCase().includes(lq);
+      const ctryMatch  = c.country && c.country.toLowerCase().includes(lq);
+      if (cityMatch || neighMatch || ctryMatch) {
+        const key = c.city + '||' + c.country;
+        if (!seenCityKeys.has(key)) {
+          seenCityKeys.add(key);
+          seenCountries.add(c.country);
+          const cd = COUNTRIES.find(x => x.name === c.country);
+          results.push({type:'city', city:c.city, country:c.country,
+            flag: cd ? cd.flag : '🌍', visited:true});
         }
       }
     });
+
+    // Step 2: Search COUNTRIES aliases for anything not already covered by cafe data
+    // These show as "not in the Codex yet" with a nominate prompt
+    COUNTRIES.forEach(c => {
+      if (seenCountries.has(c.name)) return;
+      const nameMatch  = c.name.toLowerCase().includes(lq);
+      const aliasMatch = (c.aliases||[]).some(a => a.includes(lq));
+      if (nameMatch || aliasMatch) {
+        results.push({type:'country', country:c.name, flag:c.flag, visited:false,
+          planned_cities:c.planned_cities,
+          message: c.message || `${c.name} isn\u2019t in the Codex yet \u2014 if you know a great caf\u00e9 there, nominate it.`});
+      }
+    });
+
     return results.slice(0, 8);
   }
 
@@ -1733,8 +1739,8 @@
   function renderLocDropdown(items) {
     document.getElementById('loc-dropdown').innerHTML = items.map(item => {
       const statusText = item.visited
-        ? `✓ Explored · ${item.city ? item.city : (item.planned_cities||[]).join(', ')}`
-        : `✈️ On my list`;
+        ? `✓ In the Codex`
+        : `✦ Not explored yet — nominate a café`;
       const statusClass = item.visited ? 'visited' : 'wishlist';
       const label = item.type === 'city' ? `${item.city}, ${item.country}` : item.country;
       const pressTag = item.city === 'Seattle' ? `<span style="font-size:10px;font-weight:700;background:rgba(201,151,58,0.2);color:#C9973A;border-radius:8px;padding:2px 7px;margin-left:6px;">🏆 #5 Coffee City</span>` : '';
@@ -1764,8 +1770,9 @@
       document.getElementById('loc-clear').style.display = 'block';
       document.getElementById('loc-badge').classList.remove('show');
       document.getElementById('nv-flag').textContent = item.flag;
-      document.getElementById('nv-title').textContent = `${item.country} is on my list`;
-      document.getElementById('nv-msg').textContent = item.message || "Haven't made it here yet — but it's circled on my map. Do you have a recommendation?";
+      const locationName = item.type === 'city' ? `${item.city}, ${item.country}` : item.country;
+      document.getElementById('nv-title').textContent = `${locationName} isn't in the Codex yet`;
+      document.getElementById('nv-msg').textContent = item.message || `I haven't explored ${locationName} yet — but if you know a great café there, nominate it and I'll check it out.`;
       document.getElementById('loc-not-visited').classList.add('show');
     }
   }
