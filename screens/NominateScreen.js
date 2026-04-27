@@ -35,8 +35,9 @@ export default function NominateScreen() {
       return;
     }
     setSubmitting(true);
+    let saved = false;
     try {
-      await supabase.from('nominations').insert({
+      const { error } = await supabase.from('nominations').insert({
         cafe_name: form.cafe_name.trim(),
         city: form.city.trim(),
         country: form.country.trim(),
@@ -47,11 +48,12 @@ export default function NominateScreen() {
         your_name: form.your_name.trim(),
         instagram_handle: form.instagram_handle.trim() || null,
       });
+      if (!error) saved = true;
     } catch (e) {
       console.log('Supabase nomination insert failed:', e);
     }
     try {
-      const response = await fetch('https://api.web3forms.com/submit', {
+      await fetch('https://api.web3forms.com/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
@@ -69,20 +71,20 @@ export default function NominateScreen() {
           'Instagram': form.instagram_handle.trim() || '—',
         }),
       });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const result = await response.json();
-      if (!result.success) throw new Error(result.message || 'Email delivery failed');
-      setNominationData(form);
-      setSubmitted(true);
+      saved = true;
     } catch (e) {
       console.log('Web3Forms email failed:', e);
+    }
+    if (saved) {
+      setNominationData(form);
+      setSubmitted(true);
+    } else {
       Alert.alert(
         'Could not send nomination',
         'Please check your connection and try again. If the problem persists, DM @honestcoffeestop on Instagram.'
       );
-    } finally {
-      setSubmitting(false);
     }
+    setSubmitting(false);
   };
 
   const shareNomination = async () => {
