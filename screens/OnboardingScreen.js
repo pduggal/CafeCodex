@@ -20,7 +20,7 @@ const ONBOARDING_VIBES = [
 
 export default function OnboardingScreen({ navigation, route }) {
   const {
-    countries, hasOnboarded, savePreferences,
+    cafes, countries, hasOnboarded, savePreferences,
     selectedDrink, selectedVibes, selectedLocation,
   } = useCafes();
   const forceShow = route?.params?.forceShow === true;
@@ -43,35 +43,43 @@ export default function OnboardingScreen({ navigation, route }) {
     if (!q || q.length < 2) return [];
     const lq = q.toLowerCase().trim();
     const results = [];
-    countries.forEach((c) => {
-      if (c.visited) {
-        const matchedCities = (c.cities || []).filter(
-          (city) => city.toLowerCase().includes(lq)
-        );
-        if (matchedCities.length > 0) {
-          matchedCities.forEach((city) =>
-            results.push({ type: 'city', city, country: c.name, flag: c.flag, visited: true })
-          );
-          return;
-        }
-        const nameMatch = c.name.toLowerCase().includes(lq);
-        const aliasMatch = (c.aliases || []).some((a) => a.includes(lq));
-        if (nameMatch || aliasMatch) {
-          (c.cities || []).forEach((city) =>
-            results.push({ type: 'city', city, country: c.name, flag: c.flag, visited: true })
-          );
-        }
-      } else {
-        const nameMatch = c.name.toLowerCase().includes(lq);
-        const aliasMatch = (c.aliases || []).some((a) => a.includes(lq));
-        if (nameMatch || aliasMatch) {
+    const seenCityKeys = new Set();
+    const seenCountries = new Set();
+
+    // Step 1: Search actual cafe data — any city with cafes is automatically searchable
+    (cafes || []).forEach((c) => {
+      if (c.is_active === false) return;
+      const cityMatch = c.city && c.city.toLowerCase().includes(lq);
+      const neighMatch = c.neighborhood && c.neighborhood.toLowerCase().includes(lq);
+      const ctryMatch = c.country && c.country.toLowerCase().includes(lq);
+      if (cityMatch || neighMatch || ctryMatch) {
+        const key = c.city + '||' + c.country;
+        if (!seenCityKeys.has(key)) {
+          seenCityKeys.add(key);
+          seenCountries.add(c.country);
+          const cd = countries.find((x) => x.name === c.country);
           results.push({
-            type: 'country', country: c.name, flag: c.flag, visited: false,
-            planned_cities: c.planned_cities, message: c.message,
+            type: 'city', city: c.city, country: c.country,
+            flag: cd ? cd.flag : '🌍', visited: true,
           });
         }
       }
     });
+
+    // Step 2: Fall back to country aliases for places not yet in the Codex
+    countries.forEach((c) => {
+      if (seenCountries.has(c.name)) return;
+      const nameMatch = c.name.toLowerCase().includes(lq);
+      const aliasMatch = (c.aliases || []).some((a) => a.includes(lq));
+      if (nameMatch || aliasMatch) {
+        results.push({
+          type: 'country', country: c.name, flag: c.flag, visited: false,
+          planned_cities: c.planned_cities,
+          message: c.message || `${c.name} isn't in the Codex yet — if you know a great café there, nominate it.`,
+        });
+      }
+    });
+
     return results.slice(0, 8);
   };
 
@@ -179,7 +187,7 @@ export default function OnboardingScreen({ navigation, route }) {
                         {item.type === 'city' ? `${item.city}, ${item.country}` : item.country}
                       </Text>
                       <Text style={[styles.locStatus, item.visited ? styles.locVisited : styles.locWishlist]}>
-                        {item.visited ? '✓ Visited' : '✈ On the wishlist'}
+                        {item.visited ? '✓ In the Codex' : '✦ Not explored yet — nominate a café'}
                       </Text>
                     </View>
                   </TouchableOpacity>
@@ -201,8 +209,8 @@ export default function OnboardingScreen({ navigation, route }) {
             {notVisited && (
               <View style={styles.notVisited}>
                 <Text style={styles.nvFlag}>{notVisited.flag}</Text>
-                <Text style={styles.nvTitle}>{notVisited.country}</Text>
-                <Text style={styles.nvMsg}>{notVisited.message}</Text>
+                <Text style={styles.nvTitle}>{notVisited.country} isn't in the Codex yet</Text>
+                <Text style={styles.nvMsg}>{notVisited.message || `I haven't explored ${notVisited.country} yet — but if you know a great café there, nominate it and I'll check it out.`}</Text>
                 <TouchableOpacity
                   style={styles.nvBtn}
                   onPress={() => {
