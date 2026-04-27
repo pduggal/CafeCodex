@@ -5,8 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
-  Animated,
-  PanResponder,
   Dimensions,
   ScrollView,
   FlatList,
@@ -14,8 +12,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  interpolate,
+  runOnJS,
+  Extrapolation,
+} from 'react-native-reanimated';
 import { Colors } from '../constants/colors';
-import { VIBE_TAGS, getCafePhoto } from '../data/cafes';
+import { getCafePhoto, getVibeLabel } from '../data/cafes';
 import { useCafes } from '../context/CafeContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -34,30 +42,8 @@ export default function SwipeScreen({ navigation }) {
   const [showTip, setShowTip] = useState(true);
   const [shuffleSeed, setShuffleSeed] = useState(0);
   const [swipedThisRound, setSwipedThisRound] = useState(new Set());
-  const pan = useRef(new Animated.ValueXY()).current;
 
-  const deck = useMemo(() => {
-    const filtered = cafes.filter((cafe) => {
-      if (swipedThisRound.has(cafe.id)) return false;
-      if (selectedDrink && cafe.drink && cafe.drink !== selectedDrink) return false;
-      if (selectedLocation && selectedLocation.type === 'city' && cafe.city !== selectedLocation.city) return false;
-      if (selectedVibes.length > 0) {
-        for (const v of selectedVibes) {
-          if (v === 'trending' && !cafe.trending) return false;
-          if (v === 'picks' && !cafe.curator_pick) return false;
-          if (v === 'aesthetic' && !(cafe.vibe_tags || []).includes('viral_aesthetic')) return false;
-          if (v === 'hidden' && !(cafe.vibe_tags || []).includes('hidden_gem')) return false;
-        }
-      }
-      return true;
-    });
-    const shuffled = [...filtered];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
-  }, [cafes, swipedThisRound, selectedDrink, selectedVibes, selectedLocation, shuffleSeed]);
+  const translateX = useSharedValue(0);
 
   const allFilteredCafes = useMemo(() => {
     return cafes.filter((cafe) => {
@@ -74,6 +60,20 @@ export default function SwipeScreen({ navigation }) {
       return true;
     });
   }, [cafes, selectedDrink, selectedVibes, selectedLocation]);
+
+  // Shuffle separately from filtering so card order stays stable between swipes
+  const shuffledCafes = useMemo(() => {
+    const shuffled = [...allFilteredCafes];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, [allFilteredCafes, shuffleSeed]);
+
+  const deck = useMemo(() => {
+    return shuffledCafes.filter((cafe) => !swipedThisRound.has(cafe.id));
+  }, [shuffledCafes, swipedThisRound]);
 
   const browseCafes = useMemo(() => {
     let list = browseCity === 'All' ? allFilteredCafes : allFilteredCafes.filter((c) => c.city === browseCity);
@@ -96,120 +96,153 @@ export default function SwipeScreen({ navigation }) {
 
   const currentCafe = deck[currentIndex];
 
-  const animating = useRef(false);
-
   const redealDeck = useCallback(() => {
-    animating.current = false;
-    pan.x.setValue(0);
     setSwipedThisRound(new Set());
     setShuffleSeed((s) => s + 1);
-  }, [pan]);
+  }, []);
 
-  const vibeLabel = (tagId) => {
-    const found = VIBE_TAGS.find((t) => t.id === tagId);
-    return found ? `${found.emoji} ${found.label}` : tagId;
-  };
 
   const commitSwipe = useCallback((direction) => {
-    if (!currentCafe) return;
+    if (!currentCafeRef.current) return;
+    const cafeId = currentCafeRef.current.id;
     if (direction === 'right') {
-      toggleSaved(currentCafe.id);
+      toggleSaved(cafeId);
     } else {
-      toggleVisited(currentCafe.id);
+      toggleVisited(cafeId);
     }
-    setSwipedThisRound((prev) => new Set(prev).add(currentCafe.id));
-    pan.x.setValue(0);
-    animating.current = false;
+    setSwipedThisRound((prev) => new Set(prev).add(cafeId));
     if (showTip) setShowTip(false);
-  }, [currentCafe, toggleSaved, toggleVisited, pan, showTip]);
+  }, [toggleSaved, toggleVisited, showTip]);
 
+  // Mutable ref so gesture handler always calls the latest commitSwipe (avoids stale closure)
   const commitSwipeRef = useRef(commitSwipe);
   useEffect(() => { commitSwipeRef.current = commitSwipe; }, [commitSwipe]);
 
   const currentCafeRef = useRef(currentCafe);
-  useEffect(() => { currentCafeRef.current = currentCafe; }, [currentCafe]);
+  // Reset card position only after React swaps the card — prevents the old card flashing back to center
+  const prevCafeIdRef = useRef(currentCafe?.id);
+  useEffect(() => {
+    currentCafeRef.current = currentCafe;
+    if (currentCafe?.id !== prevCafeIdRef.current) {
+      translateX.value = 0;
+      prevCafeIdRef.current = currentCafe?.id;
+    }
+  }, [currentCafe, translateX]);
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => !animating.current,
-      onMoveShouldSetPanResponder: (_, g) =>
-        !animating.current && Math.abs(g.dx) > Math.abs(g.dy) && Math.abs(g.dx) > 10,
-      onPanResponderGrant: () => {},
-      onPanResponderMove: (_, g) => {
-        if (!animating.current) pan.x.setValue(g.dx);
-      },
-      onPanResponderRelease: (_, g) => {
-        if (animating.current) return;
-        if (Math.abs(g.dx) < 10 && Math.abs(g.dy) < 10) {
-          if (currentCafeRef.current) {
-            navigation.navigate('CafeDetail', { cafe: currentCafeRef.current });
-          }
-          return;
-        }
-        if (g.dx > SWIPE_THRESHOLD || g.vx > 0.7) {
-          animating.current = true;
-          Animated.timing(pan.x, {
-            toValue: SCREEN_WIDTH * 1.5,
-            duration: 250,
-            useNativeDriver: true,
-          }).start(() => commitSwipeRef.current('right'));
-        } else if (g.dx < -SWIPE_THRESHOLD || g.vx < -0.7) {
-          animating.current = true;
-          Animated.timing(pan.x, {
-            toValue: -SCREEN_WIDTH * 1.5,
-            duration: 250,
-            useNativeDriver: true,
-          }).start(() => commitSwipeRef.current('left'));
-        } else {
-          Animated.spring(pan.x, {
-            toValue: 0,
-            friction: 6,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
+  const navigateToDetail = useCallback((cafe) => {
+    navigation.navigate('CafeDetail', { cafe });
+  }, [navigation]);
+
+  // Stable wrappers for runOnJS — gesture worklets can't call JS functions directly
+  const doCommitSwipe = useCallback((direction) => {
+    commitSwipeRef.current(direction);
+  }, []);
+
+  const doNavigate = useCallback(() => {
+    if (currentCafeRef.current) {
+      navigateToDetail(currentCafeRef.current);
+    }
+  }, [navigateToDetail]);
+
+  const tapGesture = Gesture.Tap()
+    .maxDuration(250)
+    .onEnd(() => {
+      'worklet';
+      runOnJS(doNavigate)();
+    });
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-15, 15])
+    .onUpdate((event) => {
+      'worklet';
+      translateX.value = event.translationX;
     })
-  ).current;
+    .onEnd((event) => {
+      'worklet';
+      const { translationX, velocityX } = event;
 
-  const cardRotate = pan.x.interpolate({
-    inputRange: [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
-    outputRange: ['-8deg', '0deg', '8deg'],
+      if (translationX > SWIPE_THRESHOLD || velocityX > 700) {
+        translateX.value = withTiming(
+          SCREEN_WIDTH * 1.5,
+          { duration: 250 },
+          (finished) => {
+            'worklet';
+            if (finished) runOnJS(doCommitSwipe)('right');
+          }
+        );
+      } else if (translationX < -SWIPE_THRESHOLD || velocityX < -700) {
+        translateX.value = withTiming(
+          -SCREEN_WIDTH * 1.5,
+          { duration: 250 },
+          (finished) => {
+            'worklet';
+            if (finished) runOnJS(doCommitSwipe)('left');
+          }
+        );
+      } else {
+        translateX.value = withSpring(0, { damping: 15, stiffness: 150 });
+      }
+    });
+
+  // Race: both listen simultaneously, first to activate wins (tap if < 10px movement, pan otherwise)
+  const composedGesture = Gesture.Race(tapGesture, panGesture);
+
+  const cardAnimatedStyle = useAnimatedStyle(() => {
+    const rotate = interpolate(
+      translateX.value,
+      [-SCREEN_WIDTH, 0, SCREEN_WIDTH],
+      [-8, 0, 8]
+    );
+    return {
+      transform: [
+        { translateX: translateX.value },
+        { rotate: `${rotate}deg` },
+      ],
+    };
   });
 
-  const rightOverlayOpacity = pan.x.interpolate({
-    inputRange: [0, SWIPE_THRESHOLD],
-    outputRange: [0, 1],
-    extrapolate: 'clamp',
-  });
+  const rightOverlayStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      translateX.value,
+      [0, SWIPE_THRESHOLD],
+      [0, 1],
+      Extrapolation.CLAMP
+    ),
+  }));
 
-  const leftOverlayOpacity = pan.x.interpolate({
-    inputRange: [-SWIPE_THRESHOLD, 0],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
+  const leftOverlayStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(
+      translateX.value,
+      [-SWIPE_THRESHOLD, 0],
+      [1, 0],
+      Extrapolation.CLAMP
+    ),
+  }));
 
   const filterLabel = `${selectedDrink === 'matcha' ? '🍵 Matcha' : '☕ Coffee'}${
     selectedLocation ? ` · ${selectedLocation.city}` : ''
   }`;
 
-  const renderCard = (cafe, isTop) => {
+  const triggerSwipe = useCallback((direction) => {
+    const target = direction === 'right' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5;
+    translateX.value = withTiming(
+      target,
+      { duration: 250 },
+      (finished) => {
+        'worklet';
+        if (finished) runOnJS(doCommitSwipe)(direction);
+      }
+    );
+  }, [translateX, doCommitSwipe]);
+
+  const renderCardContent = (cafe) => {
     const photo = getCafePhoto(cafe);
     const isCafeSaved = savedCafes.includes(cafe.id);
     const isCafeVisited = visitedCafes.includes(cafe.id);
-    const animStyle = isTop
-      ? { transform: [{ translateX: pan.x }, { rotate: cardRotate }] }
-      : {};
 
     return (
-      <Animated.View
-        key={cafe.id}
-        style={[
-          styles.card,
-          isTop ? styles.cardTop : styles.cardBehind,
-          animStyle,
-        ]}
-        {...(isTop ? panResponder.panHandlers : {})}
-      >
+      <>
         <View style={styles.cardPhoto}>
           <Image source={{ uri: photo }} style={styles.cardPhotoImg} />
           <View style={styles.cardPhotoGradient} />
@@ -265,25 +298,14 @@ export default function SwipeScreen({ navigation }) {
           <View style={styles.cardTags}>
             {(cafe.vibe_tags || []).slice(0, 2).map((tag) => (
               <View key={tag} style={styles.cardTag}>
-                <Text style={styles.cardTagText}>{vibeLabel(tag)}</Text>
+                <Text style={styles.cardTagText}>{getVibeLabel(tag)}</Text>
               </View>
             ))}
           </View>
         </View>
 
         <Text style={styles.tapHint}>Tap for details</Text>
-
-        {isTop && (
-          <>
-            <Animated.View pointerEvents="none" style={[styles.swipeOverlay, styles.overlayRight, { opacity: rightOverlayOpacity }]}>
-              <Text style={[styles.overlayLabel, styles.overlayLabelRight]}>WANT IT</Text>
-            </Animated.View>
-            <Animated.View pointerEvents="none" style={[styles.swipeOverlay, styles.overlayLeft, { opacity: leftOverlayOpacity }]}>
-              <Text style={[styles.overlayLabel, styles.overlayLabelLeft]}>BEEN THERE</Text>
-            </Animated.View>
-          </>
-        )}
-      </Animated.View>
+      </>
     );
   };
 
@@ -448,8 +470,34 @@ export default function SwipeScreen({ navigation }) {
             </View>
           ) : (
             <View style={styles.cardStack}>
-              {deck[currentIndex + 1] && renderCard(deck[currentIndex + 1], false)}
-              {currentCafe && renderCard(currentCafe, true)}
+              {deck[currentIndex + 1] && (
+                <View
+                  style={[styles.card, styles.cardBehind]}
+                >
+                  {renderCardContent(deck[currentIndex + 1])}
+                </View>
+              )}
+              {currentCafe && (
+                <GestureDetector gesture={composedGesture}>
+                  <Animated.View
+                    style={[styles.card, styles.cardTop, cardAnimatedStyle]}
+                  >
+                    {renderCardContent(currentCafe)}
+                    <Animated.View
+                      pointerEvents="none"
+                      style={[styles.swipeOverlay, styles.overlayRight, rightOverlayStyle]}
+                    >
+                      <Text style={[styles.overlayLabel, styles.overlayLabelRight]}>WANT IT</Text>
+                    </Animated.View>
+                    <Animated.View
+                      pointerEvents="none"
+                      style={[styles.swipeOverlay, styles.overlayLeft, leftOverlayStyle]}
+                    >
+                      <Text style={[styles.overlayLabel, styles.overlayLabelLeft]}>BEEN THERE</Text>
+                    </Animated.View>
+                  </Animated.View>
+                </GestureDetector>
+              )}
             </View>
           )}
         </View>
@@ -459,7 +507,7 @@ export default function SwipeScreen({ navigation }) {
         <View style={styles.actions}>
           <TouchableOpacity
             style={[styles.actionCircle, styles.actionBeen]}
-            onPress={() => commitSwipe('left')}
+            onPress={() => triggerSwipe('left')}
           >
             <Text style={styles.actionIcon}>✓</Text>
             <Text style={styles.actionLabel}>Been there</Text>
@@ -472,7 +520,7 @@ export default function SwipeScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionCircle, styles.actionWant]}
-            onPress={() => commitSwipe('right')}
+            onPress={() => triggerSwipe('right')}
           >
             <Text style={styles.actionIconLg}>❤️</Text>
             <Text style={styles.actionLabelGreen}>Want to go</Text>

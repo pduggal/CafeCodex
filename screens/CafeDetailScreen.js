@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
-import { VIBE_TAGS, getCafePhoto } from '../data/cafes';
+import { getCafePhoto, getVibeLabel } from '../data/cafes';
 import { useCafes } from '../context/CafeContext';
 
 export default function CafeDetailScreen({ route, navigation }) {
@@ -20,11 +20,6 @@ export default function CafeDetailScreen({ route, navigation }) {
   const saved = isSaved(cafe.id);
   const visited = isVisited(cafe.id);
   const photo = getCafePhoto(cafe);
-
-  const vibeLabel = (tagId) => {
-    const found = VIBE_TAGS.find((t) => t.id === tagId);
-    return found ? `${found.emoji} ${found.label}` : tagId;
-  };
 
   const openInstagram = () => {
     if (cafe.instagram_handle) {
@@ -124,7 +119,7 @@ export default function CafeDetailScreen({ route, navigation }) {
           <View style={styles.tagRow}>
             {(cafe.vibe_tags || []).map((tag) => (
               <View key={tag} style={styles.tag}>
-                <Text style={styles.tagText}>{vibeLabel(tag)}</Text>
+                <Text style={styles.tagText}>{getVibeLabel(tag)}</Text>
               </View>
             ))}
           </View>

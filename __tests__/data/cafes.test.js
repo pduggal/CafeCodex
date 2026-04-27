@@ -1,4 +1,4 @@
-const { VIBE_TAGS, getCafePhoto, COFFEE_PHOTOS, MATCHA_PHOTOS } = require('../../data/cafes');
+const { VIBE_TAGS, getCafePhoto, getVibeLabel, COFFEE_PHOTOS, MATCHA_PHOTOS } = require('../../data/cafes');
 
 const CANONICAL_VIBE_IDS = [
   'viral_aesthetic', 'matcha_specialist', 'specialty_coffee', 'pour_over',
@@ -49,5 +49,24 @@ describe('getCafePhoto', () => {
     const cafe = { id: '7', vibe_tags: ['matcha_specialist'] };
     const expected = MATCHA_PHOTOS[7 % MATCHA_PHOTOS.length];
     expect(getCafePhoto(cafe)).toBe(expected);
+  });
+});
+
+describe('getVibeLabel', () => {
+  test('returns emoji + label for known tag', () => {
+    expect(getVibeLabel('specialty_coffee')).toBe('☕ Specialty Coffee');
+    expect(getVibeLabel('hidden_gem')).toBe('✨ Hidden Gem');
+  });
+
+  test('returns raw id for unknown tag', () => {
+    expect(getVibeLabel('unknown_tag')).toBe('unknown_tag');
+  });
+
+  test('works for all 8 canonical tags', () => {
+    VIBE_TAGS.forEach((tag) => {
+      const result = getVibeLabel(tag.id);
+      expect(result).toContain(tag.emoji);
+      expect(result).toContain(tag.label);
+    });
   });
 });

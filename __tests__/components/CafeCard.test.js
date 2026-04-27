@@ -47,4 +47,38 @@ describe('CafeCard', () => {
     expect(getByText(/Pallavi's Pick/)).toBeTruthy();
     expect(getByText('Featured in NYT')).toBeTruthy();
   });
+
+  test('shows instagram handle when present', () => {
+    const cafe = { ...baseCafe, instagram_handle: 'testcafe' };
+    const { getByText } = render(<CafeCard cafe={cafe} onPress={() => {}} />);
+    expect(getByText('@testcafe')).toBeTruthy();
+  });
+
+  test('hides instagram handle when absent', () => {
+    const { queryByText } = render(<CafeCard cafe={baseCafe} onPress={() => {}} />);
+    expect(queryByText(/@/)).toBeNull();
+  });
+
+  test('shows must-try drink when present', () => {
+    const cafe = { ...baseCafe, must_try: { drink: 'Oat Latte', note: 'Best in the city' } };
+    const { getByText } = render(<CafeCard cafe={cafe} onPress={() => {}} />);
+    expect(getByText(/Must try.*Oat Latte/)).toBeTruthy();
+  });
+
+  test('shows trending badge when trending and not curator pick', () => {
+    const cafe = { ...baseCafe, trending: true };
+    const { getByText } = render(<CafeCard cafe={cafe} onPress={() => {}} />);
+    expect(getByText(/Trending/)).toBeTruthy();
+  });
+
+  test('shows neighborhood in location text', () => {
+    const { getByText } = render(<CafeCard cafe={baseCafe} onPress={() => {}} />);
+    expect(getByText(/Capitol Hill/)).toBeTruthy();
+  });
+
+  test('shows star rating when curator_rating is present', () => {
+    const cafe = { ...baseCafe, curator_rating: 4 };
+    const { getByText } = render(<CafeCard cafe={cafe} onPress={() => {}} />);
+    expect(getByText('★★★★')).toBeTruthy();
+  });
 });

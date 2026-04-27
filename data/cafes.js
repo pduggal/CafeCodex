@@ -30,6 +30,11 @@ export const MATCHA_PHOTOS = [
   'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?w=600&h=440&fit=crop&q=85&auto=format',
 ];
 
+export function getVibeLabel(tagId) {
+  const found = VIBE_TAGS.find((t) => t.id === tagId);
+  return found ? `${found.emoji} ${found.label}` : tagId;
+}
+
 export function getCafePhoto(cafe) {
   if (cafe.photo_url) return cafe.photo_url;
   const arr = (cafe.drink === 'matcha' || (cafe.vibe_tags && cafe.vibe_tags.includes('matcha_specialist')))

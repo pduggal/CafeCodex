@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ActivityIndicator, Animated } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -123,12 +124,14 @@ function AppContent() {
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <CafeProvider>
-        <NavigationContainer>
-          <AppContent />
-        </NavigationContainer>
-      </CafeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <CafeProvider>
+          <NavigationContainer>
+            <AppContent />
+          </NavigationContainer>
+        </CafeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

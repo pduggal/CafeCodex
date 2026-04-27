@@ -27,6 +27,7 @@ export function CafeProvider({ children }) {
     fetchCountries();
   }, []);
 
+  // 8s timeout with AsyncStorage cache fallback — keeps app usable offline or on slow networks
   const fetchCafes = async () => {
     let timeoutId;
     try {
@@ -121,6 +122,7 @@ export function CafeProvider({ children }) {
     AsyncStorage.setItem('hasOnboarded', JSON.stringify(false)).catch(() => {});
   }, []);
 
+  // Saved and visited are mutually exclusive — saving removes from visited and vice versa
   const toggleSaved = useCallback((cafeId) => {
     setSavedCafes((prev) => {
       const updated = prev.includes(cafeId)

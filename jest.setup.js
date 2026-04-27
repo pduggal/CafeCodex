@@ -37,3 +37,44 @@ jest.mock('./lib/supabase', () => ({
 jest.mock('expo-clipboard', () => ({
   setStringAsync: jest.fn(() => Promise.resolve()),
 }));
+
+jest.mock('react-native-gesture-handler', () => {
+  const { View } = require('react-native');
+  const mockChainable = () => {
+    const handler = {};
+    const methods = ['activeOffsetX', 'failOffsetY', 'maxDuration', 'enabled',
+      'onBegin', 'onUpdate', 'onEnd', 'onStart', 'onFinalize'];
+    methods.forEach((m) => { handler[m] = () => handler; });
+    return handler;
+  };
+  return {
+    GestureHandlerRootView: View,
+    GestureDetector: ({ children }) => children,
+    Gesture: {
+      Pan: mockChainable,
+      Tap: mockChainable,
+      Race: () => ({}),
+      Exclusive: () => ({}),
+    },
+  };
+});
+
+jest.mock('react-native-reanimated', () => {
+  const { View } = require('react-native');
+  const Reanimated = {
+    View,
+    Text: require('react-native').Text,
+    createAnimatedComponent: (comp) => comp,
+  };
+  return {
+    __esModule: true,
+    default: Reanimated,
+    useSharedValue: (init) => ({ value: init }),
+    useAnimatedStyle: () => ({}),
+    withTiming: (val) => val,
+    withSpring: (val) => val,
+    interpolate: () => 0,
+    runOnJS: (fn) => fn,
+    Extrapolation: { CLAMP: 'clamp' },
+  };
+});

@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
-import { VIBE_TAGS, getCafePhoto } from '../data/cafes';
+import { getCafePhoto, getVibeLabel } from '../data/cafes';
 import { useCafes } from '../context/CafeContext';
 
 function CafeCard({ cafe, onPress }) {
@@ -16,11 +16,6 @@ function CafeCard({ cafe, onPress }) {
   const saved = isSaved(cafe.id);
   const visited = isVisited(cafe.id);
   const photo = getCafePhoto(cafe);
-
-  const vibeLabel = (tagId) => {
-    const found = VIBE_TAGS.find((t) => t.id === tagId);
-    return found ? `${found.emoji} ${found.label}` : tagId;
-  };
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
@@ -101,7 +96,7 @@ function CafeCard({ cafe, onPress }) {
         <View style={styles.tagRow}>
           {(cafe.vibe_tags || []).slice(0, 3).map((tag) => (
             <View key={tag} style={styles.tag}>
-              <Text style={styles.tagText}>{vibeLabel(tag)}</Text>
+              <Text style={styles.tagText}>{getVibeLabel(tag)}</Text>
             </View>
           ))}
         </View>
@@ -293,4 +288,5 @@ const styles = StyleSheet.create({
   },
 });
 
+// Memoized to prevent re-renders in browse lists with 50+ cards
 export default React.memo(CafeCard);

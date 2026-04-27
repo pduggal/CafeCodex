@@ -94,6 +94,59 @@ describe('CafeProvider', () => {
     expect(ctx.isSaved('cafe-4')).toBe(false);
   });
 
+  test('moveToVisited removes from saved and adds to visited', async () => {
+    let ctx;
+    render(
+      <CafeProvider>
+        <TestConsumer onContext={(c) => { ctx = c; }} />
+      </CafeProvider>
+    );
+
+    await waitFor(() => expect(ctx).toBeDefined());
+
+    await act(async () => { await ctx.toggleSaved('cafe-5'); });
+    expect(ctx.isSaved('cafe-5')).toBe(true);
+
+    await act(async () => { await ctx.moveToVisited('cafe-5'); });
+    expect(ctx.isVisited('cafe-5')).toBe(true);
+    expect(ctx.isSaved('cafe-5')).toBe(false);
+  });
+
+  test('moveToWishlist removes from visited and adds to saved', async () => {
+    let ctx;
+    render(
+      <CafeProvider>
+        <TestConsumer onContext={(c) => { ctx = c; }} />
+      </CafeProvider>
+    );
+
+    await waitFor(() => expect(ctx).toBeDefined());
+
+    await act(async () => { await ctx.toggleVisited('cafe-6'); });
+    expect(ctx.isVisited('cafe-6')).toBe(true);
+
+    await act(async () => { await ctx.moveToWishlist('cafe-6'); });
+    expect(ctx.isSaved('cafe-6')).toBe(true);
+    expect(ctx.isVisited('cafe-6')).toBe(false);
+  });
+
+  test('toggleFavorite adds and removes independently of saved/visited', async () => {
+    let ctx;
+    render(
+      <CafeProvider>
+        <TestConsumer onContext={(c) => { ctx = c; }} />
+      </CafeProvider>
+    );
+
+    await waitFor(() => expect(ctx).toBeDefined());
+
+    await act(async () => { await ctx.toggleFavorite('cafe-7'); });
+    expect(ctx.isFavorite('cafe-7')).toBe(true);
+
+    await act(async () => { await ctx.toggleFavorite('cafe-7'); });
+    expect(ctx.isFavorite('cafe-7')).toBe(false);
+  });
+
   test('falls back to AsyncStorage cache when Supabase fails', async () => {
     const { supabase } = require('../../lib/supabase');
     supabase.from.mockImplementation(() => ({

@@ -23,6 +23,7 @@ The concept: a codex — an ancient handwritten manuscript — is Pallavi's pers
 |---|---|
 | Framework | React Native + Expo (managed workflow — never eject) |
 | Navigation | React Navigation — bottom tabs + native stack |
+| Gestures | react-native-gesture-handler + react-native-reanimated (native UI thread) |
 | State | Context API + AsyncStorage (with Supabase cache fallback) |
 | Backend | Supabase (Postgres, Auth, Storage) |
 | Icons | @expo/vector-icons (Ionicons) |
@@ -48,10 +49,10 @@ The concept: a codex — an ancient handwritten manuscript — is Pallavi's pers
 ```
 CafeCodex/
 ├── index.html              # Webapp (HTML + CSS + JS all inline, hosted on GitHub Pages)
-├── App.js                  # RN root — NavigationContainer + CafeProvider + bottom tabs
+├── App.js                  # RN root — GestureHandlerRootView + NavigationContainer + CafeProvider
 ├── app.json                # Expo config (slug: cafecodex, bundle: com.honestcoffeestop.cafecodex)
 ├── package.json
-├── babel.config.js
+├── babel.config.js         # Expo preset + reanimated plugin (must be last)
 ├── assets/
 │   ├── icon.png            # App icon (placeholder)
 │   ├── splash.png          # Splash screen (placeholder)
@@ -64,16 +65,22 @@ CafeCodex/
 ├── lib/
 │   └── supabase.js         # Supabase client init
 ├── data/
-│   └── cafes.js            # Vibe tag definitions, photo fallback helpers (no cafe records)
+│   └── cafes.js            # Vibe tag definitions, getVibeLabel(), photo fallback helpers
 ├── components/
 │   └── CafeCard.js         # Reusable cafe card with photo, badges, vibe tags
 ├── screens/
 │   ├── OnboardingScreen.js # 2-step: drink preference + location + vibe selection
-│   ├── SwipeScreen.js      # Swipe cards + list/browse toggle + city filter
+│   ├── SwipeScreen.js      # Native gesture swipe cards + list/browse toggle + city filter
 │   ├── CafeDetailScreen.js # Full detail: curator notes, must-try, rating, actions
 │   ├── MyListScreen.js     # 3 tabs: Want to Go, Been There, Saved
 │   ├── AuthorScreen.js     # Author story, photo, stats, World's Best list
 │   └── NominateScreen.js   # Nomination form + email notification + share
+├── __tests__/              # Jest test suite (57 tests across 8 suites)
+│   ├── components/         # CafeCard tests
+│   ├── context/            # CafeContext tests (save/visit/favorite/cache fallback)
+│   ├── data/               # getVibeLabel tests
+│   ├── screens/            # SwipeScreen, AuthorScreen, NominateScreen, smoke tests
+│   └── webapp/             # index.html tests
 └── scripts/
     └── seed-supabase.js    # Seeds Supabase from inline data
 ```
@@ -142,7 +149,7 @@ Bottom Tabs
 
 ---
 
-## Current State (last updated: April 2025)
+## Current State (last updated: April 2026)
 
 ### Webapp (index.html)
 - All features working and deployed to GitHub Pages
@@ -159,12 +166,17 @@ Bottom Tabs
 ### React Native App
 - All 4 tabs working: Discover, My List, Author, Recommend
 - Supabase live data with AsyncStorage cache fallback
-- Swipe cards with PanResponder
-- List/browse view toggle
-- Save/visited/favorites with AsyncStorage persistence
+- Native gesture swipe cards (react-native-gesture-handler + reanimated on UI thread)
+- Gesture.Race(tap, pan) for simultaneous tap-to-detail and swipe-to-save
+- Stable card order between swipes (shuffle separated from filter)
+- Deferred translateX reset to prevent card flash on swipe
+- List/browse view toggle with search by name, city, neighborhood
+- Save/visited/favorites with AsyncStorage persistence (mutually exclusive lists)
 - Author page: real photo, story, stats, World's Best 2026 collapsible list
 - Nomination form with Supabase insert + Web3Forms email
 - City filter, vibe filter, search
+- Shared utility: getVibeLabel() in data/cafes.js (used by SwipeScreen, CafeCard, CafeDetailScreen)
+- 57 tests across 8 suites (npm test)
 
 ### Placeholder / Not Yet Built
 - Real assets: icon.png / splash.png are placeholders
@@ -196,7 +208,8 @@ Bottom Tabs
 - ✅ Supabase backend with 362+ cafes
 - ✅ Email notifications on nominations
 - ✅ Analytics (GoatCounter)
-- [ ] Fix runtime errors on real device
+- ✅ Native gesture handling (react-native-gesture-handler + reanimated)
+- ✅ 57 tests, comprehensive README/PRD
 - [ ] Real app icon and splash screen
 
 ### Phase 2 — Features
