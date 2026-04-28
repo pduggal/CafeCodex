@@ -452,15 +452,33 @@ export default function SwipeScreen({ navigation }) {
         <View style={styles.swipeArea}>
           {deck.length === 0 || currentIndex >= deck.length ? (
             <View style={styles.emptyWrap}>
-              <Text style={styles.emptyIcon}>✦</Text>
-              <Text style={styles.emptyTitle}>That's all for now</Text>
-              <Text style={styles.emptySub}>You've seen every cafe in this set.</Text>
-              <TouchableOpacity
-                style={styles.emptyBtn}
-                onPress={redealDeck}
-              >
-                <Text style={styles.emptyBtnText}>Reshuffle deck</Text>
-              </TouchableOpacity>
+              {allFilteredCafes.length === 0 ? (
+                <>
+                  <Text style={styles.emptyIcon}>☕</Text>
+                  <Text style={styles.emptyTitle}>No cafes here yet</Text>
+                  <Text style={styles.emptySub}>
+                    {selectedDrink === 'matcha' ? 'No matcha spots' : 'No cafes'} for this location yet — still on my list to explore!
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.emptyBtn}
+                    onPress={() => navigation.getParent()?.navigate('Recommend')}
+                  >
+                    <Text style={styles.emptyBtnText}>✦ Nominate a café</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.emptyIcon}>✦</Text>
+                  <Text style={styles.emptyTitle}>That's all for now</Text>
+                  <Text style={styles.emptySub}>You've seen every cafe in this set.</Text>
+                  <TouchableOpacity
+                    style={styles.emptyBtn}
+                    onPress={redealDeck}
+                  >
+                    <Text style={styles.emptyBtnText}>Reshuffle deck</Text>
+                  </TouchableOpacity>
+                </>
+              )}
               <TouchableOpacity
                 style={[styles.emptyBtn, styles.emptyBtnSecondary]}
                 onPress={() => navigation.getParent()?.navigate('My List')}

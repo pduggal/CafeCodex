@@ -36,14 +36,14 @@ describe('NominateScreen', () => {
     expect(isDisabled).toBe(true);
   });
 
-  test('Web3Forms access key is present in source', () => {
+  test('Telegram notification is configured in source', () => {
     const fs = require('fs');
     const path = require('path');
     const src = fs.readFileSync(
       path.join(__dirname, '../../screens/NominateScreen.js'),
       'utf-8'
     );
-    expect(src).toContain('df232092-355f-4f5c-8d0a-70b739d24294');
-    expect(src).toContain('api.web3forms.com/submit');
+    expect(src).toContain('api.telegram.org');
+    expect(src).toContain('sendMessage');
   });
 });

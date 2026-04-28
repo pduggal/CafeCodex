@@ -37,7 +37,7 @@ export default function NominateScreen() {
     setSubmitting(true);
     let saved = false;
     try {
-      const { error } = await supabase.from('nominations').insert({
+      const { error, status } = await supabase.from('nominations').insert({
         cafe_name: form.cafe_name.trim(),
         city: form.city.trim(),
         country: form.country.trim(),
@@ -48,33 +48,19 @@ export default function NominateScreen() {
         your_name: form.your_name.trim(),
         instagram_handle: form.instagram_handle.trim() || null,
       });
-      if (!error) saved = true;
+      if (!error && status === 201) saved = true;
+      else console.log('Supabase nomination error:', error?.message || status);
     } catch (e) {
       console.log('Supabase nomination insert failed:', e);
     }
-    try {
-      await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-          access_key: 'df232092-355f-4f5c-8d0a-70b739d24294',
-          subject: '☕ New Café Codex Nomination: ' + form.cafe_name.trim(),
-          from_name: 'Café Codex',
-          'Café': form.cafe_name.trim(),
-          'City': form.city.trim(),
-          'Country': form.country.trim(),
-          'Neighborhood': form.neighborhood.trim() || '—',
-          'What makes it special': form.what_makes_it_special.trim(),
-          'Must order': form.must_order.trim(),
-          'Best time': form.best_time.trim() || '—',
-          'Nominated by': form.your_name.trim(),
-          'Instagram': form.instagram_handle.trim() || '—',
-        }),
-      });
-      saved = true;
-    } catch (e) {
-      console.log('Web3Forms email failed:', e);
-    }
+    // Notify via Telegram (Web3Forms blocks non-browser requests)
+    const n = form;
+    const msg = `☕ *New Café Codex Nomination*\n\n☕ *Café:* ${n.cafe_name.trim()}\n📍 *City:* ${n.city.trim()}, ${n.country.trim()}\n🏘 *Neighborhood:* ${n.neighborhood.trim() || '—'}\n\n✨ *What makes it special:* ${n.what_makes_it_special.trim()}\n🥤 *Must order:* ${n.must_order.trim()}\n⏰ *Best time:* ${n.best_time.trim() || '—'}\n\n🙋 *Nominated by:* ${n.your_name.trim()}\n📸 *Instagram:* ${n.instagram_handle.trim() ? '@' + n.instagram_handle.trim().replace(/^@/, '') : '—'}`;
+    fetch('https://api.telegram.org/bot8700866491:AAGrVpFUTbez0b97siu1eAyADUTD980qVB0/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: 776680806, text: msg, parse_mode: 'Markdown' }),
+    }).catch(() => {});
     if (saved) {
       setNominationData(form);
       setSubmitted(true);
