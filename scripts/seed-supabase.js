@@ -3,7 +3,11 @@ const fs = require('fs');
 const path = require('path');
 
 const SUPABASE_URL = 'https://slwymfjwjhklgbijgixc.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsd3ltZmp3amhrbGdiaWpnaXhjIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjcxNDUzNSwiZXhwIjoyMDkyMjkwNTM1fQ.8GoYHb6h_E6a-YkFuRT4T2eDRxPbkCsRaj9KNexWUFo';
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+if (!SERVICE_KEY) {
+  console.error('Set SUPABASE_SERVICE_KEY environment variable before running this script.');
+  process.exit(1);
+}
 
 const headers = {
   'apikey': SERVICE_KEY,

@@ -10,15 +10,7 @@ Show a quick dashboard of the project's current state.
 4. **Cafe count**: Query Supabase for total active cafes and breakdown by country
 
 ## Supabase query for cafe count
-```js
-const { createClient } = require('@supabase/supabase-js');
-const sb = createClient(
-  'https://slwymfjwjhklgbijgixc.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsd3ltZmp3amhrbGdiaWpnaXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTQ1MzUsImV4cCI6MjA5MjI5MDUzNX0.uluPL86awSIie7Hu70P72v3qi4rCIucKr2y4HhYwnOQ'
-);
-// Get counts by country
-const { data } = await sb.from('cafes').select('country, city');
-```
+Use the Supabase URL and anon key from `lib/supabase.js` to query cafe counts by country and city.
 
 ## Output format
 Report as a clean summary:

@@ -16,13 +16,7 @@ Add a new city to an existing country's `cities` array in the Supabase `countrie
 5. Confirm success
 
 ## Supabase connection
-```js
-const { createClient } = require('@supabase/supabase-js');
-const sb = createClient(
-  'https://slwymfjwjhklgbijgixc.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsd3ltZmp3amhrbGdiaWpnaXhjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3MTQ1MzUsImV4cCI6MjA5MjI5MDUzNX0.uluPL86awSIie7Hu70P72v3qi4rCIucKr2y4HhYwnOQ'
-);
-```
+Use the client from `lib/supabase.js` — the anon key and URL are already configured there.
 
 ## Country row shape
 ```js
