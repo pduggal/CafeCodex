@@ -1,7 +1,8 @@
-# Café Codex — Project Context for Claude
+# Café Codex — Project Context
 
-> This file is the portable brain for this project. Always read this first before making any changes.
+> This file is the single source of truth for this project. Read this first before making any changes.
 > Keep this file updated every time a meaningful change is made.
+> Last updated: April 28, 2026
 
 ---
 
@@ -35,7 +36,7 @@ The concept: a codex — an ancient handwritten manuscript — is Pallavi's pers
 | Hosting | GitHub Pages (gh-pages branch) |
 | Backend | Supabase (same instance as RN app) |
 | Analytics | GoatCounter (cafecodex.goatcounter.com) |
-| Email | Web3Forms (nomination notifications) |
+| Nominations | Web3Forms email (browser-only, blocked from non-browser clients) |
 
 **Node version:** v25.9.0
 **Expo SDK:** 54
@@ -74,7 +75,7 @@ CafeCodex/
 │   ├── CafeDetailScreen.js # Full detail: curator notes, must-try, rating, actions
 │   ├── MyListScreen.js     # 3 tabs: Want to Go, Been There, Saved
 │   ├── AuthorScreen.js     # Author story, photo, stats, World's Best list
-│   └── NominateScreen.js   # Nomination form + email notification + share
+│   └── NominateScreen.js   # Nomination form + Supabase insert + Telegram notification
 ├── __tests__/              # Jest test suite (57 tests across 8 suites)
 │   ├── components/         # CafeCard tests
 │   ├── context/            # CafeContext tests (save/visit/favorite/cache fallback)
@@ -149,7 +150,27 @@ Bottom Tabs
 
 ---
 
-## Current State (last updated: April 2026)
+## Supabase
+
+**Project ref:** `slwymfjwjhklgbijgixc`
+**Anon key:** public (in `lib/supabase.js`) — safe by design, RLS controls access
+
+### Tables
+| Table | RLS | Anon access |
+|---|---|---|
+| `cafes` | SELECT only | Read all cafes |
+| `countries` | SELECT only | Read country list (visited, aliases, cities) |
+| `nominations` | INSERT only (no SELECT) | Insert nominations, cannot read back |
+
+### Key RLS gotcha
+The `nominations` table has an INSERT policy but NO SELECT policy. This means:
+- `supabase.from('nominations').insert({...})` → works (returns 201)
+- `supabase.from('nominations').insert({...}).select()` → **fails with 401** (RLS blocks RETURNING *)
+- Never add `.select()` to nomination inserts
+
+---
+
+## Current State
 
 ### Webapp (index.html)
 - All features working and deployed to GitHub Pages
@@ -158,7 +179,7 @@ Bottom Tabs
 - App shell (430px max-width, centered on desktop)
 - Apple PWA meta tags
 - GoatCounter analytics
-- Web3Forms email on nominations
+- Web3Forms email on nominations (browser-only)
 - Author page: real photo, story, stats, collapsible World's Best list
 - iOS auto-zoom prevention (16px inputs)
 - Android swipe fix (touch-action: none)
@@ -167,29 +188,45 @@ Bottom Tabs
 - All 4 tabs working: Discover, My List, Author, Recommend
 - Supabase live data with AsyncStorage cache fallback
 - Native gesture swipe cards (react-native-gesture-handler + reanimated on UI thread)
-- Gesture.Race(tap, pan) for simultaneous tap-to-detail and swipe-to-save
-- Stable card order between swipes (shuffle separated from filter)
-- Deferred translateX reset to prevent card flash on swipe
+  - Gesture.Race(tap, pan) for simultaneous tap-to-detail and swipe-to-save
+  - Stable card order between swipes (shuffle separated from filter)
+  - Deferred translateX reset to prevent card flash on swipe
 - List/browse view toggle with search by name, city, neighborhood
 - Save/visited/favorites with AsyncStorage persistence (mutually exclusive lists)
 - Author page: real photo, story, stats, World's Best 2026 collapsible list
-- Nomination form with Supabase insert + Web3Forms email
 - City filter, vibe filter, search
 - Shared utility: getVibeLabel() in data/cafes.js (used by SwipeScreen, CafeCard, CafeDetailScreen)
 - 57 tests across 8 suites (npm test)
 
+### Nominations
+- **Webapp**: Supabase insert (silently fails due to RLS but data not critical) + Web3Forms email (works in browser)
+- **App**: Supabase insert (works, RLS INSERT policy exists) + Telegram bot notification
+- **Supabase RLS**: nominations table has INSERT policy for anon, but NO SELECT policy — inserts work but can't query back
+- **Telegram bot**: token `8700866491:AAG...` sends to chat_id `776680806` (Pallavi)
+- **Web3Forms** returns 403 from non-browser clients (React Native) — that's why the app uses Telegram instead
+- **Important**: Do NOT add `.select()` to the nominations insert — it requires a SELECT policy and will fail
+
+### Location Search (OnboardingScreen)
+- Searches actual cafe data from Supabase (all 36+ cities with cafes are searchable)
+- Also matches by neighborhood and country name/aliases
+- Visited countries show "✓ In the Codex" with city-level selection
+- Unvisited countries show "Not explored yet" with nominate prompt
+- Countries table in Supabase has `visited` boolean, `cities`, `aliases`, `planned_cities`, `message`
+
+### Empty Deck Behavior (SwipeScreen)
+- When all cafes swiped: "That's all for now" + Reshuffle deck button
+- When no cafes match filters (e.g. matcha in a city with none): "No cafes here yet" + Nominate a café button
+
 ### Placeholder / Not Yet Built
 - Real assets: icon.png / splash.png are placeholders
-- Nomination approval pipeline (validate via Google Places + Instagram, approve from email)
+- Nomination approval pipeline (validate via Google Places + Instagram)
 - User auth (Supabase)
 - Community submissions review workflow
 
 ---
 
-## Rules for Claude (always follow these)
+## Rules (always follow these)
 
-- One task at a time — one file or one feature per response
-- Always show full file contents, never partial snippets with "// rest of code here"
 - Expo managed workflow only — never eject
 - Keep components in /screens and /components
 - Use colors from constants/colors.js — never hardcode hex values
@@ -197,18 +234,22 @@ Bottom Tabs
 - When adding a new screen that navigates to CafeDetail, add it as a stack in App.js
 - When pushing changes, always push to BOTH main and gh-pages branches
 - After making changes, verify nothing was lost from previous enhancements
+- Run `npm test` before pushing — all 57 tests must pass
+- Do NOT touch the webapp (index.html) unless specifically asked — it's stable and deployed
+- Nomination inserts must NOT use `.select()` (Supabase RLS blocks it)
 
 ---
 
 ## Roadmap
 
-### Phase 1 — MVP (current)
+### Phase 1 — MVP (complete)
 - ✅ Core app working (swipe, list, detail, save, nominate)
 - ✅ Webapp deployed and mobile-responsive
-- ✅ Supabase backend with 362+ cafes
-- ✅ Email notifications on nominations
+- ✅ Supabase backend with 362+ cafes across 36+ cities
+- ✅ Nomination notifications (Telegram for app, Web3Forms for webapp)
 - ✅ Analytics (GoatCounter)
 - ✅ Native gesture handling (react-native-gesture-handler + reanimated)
+- ✅ Location search from live cafe data (not hardcoded city lists)
 - ✅ 57 tests, comprehensive README/PRD
 - [ ] Real app icon and splash screen
 
@@ -218,9 +259,9 @@ Bottom Tabs
 - Pro tier (Freemium — $3.99/mo)
 
 ### Phase 3 — Growth
-- India cities (Bangalore, Mumbai, Delhi)
+- India cities (Bangalore, Mumbai, Delhi, Hyderabad — partially live)
 - Europe cities (London, Paris, Amsterdam)
-- Japan (Tokyo, Kyoto)
+- Japan (Tokyo, Kyoto — live)
 - Brand collab booking
 
 ---
