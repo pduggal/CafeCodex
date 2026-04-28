@@ -2,10 +2,19 @@
 const fs = require('fs');
 const path = require('path');
 
+// Load .env from project root
+const envPath = path.join(__dirname, '..', '.env');
+if (fs.existsSync(envPath)) {
+  fs.readFileSync(envPath, 'utf-8').split('\n').forEach((line) => {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match) process.env[match[1].trim()] = match[2].trim();
+  });
+}
+
 const SUPABASE_URL = 'https://slwymfjwjhklgbijgixc.supabase.co';
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 if (!SERVICE_KEY) {
-  console.error('Set SUPABASE_SERVICE_KEY environment variable before running this script.');
+  console.error('Set SUPABASE_SERVICE_KEY in .env or as an environment variable.');
   process.exit(1);
 }
 
