@@ -1,4 +1,4 @@
-const { VIBE_TAGS, getCafePhoto, getVibeLabel, COFFEE_PHOTOS, MATCHA_PHOTOS } = require('../../data/cafes');
+const { VIBE_TAGS, getCafePhoto, getVibeLabel, timeAgo, COFFEE_PHOTOS, MATCHA_PHOTOS } = require('../../data/cafes');
 
 const CANONICAL_VIBE_IDS = [
   'viral_aesthetic', 'matcha_specialist', 'specialty_coffee', 'pour_over',
@@ -68,5 +68,31 @@ describe('getVibeLabel', () => {
       expect(result).toContain(tag.emoji);
       expect(result).toContain(tag.label);
     });
+  });
+});
+
+describe('timeAgo', () => {
+  test('returns "just now" for recent timestamps', () => {
+    expect(timeAgo(new Date())).toBe('just now');
+  });
+
+  test('returns minutes ago', () => {
+    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000);
+    expect(timeAgo(tenMinAgo)).toBe('10m ago');
+  });
+
+  test('returns hours ago', () => {
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    expect(timeAgo(threeHoursAgo)).toBe('3h ago');
+  });
+
+  test('returns days ago', () => {
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+    expect(timeAgo(twoDaysAgo)).toBe('2d ago');
+  });
+
+  test('returns weeks ago', () => {
+    const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
+    expect(timeAgo(twoWeeksAgo)).toBe('2w ago');
   });
 });

@@ -35,6 +35,15 @@ export function getVibeLabel(tagId) {
   return found ? `${found.emoji} ${found.label}` : tagId;
 }
 
+export function timeAgo(date) {
+  const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+  return `${Math.floor(seconds / 604800)}w ago`;
+}
+
 export function getCafePhoto(cafe) {
   if (cafe.photo_url) return cafe.photo_url;
   const arr = (cafe.drink === 'matcha' || (cafe.vibe_tags && cafe.vibe_tags.includes('matcha_specialist')))

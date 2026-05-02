@@ -67,12 +67,14 @@ CafeCodex/
 ├── lib/
 │   └── supabase.js         # Supabase client init
 ├── data/
-│   └── cafes.js            # Vibe tag definitions, getVibeLabel(), photo fallback helpers
+│   └── cafes.js            # Vibe tag definitions, getVibeLabel(), timeAgo(), photo fallback helpers
 ├── components/
-│   └── CafeCard.js         # Reusable cafe card with photo, badges, vibe tags
+│   ├── CafeCard.js         # Reusable cafe card with photo, badges, vibe tags
+│   └── FeedCard.js         # Feed post card (cafe/city/recipe/update types)
 ├── screens/
 │   ├── LoginScreen.js      # Email + password login form
 │   ├── SignupScreen.js     # Name, email, phone, password signup with validations
+│   ├── FeedScreen.js       # What's New feed — Supabase posts with pull-to-refresh
 │   ├── OnboardingScreen.js # 2-step: drink preference + location + vibe selection
 │   ├── SwipeScreen.js      # Native gesture swipe cards + list/browse toggle + city filter
 │   ├── CafeDetailScreen.js # Full detail: curator notes, must-try, rating, actions
@@ -119,6 +121,9 @@ Auth Gate (no session → AuthStack, session → Tabs)
     ├── Discover (stack)
     │   ├── OnboardingHome (OnboardingScreen)
     │   ├── SwipeHome (SwipeScreen)
+    │   └── CafeDetail (CafeDetailScreen)
+    ├── Feed (stack)
+    │   ├── FeedHome (FeedScreen)
     │   └── CafeDetail (CafeDetailScreen)
     ├── My List (stack)
     │   ├── MyListHome (MyListScreen)
@@ -169,6 +174,7 @@ Auth Gate (no session → AuthStack, session → Tabs)
 | `countries` | SELECT only | Anon: read country list (visited, aliases, cities) |
 | `nominations` | INSERT only (no SELECT) | Anon: insert nominations, cannot read back |
 | `profiles` | SELECT/INSERT/UPDATE own row | Authenticated: read/write own profile only |
+| `posts` | SELECT active only | Anon: read active feed posts |
 
 ### Profiles table shape
 ```js
@@ -229,6 +235,15 @@ The `nominations` table has an INSERT policy but NO SELECT policy. This means:
 ### Empty Deck Behavior (SwipeScreen)
 - When all cafes swiped: "That's all for now" + Reshuffle deck button
 - When no cafes match filters (e.g. matcha in a city with none): "No cafes here yet" + Nominate a café button
+
+### What's New Feed
+- Social-media-style feed with 4 post types: cafe, city, recipe, update
+- Each post is a visual card (FeedCard.js) with type badge, hero image, title, body
+- Supabase `posts` table with JSONB metadata (ingredients, owner quotes, city stats)
+- Pallavi manages content via Supabase Table Editor
+- Pull-to-refresh, AsyncStorage cache fallback for offline
+- Cafe posts link to CafeDetail screen
+- Feed tab is 2nd in nav (newspaper icon)
 
 ### Authentication
 - Supabase Auth with email/password (no email verification — auto login on signup)

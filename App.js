@@ -14,6 +14,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
+import FeedScreen from './screens/FeedScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import SwipeScreen from './screens/SwipeScreen';
 import MyListScreen from './screens/MyListScreen';
@@ -46,6 +47,7 @@ function MyListStack() {
 
 const TAB_ICONS = {
   Discover: 'compass-outline',
+  Feed: 'newspaper-outline',
   Author: 'person-circle-outline',
   'My List': 'bookmark-outline',
   Recommend: 'add-circle-outline',
@@ -83,6 +85,15 @@ function LoadingScreen() {
         {LOADING_MESSAGES[msgIndex]}
       </Animated.Text>
     </View>
+  );
+}
+
+function FeedStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="FeedHome" component={FeedScreen} />
+      <Stack.Screen name="CafeDetail" component={CafeDetailScreen} />
+    </Stack.Navigator>
   );
 }
 
@@ -131,6 +142,7 @@ function AppContent() {
             })}
           >
             <Tab.Screen name="Discover" component={DiscoverStack} />
+            <Tab.Screen name="Feed" component={FeedStack} />
             <Tab.Screen name="Author" component={AuthorScreen} />
             <Tab.Screen name="My List" component={MyListStack} />
             <Tab.Screen name="Recommend" component={NominateScreen} />
