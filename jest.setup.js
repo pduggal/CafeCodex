@@ -23,16 +23,32 @@ jest.mock('@react-native-async-storage/async-storage', () => {
   };
 });
 
-jest.mock('./lib/supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        order: jest.fn(() => Promise.resolve({ data: [], error: null })),
+jest.mock('./lib/supabase', () => {
+  const mockSelect = jest.fn(() => {
+    const chain = {
+      eq: jest.fn(() => ({
+        single: jest.fn(() => Promise.resolve({ data: null, error: null })),
       })),
-      insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
-    })),
-  },
-}));
+      order: jest.fn(() => Promise.resolve({ data: [], error: null })),
+    };
+    return chain;
+  });
+  return {
+    supabase: {
+      from: jest.fn(() => ({
+        select: mockSelect,
+        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      })),
+      auth: {
+        getSession: jest.fn(() => Promise.resolve({ data: { session: null } })),
+        onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe: jest.fn() } } })),
+        signUp: jest.fn(() => Promise.resolve({ data: { user: { id: 'test-uid' } }, error: null })),
+        signInWithPassword: jest.fn(() => Promise.resolve({ data: { session: { user: { id: 'test-uid' } } }, error: null })),
+        signOut: jest.fn(() => Promise.resolve({ error: null })),
+      },
+    },
+  };
+});
 
 jest.mock('expo-clipboard', () => ({
   setStringAsync: jest.fn(() => Promise.resolve()),

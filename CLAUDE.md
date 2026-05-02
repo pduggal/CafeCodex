@@ -50,7 +50,7 @@ The concept: a codex — an ancient handwritten manuscript — is Pallavi's pers
 ```
 CafeCodex/
 ├── index.html              # Webapp (HTML + CSS + JS all inline, hosted on GitHub Pages)
-├── App.js                  # RN root — GestureHandlerRootView + NavigationContainer + CafeProvider
+├── App.js                  # RN root — AuthProvider + CafeProvider + auth gate + NavigationContainer
 ├── app.json                # Expo config (slug: cafecodex, bundle: com.honestcoffeestop.cafecodex)
 ├── package.json
 ├── babel.config.js         # Expo preset + reanimated plugin (must be last)
@@ -61,6 +61,7 @@ CafeCodex/
 ├── constants/
 │   └── colors.js           # Full brand palette
 ├── context/
+│   ├── AuthContext.js      # Auth state: session, user, profile, signIn/signUp/signOut, isAdmin
 │   └── CafeContext.js      # Global state: cafes, countries, saved, visited, favorites
 │                           # Supabase fetch with AsyncStorage cache fallback
 ├── lib/
@@ -70,6 +71,8 @@ CafeCodex/
 ├── components/
 │   └── CafeCard.js         # Reusable cafe card with photo, badges, vibe tags
 ├── screens/
+│   ├── LoginScreen.js      # Email + password login form
+│   ├── SignupScreen.js     # Name, email, phone, password signup with validations
 │   ├── OnboardingScreen.js # 2-step: drink preference + location + vibe selection
 │   ├── SwipeScreen.js      # Native gesture swipe cards + list/browse toggle + city filter
 │   ├── CafeDetailScreen.js # Full detail: curator notes, must-try, rating, actions
@@ -108,16 +111,20 @@ CafeCodex/
 ## Navigation Structure (RN App)
 
 ```
-Bottom Tabs
-├── Discover (stack)
-│   ├── OnboardingHome (OnboardingScreen)
-│   ├── SwipeHome (SwipeScreen)
-│   └── CafeDetail (CafeDetailScreen)
-├── My List (stack)
-│   ├── MyListHome (MyListScreen)
-│   └── CafeDetail (CafeDetailScreen)
-├── Author (single screen: AuthorScreen)
-└── Recommend (single screen: NominateScreen)
+Auth Gate (no session → AuthStack, session → Tabs)
+├── AuthStack (unauthenticated)
+│   ├── Login (LoginScreen)
+│   └── Signup (SignupScreen)
+└── Bottom Tabs (authenticated)
+    ├── Discover (stack)
+    │   ├── OnboardingHome (OnboardingScreen)
+    │   ├── SwipeHome (SwipeScreen)
+    │   └── CafeDetail (CafeDetailScreen)
+    ├── My List (stack)
+    │   ├── MyListHome (MyListScreen)
+    │   └── CafeDetail (CafeDetailScreen)
+    ├── Author (single screen: AuthorScreen)
+    └── Recommend (single screen: NominateScreen)
 ```
 
 ---
@@ -156,11 +163,17 @@ Bottom Tabs
 **Anon key:** public (in `lib/supabase.js`) — safe by design, RLS controls access
 
 ### Tables
-| Table | RLS | Anon access |
+| Table | RLS | Access |
 |---|---|---|
-| `cafes` | SELECT only | Read all cafes |
-| `countries` | SELECT only | Read country list (visited, aliases, cities) |
-| `nominations` | INSERT only (no SELECT) | Insert nominations, cannot read back |
+| `cafes` | SELECT only | Anon: read all cafes |
+| `countries` | SELECT only | Anon: read country list (visited, aliases, cities) |
+| `nominations` | INSERT only (no SELECT) | Anon: insert nominations, cannot read back |
+| `profiles` | SELECT/INSERT/UPDATE own row | Authenticated: read/write own profile only |
+
+### Profiles table shape
+```js
+{ id: uuid (FK → auth.users), name: text, phone: text, role: 'user'|'admin', created_at: timestamptz }
+```
 
 ### Key RLS gotcha
 The `nominations` table has an INSERT policy but NO SELECT policy. This means:
@@ -217,10 +230,17 @@ The `nominations` table has an INSERT policy but NO SELECT policy. This means:
 - When all cafes swiped: "That's all for now" + Reshuffle deck button
 - When no cafes match filters (e.g. matcha in a city with none): "No cafes here yet" + Nominate a café button
 
+### Authentication
+- Supabase Auth with email/password (no email verification — auto login on signup)
+- `AuthContext.js` manages session state, provides `signIn`, `signUp`, `signOut`, `isAdmin`
+- `lib/supabase.js` configured with AsyncStorage for session persistence across app restarts
+- Auth gate in `App.js`: no session → LoginScreen/SignupScreen, session → Tab.Navigator
+- `profiles` table stores name, phone, role (admin/user) — linked to auth.users via FK
+- Admin role set manually in Supabase SQL: `UPDATE profiles SET role = 'admin' WHERE id = '<user-id>'`
+
 ### Placeholder / Not Yet Built
 - Real assets: icon.png / splash.png are placeholders
 - Nomination approval pipeline (validate via Google Places + Instagram)
-- User auth (Supabase)
 - Community submissions review workflow
 
 ---
@@ -254,8 +274,8 @@ The `nominations` table has an INSERT policy but NO SELECT policy. This means:
 - [ ] Real app icon and splash screen
 
 ### Phase 2 — Features
+- ✅ User auth (Supabase — email/password, login/signup, admin role)
 - Nomination approval pipeline (Google Places + Instagram validation)
-- User auth (Supabase)
 - Pro tier (Freemium — $3.99/mo)
 
 ### Phase 3 — Growth

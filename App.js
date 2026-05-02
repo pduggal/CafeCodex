@@ -10,7 +10,10 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { Colors } from './constants/colors';
 import { CafeProvider, useCafes } from './context/CafeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
+import LoginScreen from './screens/LoginScreen';
+import SignupScreen from './screens/SignupScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import SwipeScreen from './screens/SwipeScreen';
 import MyListScreen from './screens/MyListScreen';
@@ -20,6 +23,7 @@ import NominateScreen from './screens/NominateScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const AuthStack = createNativeStackNavigator();
 
 function DiscoverStack() {
   return (
@@ -82,9 +86,22 @@ function LoadingScreen() {
   );
 }
 
+function AuthScreens() {
+  return (
+    <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="Signup" component={SignupScreen} />
+    </AuthStack.Navigator>
+  );
+}
+
 function AppContent() {
-  const { loading } = useCafes();
-  if (loading) return <LoadingScreen />;
+  const { loading: cafeLoading } = useCafes();
+  const { session, loading: authLoading } = useAuth();
+
+  if (authLoading || cafeLoading) return <LoadingScreen />;
+  if (!session) return <AuthScreens />;
+
   return (
     <>
       <StatusBar style="light" />
@@ -126,11 +143,13 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <CafeProvider>
-          <NavigationContainer>
-            <AppContent />
-          </NavigationContainer>
-        </CafeProvider>
+        <AuthProvider>
+          <CafeProvider>
+            <NavigationContainer>
+              <AppContent />
+            </NavigationContainer>
+          </CafeProvider>
+        </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
