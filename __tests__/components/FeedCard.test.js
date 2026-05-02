@@ -56,6 +56,19 @@ const UPDATE_POST = {
   is_active: true,
 };
 
+const INTERVIEW_POST = {
+  id: '5',
+  type: 'interview',
+  title: 'Meet the owner of Elm Coffee Roasters',
+  subtitle: 'Seattle · Specialty Coffee',
+  body: 'A conversation about single-origin sourcing and community.',
+  image_url: 'https://example.com/interview.jpg',
+  cafe_id: null,
+  metadata: { url: 'https://youtube.com/watch?v=abc123', platform: 'youtube' },
+  published_at: NOW,
+  is_active: true,
+};
+
 describe('FeedCard', () => {
   test('renders cafe post with title, subtitle, and owner quote', () => {
     const { getByText } = render(<FeedCard post={CAFE_POST} />);
@@ -99,9 +112,17 @@ describe('FeedCard', () => {
     expect(getByText('☕ View Cafe →')).toBeTruthy();
   });
 
+  test('renders interview post with Watch Now CTA', () => {
+    const { getByText } = render(<FeedCard post={INTERVIEW_POST} />);
+    expect(getByText('Meet the owner of Elm Coffee Roasters')).toBeTruthy();
+    expect(getByText('🎙 INTERVIEW')).toBeTruthy();
+    expect(getByText('▶ Watch Now →')).toBeTruthy();
+  });
+
   test('does not show CTA for update post', () => {
     const { queryByText } = render(<FeedCard post={UPDATE_POST} />);
     expect(queryByText(/View Cafe/)).toBeNull();
     expect(queryByText(/Explore/)).toBeNull();
+    expect(queryByText(/Watch Now/)).toBeNull();
   });
 });

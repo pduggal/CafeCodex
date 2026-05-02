@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Linking,
 } from 'react-native';
 import { Colors } from '../constants/colors';
 import { timeAgo } from '../data/cafes';
@@ -13,6 +14,7 @@ const TYPE_BADGES = {
   cafe: '☕ JUST ADDED',
   city: '🗺 NEW CITY LIVE',
   recipe: '🧪 SECRET RECIPE',
+  interview: '🎙 INTERVIEW',
   update: '✦ FROM PALLAVI',
 };
 
@@ -63,6 +65,17 @@ function FeedCard({ post, onPress }) {
           <Text style={styles.bodyQuote}>
             "{meta.owner_quote}"{meta.instagram ? `  — ${meta.instagram}` : ''}
           </Text>
+        ) : null}
+
+        {post.type === 'interview' && meta.url ? (
+          <TouchableOpacity
+            style={styles.cta}
+            onPress={() => Linking.openURL(meta.url)}
+          >
+            <Text style={styles.ctaText}>
+              {meta.platform === 'youtube' ? '▶ Watch Now' : '📷 Watch Now'} →
+            </Text>
+          </TouchableOpacity>
         ) : null}
 
         {(post.type === 'cafe' || post.type === 'city') && onPress ? (
