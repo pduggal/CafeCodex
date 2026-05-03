@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors } from '../constants/colors';
-import { supabase } from '../lib/supabase';
+import { publicSupabase } from '../lib/supabase';
 import { useCafes } from '../context/CafeContext';
 import FeedCard from '../components/FeedCard';
 
@@ -23,7 +23,7 @@ export default function FeedScreen({ navigation }) {
 
   const fetchPosts = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await publicSupabase
         .from('posts')
         .select('*')
         .eq('is_active', true)

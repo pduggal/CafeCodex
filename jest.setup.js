@@ -33,12 +33,13 @@ jest.mock('./lib/supabase', () => {
     };
     return chain;
   });
+  const mockFrom = jest.fn(() => ({
+    select: mockSelect,
+    insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+  }));
   return {
     supabase: {
-      from: jest.fn(() => ({
-        select: mockSelect,
-        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
-      })),
+      from: mockFrom,
       auth: {
         getSession: jest.fn(() => Promise.resolve({ data: { session: null } })),
         onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe: jest.fn() } } })),
@@ -46,6 +47,9 @@ jest.mock('./lib/supabase', () => {
         signInWithPassword: jest.fn(() => Promise.resolve({ data: { session: { user: { id: 'test-uid' } } }, error: null })),
         signOut: jest.fn(() => Promise.resolve({ error: null })),
       },
+    },
+    publicSupabase: {
+      from: mockFrom,
     },
   };
 });

@@ -1,4 +1,4 @@
-import { getDistanceKm, formatDistance } from '../../data/distance';
+import { getDistanceKm, formatDistance, getDistanceRaw } from '../../data/distance';
 
 describe('getDistanceKm', () => {
   it('calculates Tokyo to NYC correctly (~10,838 km)', () => {
@@ -57,5 +57,24 @@ describe('formatDistance', () => {
 
   it('rounds for distances 10-999', () => {
     expect(formatDistance(55.8, 'Japan')).toBe('56 km');
+  });
+});
+
+describe('getDistanceRaw', () => {
+  it('returns raw km between user and cafe', () => {
+    const userLoc = { latitude: 47.6062, longitude: -122.3321 };
+    const cafe = { coordinates: { lat: 47.6152, lng: -122.3321 } };
+    const km = getDistanceRaw(userLoc, cafe);
+    expect(km).toBeGreaterThan(0.9);
+    expect(km).toBeLessThan(1.2);
+  });
+
+  it('returns null when userLocation is null', () => {
+    expect(getDistanceRaw(null, { coordinates: { lat: 0, lng: 0 } })).toBeNull();
+  });
+
+  it('returns null when cafe has no coordinates', () => {
+    expect(getDistanceRaw({ latitude: 0, longitude: 0 }, {})).toBeNull();
+    expect(getDistanceRaw({ latitude: 0, longitude: 0 }, { coordinates: null })).toBeNull();
   });
 });

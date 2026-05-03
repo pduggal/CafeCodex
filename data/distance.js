@@ -23,3 +23,8 @@ export function formatDistance(km, country) {
   if (value < 1000) return `${Math.round(value)} ${unit}`;
   return `${Math.round(value).toLocaleString()} ${unit}`;
 }
+
+export function getDistanceRaw(userLocation, cafe) {
+  if (!userLocation || !cafe?.coordinates) return null;
+  return getDistanceKm(userLocation.latitude, userLocation.longitude, cafe.coordinates.lat, cafe.coordinates.lng);
+}

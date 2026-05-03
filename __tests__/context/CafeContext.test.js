@@ -154,8 +154,8 @@ describe('CafeProvider', () => {
   });
 
   test('falls back to AsyncStorage cache when Supabase fails', async () => {
-    const { supabase } = require('../../lib/supabase');
-    supabase.from.mockImplementation(() => ({
+    const { publicSupabase } = require('../../lib/supabase');
+    publicSupabase.from.mockImplementation(() => ({
       select: jest.fn(() => ({
         order: jest.fn(() => Promise.reject(new Error('network error'))),
       })),

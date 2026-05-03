@@ -164,4 +164,11 @@ describe('SwipeScreen', () => {
     );
     expect(toJSON()).toBeTruthy();
   });
+
+  test('Near Me pill is rendered', () => {
+    const { getByText } = render(
+      <SwipeScreen navigation={navigation} route={{ params: {} }} />
+    );
+    expect(getByText('Near Me')).toBeTruthy();
+  });
 });

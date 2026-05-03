@@ -49,7 +49,7 @@ jest.mock('../../context/CafeContext', () => ({
 
 const mockSupabaseData = { data: null, error: null };
 jest.mock('../../lib/supabase', () => ({
-  supabase: {
+  publicSupabase: {
     from: () => ({
       select: () => ({
         eq: () => ({

@@ -24,7 +24,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Colors } from '../constants/colors';
 import { getCafePhoto, getVibeLabel } from '../data/cafes';
-import { getDistanceKm, formatDistance } from '../data/distance';
+import { getDistanceKm, formatDistance, getDistanceRaw } from '../data/distance';
 import { useCafes } from '../context/CafeContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -44,6 +44,7 @@ export default function SwipeScreen({ navigation }) {
   const [showTip, setShowTip] = useState(true);
   const [shuffleSeed, setShuffleSeed] = useState(0);
   const [swipedThisRound, setSwipedThisRound] = useState(new Set());
+  const [nearMe, setNearMe] = useState(false);
 
   const translateX = useSharedValue(0);
 
@@ -63,15 +64,25 @@ export default function SwipeScreen({ navigation }) {
     });
   }, [cafes, selectedDrink, selectedVibes, selectedLocation]);
 
-  // Shuffle separately from filtering so card order stays stable between swipes
   const shuffledCafes = useMemo(() => {
-    const shuffled = [...allFilteredCafes];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    const list = [...allFilteredCafes];
+    if (nearMe && userLocation) {
+      list.sort((a, b) => {
+        const da = getDistanceRaw(userLocation, a);
+        const db = getDistanceRaw(userLocation, b);
+        if (da === null && db === null) return 0;
+        if (da === null) return 1;
+        if (db === null) return -1;
+        return da - db;
+      });
+    } else {
+      for (let i = list.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
     }
-    return shuffled;
-  }, [allFilteredCafes, shuffleSeed]);
+    return list;
+  }, [allFilteredCafes, shuffleSeed, nearMe, userLocation]);
 
   const deck = useMemo(() => {
     return shuffledCafes.filter((cafe) => !swipedThisRound.has(cafe.id));
@@ -89,8 +100,18 @@ export default function SwipeScreen({ navigation }) {
           (c.instagram_handle || '').toLowerCase().includes(q)
       );
     }
+    if (nearMe && userLocation) {
+      list = [...list].sort((a, b) => {
+        const da = getDistanceRaw(userLocation, a);
+        const db = getDistanceRaw(userLocation, b);
+        if (da === null && db === null) return 0;
+        if (da === null) return 1;
+        if (db === null) return -1;
+        return da - db;
+      });
+    }
     return list;
-  }, [allFilteredCafes, browseCity, searchQuery]);
+  }, [allFilteredCafes, browseCity, searchQuery, nearMe, userLocation]);
 
   const browseCities = useMemo(() => {
     return ['All', ...new Set(allFilteredCafes.map((c) => c.city))];
@@ -379,20 +400,30 @@ export default function SwipeScreen({ navigation }) {
       </View>
 
       <View style={styles.subHeader}>
-        <View style={styles.viewToggle}>
+        <View style={styles.subHeaderLeft}>
+          <View style={styles.viewToggle}>
+            <TouchableOpacity
+              style={[styles.vtBtn, viewMode === 'cards' && styles.vtBtnActive]}
+              onPress={() => setViewMode('cards')}
+            >
+              <Ionicons name={viewMode === 'cards' ? 'grid' : 'grid-outline'} size={14} color={viewMode === 'cards' ? Colors.background : Colors.textMuted} />
+              <Text style={[styles.vtLabel, viewMode === 'cards' && styles.vtLabelActive]}>Cards</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.vtBtn, viewMode === 'list' && styles.vtBtnActive]}
+              onPress={() => setViewMode('list')}
+            >
+              <Ionicons name={viewMode === 'list' ? 'list' : 'list-outline'} size={14} color={viewMode === 'list' ? Colors.background : Colors.textMuted} />
+              <Text style={[styles.vtLabel, viewMode === 'list' && styles.vtLabelActive]}>List</Text>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity
-            style={[styles.vtBtn, viewMode === 'cards' && styles.vtBtnActive]}
-            onPress={() => setViewMode('cards')}
+            style={[styles.sortPill, nearMe && userLocation && styles.sortPillActive, !userLocation && styles.sortPillDisabled]}
+            onPress={() => userLocation && setNearMe((v) => !v)}
+            activeOpacity={userLocation ? 0.7 : 1}
           >
-            <Ionicons name={viewMode === 'cards' ? 'grid' : 'grid-outline'} size={14} color={viewMode === 'cards' ? Colors.background : Colors.textMuted} />
-            <Text style={[styles.vtLabel, viewMode === 'cards' && styles.vtLabelActive]}>Cards</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.vtBtn, viewMode === 'list' && styles.vtBtnActive]}
-            onPress={() => setViewMode('list')}
-          >
-            <Ionicons name={viewMode === 'list' ? 'list' : 'list-outline'} size={14} color={viewMode === 'list' ? Colors.background : Colors.textMuted} />
-            <Text style={[styles.vtLabel, viewMode === 'list' && styles.vtLabelActive]}>List</Text>
+            <Ionicons name="location" size={12} color={nearMe && userLocation ? Colors.background : Colors.textMuted} />
+            <Text style={[styles.sortPillText, nearMe && userLocation && styles.sortPillTextActive]}>Near Me</Text>
           </TouchableOpacity>
         </View>
         <Text style={styles.deckCount}>{deck.length} cafes</Text>
@@ -579,6 +610,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingBottom: 8,
   },
+  subHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  sortPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingHorizontal: 8, paddingVertical: 5, borderRadius: 20,
+    borderWidth: 1, borderColor: Colors.cardBorder, backgroundColor: Colors.cardBackground,
+  },
+  sortPillActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
+  sortPillDisabled: { opacity: 0.4 },
+  sortPillText: { fontSize: 10, fontWeight: '700', color: Colors.textMuted },
+  sortPillTextActive: { color: Colors.background },
   deckCount: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
   viewToggle: { flexDirection: 'row', borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: Colors.cardBorder },
   vtBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: Colors.cardBackground, paddingHorizontal: 12, paddingVertical: 7 },

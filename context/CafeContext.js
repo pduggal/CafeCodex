@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
-import { supabase } from '../lib/supabase';
+import { publicSupabase } from '../lib/supabase';
 
 const CafeContext = createContext();
 
@@ -33,35 +33,48 @@ export function CafeProvider({ children }) {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') return;
-      const loc = await Location.getCurrentPositionAsync({});
-      setUserLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+      let loc;
+      try {
+        loc = await Location.getLastKnownPositionAsync();
+      } catch (_) {}
+      if (!loc) {
+        loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Low });
+      }
+      if (loc) {
+        setUserLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+      }
     } catch (_) {}
   };
 
-  // 8s timeout with AsyncStorage cache fallback — keeps app usable offline or on slow networks
   const fetchCafes = async () => {
     let timeoutId;
     try {
       const timeout = new Promise((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error('timeout')), 8000);
+        timeoutId = setTimeout(() => reject(new Error('timeout')), 15000);
       });
-      const query = supabase.from('cafes').select('*').order('name');
+      const query = publicSupabase.from('cafes').select('*').order('name');
       const { data, error } = await Promise.race([query, timeout]);
       clearTimeout(timeoutId);
       if (error) throw error;
       if (data && data.length > 0) {
         setCafes(data);
+        setIsOffline(false);
         AsyncStorage.setItem('cafes_cache', JSON.stringify(data)).catch(() => {});
       } else {
         throw new Error('empty');
       }
     } catch (e) {
       clearTimeout(timeoutId);
+      console.warn('Cafe fetch failed:', e.message);
       try {
         const cached = await AsyncStorage.getItem('cafes_cache');
         if (cached) {
-          setCafes(JSON.parse(cached));
+          const parsed = JSON.parse(cached);
+          console.warn('Using cache:', parsed.length, 'cafes');
+          setCafes(parsed);
           setIsOffline(true);
+        } else {
+          console.warn('No cache available');
         }
       } catch (ce) {}
     } finally {
@@ -71,7 +84,7 @@ export function CafeProvider({ children }) {
 
   const fetchCountries = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await publicSupabase
         .from('countries')
         .select('*')
         .order('name');
