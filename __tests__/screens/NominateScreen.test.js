@@ -9,15 +9,6 @@ jest.mock('react-native-safe-area-context', () => ({
   },
 }));
 
-jest.mock('../../context/CafeContext', () => ({
-  useCafes: () => ({
-    cafes: [],
-    countries: [
-      { name: 'Japan', flag: '🇯🇵', aliases: ['japan'], cities: ['Tokyo', 'Kyoto'] },
-      { name: 'United States', flag: '🇺🇸', aliases: ['usa', 'us'], cities: ['Seattle', 'New York'] },
-    ],
-  }),
-}));
 
 describe('NominateScreen', () => {
   test('form renders all required field labels', () => {

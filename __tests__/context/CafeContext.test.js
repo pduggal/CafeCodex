@@ -2,6 +2,12 @@ import React, { useEffect } from 'react';
 import { Text } from 'react-native';
 import { render, act, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+jest.mock('expo-location', () => ({
+  requestForegroundPermissionsAsync: jest.fn().mockResolvedValue({ status: 'denied' }),
+  getCurrentPositionAsync: jest.fn(),
+}));
+
 import { CafeProvider, useCafes } from '../../context/CafeContext';
 
 function TestConsumer({ onContext }) {

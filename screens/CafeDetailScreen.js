@@ -12,11 +12,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { getCafePhoto, getVibeLabel } from '../data/cafes';
+import { getDistanceKm, formatDistance } from '../data/distance';
 import { useCafes } from '../context/CafeContext';
 
 export default function CafeDetailScreen({ route, navigation }) {
   const cafe = route.params?.cafe;
-  const { isSaved, toggleSaved, isVisited, toggleVisited } = useCafes();
+  const { isSaved, toggleSaved, isVisited, toggleVisited, userLocation } = useCafes();
 
   if (!cafe) {
     return (
@@ -31,6 +32,9 @@ export default function CafeDetailScreen({ route, navigation }) {
   const saved = isSaved(cafe.id);
   const visited = isVisited(cafe.id);
   const photo = getCafePhoto(cafe);
+  const dist = userLocation && cafe.coordinates
+    ? formatDistance(getDistanceKm(userLocation.latitude, userLocation.longitude, cafe.coordinates.lat, cafe.coordinates.lng), cafe.country)
+    : null;
 
   const openInstagram = () => {
     if (cafe.instagram_handle) {
@@ -39,13 +43,21 @@ export default function CafeDetailScreen({ route, navigation }) {
   };
 
   const openGoogleMaps = () => {
-    const q = encodeURIComponent(`${cafe.name} ${cafe.city}`);
-    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${q}`);
+    if (cafe.coordinates) {
+      Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${cafe.coordinates.lat},${cafe.coordinates.lng}`);
+    } else {
+      const q = encodeURIComponent(`${cafe.name} ${cafe.city}`);
+      Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${q}`);
+    }
   };
 
   const openAppleMaps = () => {
-    const q = encodeURIComponent(`${cafe.name} ${cafe.city}`);
-    Linking.openURL(`maps://?q=${q}`);
+    if (cafe.coordinates) {
+      Linking.openURL(`maps://?daddr=${cafe.coordinates.lat},${cafe.coordinates.lng}`);
+    } else {
+      const q = encodeURIComponent(`${cafe.name} ${cafe.city}`);
+      Linking.openURL(`maps://?q=${q}`);
+    }
   };
 
   return (
@@ -79,7 +91,7 @@ export default function CafeDetailScreen({ route, navigation }) {
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{cafe.name}</Text>
               <Text style={styles.location}>
-                {cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}
+                {cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}{dist ? ` · ${dist}` : ''}
               </Text>
             </View>
             {cafe.curator_rating && (
@@ -187,6 +199,7 @@ export default function CafeDetailScreen({ route, navigation }) {
                   <Text style={styles.locationAddr}>
                     {[cafe.neighborhood, cafe.city, cafe.country].filter(Boolean).join(', ')}
                   </Text>
+                  {dist && <Text style={styles.locationDist}>{dist} away</Text>}
                 </View>
               </View>
               <View style={styles.locationDivider} />
@@ -290,6 +303,7 @@ const styles = StyleSheet.create({
   locationRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14 },
   locationName: { color: Colors.white, fontSize: 14, fontWeight: '700', marginBottom: 3 },
   locationAddr: { color: Colors.textMuted, fontSize: 13, lineHeight: 18 },
+  locationDist: { color: Colors.primary, fontSize: 12, fontWeight: '600', marginTop: 4 },
   locationDivider: { height: 1, backgroundColor: Colors.cardBorder },
   locationBtns: { flexDirection: 'row' },
   locationBtn: {

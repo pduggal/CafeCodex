@@ -9,13 +9,17 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
 import { getCafePhoto, getVibeLabel } from '../data/cafes';
+import { getDistanceKm, formatDistance } from '../data/distance';
 import { useCafes } from '../context/CafeContext';
 
 function CafeCard({ cafe, onPress }) {
-  const { isSaved, toggleSaved, isVisited } = useCafes();
+  const { isSaved, toggleSaved, isVisited, userLocation } = useCafes();
   const saved = isSaved(cafe.id);
   const visited = isVisited(cafe.id);
   const photo = getCafePhoto(cafe);
+  const dist = userLocation && cafe.coordinates
+    ? formatDistance(getDistanceKm(userLocation.latitude, userLocation.longitude, cafe.coordinates.lat, cafe.coordinates.lng), cafe.country)
+    : null;
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85}>
@@ -72,7 +76,7 @@ function CafeCard({ cafe, onPress }) {
 
         <View style={styles.metaRow}>
           <Text style={styles.location}>
-            {cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}
+            {cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}{dist ? ` · ${dist}` : ''}
           </Text>
           {visited && (
             <View style={styles.visitedBadge}>

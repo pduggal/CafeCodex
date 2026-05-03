@@ -35,6 +35,7 @@ jest.mock('../../context/CafeContext', () => ({
     moveToVisited: mockMoveToVisited,
     moveToWishlist: mockMoveToWishlist,
     isFavorite: (id) => mockFavorites.includes(id),
+    userLocation: null,
   }),
 }));
 

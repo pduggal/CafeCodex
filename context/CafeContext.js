@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
 import { supabase } from '../lib/supabase';
 
 const CafeContext = createContext();
@@ -14,6 +15,7 @@ export function CafeProvider({ children }) {
   const [favorites, setFavorites] = useState([]);
 
   const [isOffline, setIsOffline] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
 
   const [selectedDrink, setSelectedDrink] = useState('coffee');
   const [selectedVibes, setSelectedVibes] = useState([]);
@@ -24,7 +26,17 @@ export function CafeProvider({ children }) {
     loadPersistedData();
     fetchCafes();
     fetchCountries();
+    requestLocation();
   }, []);
+
+  const requestLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') return;
+      const loc = await Location.getCurrentPositionAsync({});
+      setUserLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+    } catch (_) {}
+  };
 
   // 8s timeout with AsyncStorage cache fallback — keeps app usable offline or on slow networks
   const fetchCafes = async () => {
@@ -196,6 +208,7 @@ export function CafeProvider({ children }) {
     countries,
     loading,
     isOffline,
+    userLocation,
     savedCafes,
     visitedCafes,
     favorites,
@@ -218,7 +231,7 @@ export function CafeProvider({ children }) {
     isFavorite,
     cities,
   }), [
-    cafes, countries, loading, isOffline,
+    cafes, countries, loading, isOffline, userLocation,
     savedCafes, visitedCafes, favorites,
     selectedDrink, selectedVibes, selectedLocation,
     hasOnboarded, savePreferences, resetOnboarding,

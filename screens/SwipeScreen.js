@@ -24,6 +24,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Colors } from '../constants/colors';
 import { getCafePhoto, getVibeLabel } from '../data/cafes';
+import { getDistanceKm, formatDistance } from '../data/distance';
 import { useCafes } from '../context/CafeContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -33,6 +34,7 @@ export default function SwipeScreen({ navigation }) {
   const {
     cafes, selectedDrink, selectedVibes, selectedLocation,
     savedCafes, visitedCafes, toggleSaved, toggleVisited, isOffline,
+    userLocation,
   } = useCafes();
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -236,10 +238,16 @@ export default function SwipeScreen({ navigation }) {
     );
   }, [translateX, doCommitSwipe]);
 
+  const getCafeDist = (cafe) => {
+    if (!userLocation || !cafe.coordinates) return null;
+    return formatDistance(getDistanceKm(userLocation.latitude, userLocation.longitude, cafe.coordinates.lat, cafe.coordinates.lng), cafe.country);
+  };
+
   const renderCardContent = (cafe) => {
     const photo = getCafePhoto(cafe);
     const isCafeSaved = savedCafes.includes(cafe.id);
     const isCafeVisited = visitedCafes.includes(cafe.id);
+    const dist = getCafeDist(cafe);
 
     return (
       <>
@@ -277,7 +285,7 @@ export default function SwipeScreen({ navigation }) {
               </View>
             )}
           </View>
-          <Text style={styles.cardLoc}>{cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}</Text>
+          <Text style={styles.cardLoc}>{cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}{dist ? ` · ${dist}` : ''}</Text>
           {cafe.instagram_handle && (
             <Text style={styles.cardInsta}>@{cafe.instagram_handle}</Text>
           )}
@@ -313,6 +321,7 @@ export default function SwipeScreen({ navigation }) {
     const photo = getCafePhoto(cafe);
     const isWish = savedCafes.includes(cafe.id);
     const isBeen = visitedCafes.includes(cafe.id);
+    const dist = getCafeDist(cafe);
     return (
       <TouchableOpacity
         style={styles.browseRow}
@@ -322,7 +331,7 @@ export default function SwipeScreen({ navigation }) {
         <Image source={{ uri: photo }} style={styles.browseThumb} />
         <View style={styles.browseInfo}>
           <Text style={styles.browseName} numberOfLines={1}>{cafe.name}</Text>
-          <Text style={styles.browseLoc}>{cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}</Text>
+          <Text style={styles.browseLoc}>{cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}{dist ? ` · ${dist}` : ''}</Text>
           {(isWish || isBeen) && (
             <View style={styles.browseStatusRow}>
               {isWish && <Text style={styles.browseStatusSaved}>Saved</Text>}

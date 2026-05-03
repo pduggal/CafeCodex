@@ -30,6 +30,7 @@ jest.mock('../../context/CafeContext', () => ({
     isSaved: () => false,
     isVisited: () => false,
     isFavorite: () => false,
+    userLocation: null,
     cities: ['All'],
   }),
 }));

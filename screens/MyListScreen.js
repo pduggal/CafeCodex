@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/colors';
 import { getCafePhoto } from '../data/cafes';
+import { getDistanceKm, formatDistance } from '../data/distance';
 import { useCafes } from '../context/CafeContext';
 
 const TABS = [
@@ -25,6 +26,7 @@ export default function MyListScreen({ navigation }) {
   const {
     cafes, savedCafes, visitedCafes, favorites,
     toggleFavorite, moveToVisited, moveToWishlist, isFavorite,
+    userLocation,
   } = useCafes();
 
   const [activeTab, setActiveTab] = useState('wishlist');
@@ -79,6 +81,9 @@ export default function MyListScreen({ navigation }) {
   const renderCafe = (cafe) => {
     const photo = getCafePhoto(cafe);
     const isFav = isFavorite(cafe.id);
+    const dist = userLocation && cafe.coordinates
+      ? formatDistance(getDistanceKm(userLocation.latitude, userLocation.longitude, cafe.coordinates.lat, cafe.coordinates.lng), cafe.country)
+      : null;
     return (
       <TouchableOpacity
         key={cafe.id}
@@ -89,7 +94,7 @@ export default function MyListScreen({ navigation }) {
         <Image source={{ uri: photo }} style={styles.listThumb} />
         <View style={styles.listCardInfo}>
           <Text style={styles.listCardName} numberOfLines={1}>{cafe.name}</Text>
-          <Text style={styles.listCardLoc}>{cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}</Text>
+          <Text style={styles.listCardLoc}>{cafe.neighborhood ? `${cafe.neighborhood} · ` : ''}{cafe.city}{dist ? ` · ${dist}` : ''}</Text>
           <View style={styles.listCardActions}>
             <TouchableOpacity
               style={[styles.lcaBtn, styles.lcaFav, isFav && styles.lcaFavOn]}

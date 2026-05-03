@@ -2,7 +2,7 @@
 
 > This file is the single source of truth for this project. Read this first before making any changes.
 > Keep this file updated every time a meaningful change is made.
-> Last updated: April 28, 2026
+> Last updated: May 2, 2026
 
 ---
 
@@ -26,6 +26,7 @@ The concept: a codex — an ancient handwritten manuscript — is Pallavi's pers
 | Navigation | React Navigation — bottom tabs + native stack |
 | Gestures | react-native-gesture-handler + react-native-reanimated (native UI thread) |
 | State | Context API + AsyncStorage (with Supabase cache fallback) |
+| Location | expo-location (foreground permission, one-shot GPS) |
 | Backend | Supabase (Postgres, Auth, Storage) |
 | Icons | @expo/vector-icons (Ionicons) |
 
@@ -62,12 +63,14 @@ CafeCodex/
 │   └── colors.js           # Full brand palette
 ├── context/
 │   ├── AuthContext.js      # Auth state: session, user, profile, signIn/signUp/signOut, isAdmin
-│   └── CafeContext.js      # Global state: cafes, countries, saved, visited, favorites
-│                           # Supabase fetch with AsyncStorage cache fallback
+│   └── CafeContext.js      # Global state: cafes, countries, saved, visited, favorites, userLocation
+│                           # Supabase fetch with AsyncStorage cache fallback + GPS location
 ├── lib/
 │   └── supabase.js         # Supabase client init
 ├── data/
-│   └── cafes.js            # Vibe tag definitions, getVibeLabel(), timeAgo(), photo fallback helpers
+│   ├── cafes.js            # Vibe tag definitions, getVibeLabel(), timeAgo(), photo fallback helpers
+│   ├── distance.js         # Haversine distance calc + formatDistance (auto miles/km by country)
+│   └── world-countries.js  # 195 countries with flags + major cities (used by NominateScreen)
 ├── components/
 │   ├── CafeCard.js         # Reusable cafe card with photo, badges, vibe tags
 │   └── FeedCard.js         # Feed post card (cafe/city/recipe/update types)
@@ -80,17 +83,18 @@ CafeCodex/
 │   ├── CafeDetailScreen.js # Full detail: curator notes, must-try, rating, actions
 │   ├── MyListScreen.js     # 3 tabs: Want to Go, Been There, Saved
 │   ├── AuthorScreen.js     # Author story, photo, stats, World's Best list
-│   └── NominateScreen.js   # Nomination form + country/city dropdowns + Supabase insert + Telegram notification
-├── __tests__/              # Jest test suite (154 tests across 17 suites)
+│   └── NominateScreen.js   # Nomination form + world country/city dropdowns + Supabase insert + Telegram notification
+├── __tests__/              # Jest test suite (165 tests across 18 suites)
 │   ├── components/         # CafeCard, FeedCard tests
 │   ├── context/            # CafeContext tests (save/visit/favorite/cache fallback)
-│   ├── data/               # getVibeLabel, getCafePhoto, timeAgo tests
+│   ├── data/               # getVibeLabel, getCafePhoto, timeAgo, distance tests
 │   ├── screens/            # Smoke tests + interaction tests (Feed, MyList, Nominate, Onboarding)
 │   └── webapp/             # index.html tests
 ├── .maestro/               # Maestro E2E flow files (9 YAML flows for iOS Simulator)
 ├── QA_TEST_PLAN.md         # 246 test cases across 3 streams (Android, iOS, Functional)
 └── scripts/
-    └── seed-supabase.js    # Seeds Supabase from inline data
+    ├── seed-supabase.js    # Seeds Supabase from inline data
+    └── geocode-cafes.js    # Batch geocode cafes via Nominatim → Supabase coordinates
 ```
 
 ---
@@ -155,6 +159,7 @@ Auth Gate (no session → AuthStack, session → Tabs)
   is_active: boolean,
   trending: boolean,
   press_mention: string,
+  coordinates: { lat: number, lng: number } | null,
 }
 ```
 
@@ -217,12 +222,20 @@ The `nominations` table has an INSERT policy but NO SELECT policy. This means:
 - Author page: real photo, story, stats, World's Best 2026 collapsible list
 - City filter, vibe filter, search
 - Shared utility: getVibeLabel() in data/cafes.js (used by SwipeScreen, CafeCard, CafeDetailScreen)
-- 154 tests across 17 suites (npm test)
+- Distance feature: GPS-based distance from user to each cafe
+  - expo-location for foreground GPS permission (one-shot, no tracking)
+  - Haversine formula in data/distance.js
+  - Auto-format: miles for US cafes, km for international
+  - Shown on CafeCard, SwipeScreen (cards + list), MyListScreen, CafeDetailScreen
+  - CafeDetailScreen maps links use coordinates for directions when available
+  - Graceful degradation: if GPS denied or coordinates null, distance simply doesn't show
+  - `scripts/geocode-cafes.js` batch-populates coordinates via Nominatim (OpenStreetMap)
+- 167 tests across 18 suites (npm test)
 
 ### Nominations
 - **Webapp**: Supabase insert (silently fails due to RLS but data not critical) + Web3Forms email (works in browser)
 - **App**: Supabase insert (works, RLS INSERT policy for anon + authenticated) + Telegram bot notification
-- **Form validation**: Country/city searchable dropdowns with auto-complete from countries table, alias matching, planned city support
+- **Form validation**: Country/city searchable dropdowns with auto-complete from 195-country world data, major cities per country
 - **Supabase RLS**: nominations table has INSERT policy for anon, but NO SELECT policy — inserts work but can't query back
 - **Telegram bot**: token `8700866491:AAG...` sends to chat_id `776680806` (Pallavi)
 - **Web3Forms** returns 403 from non-browser clients (React Native) — that's why the app uses Telegram instead
@@ -257,7 +270,7 @@ The `nominations` table has an INSERT policy but NO SELECT policy. This means:
 - Admin role set manually in Supabase SQL: `UPDATE profiles SET role = 'admin' WHERE id = '<user-id>'`
 
 ### Placeholder / Not Yet Built
-- Real assets: icon.png / splash.png are placeholders
+- Splash screen (splash.png is still placeholder)
 - Nomination approval pipeline (validate via Google Places + Instagram)
 - Community submissions review workflow
 
@@ -288,13 +301,14 @@ The `nominations` table has an INSERT policy but NO SELECT policy. This means:
 - ✅ Analytics (GoatCounter)
 - ✅ Native gesture handling (react-native-gesture-handler + reanimated)
 - ✅ Location search from live cafe data (not hardcoded city lists)
-- ✅ 154 tests across 17 suites, QA test plan, Maestro E2E flows
+- ✅ 165 tests across 18 suites, QA test plan, Maestro E2E flows
 - ✅ Nomination form with country/city searchable dropdowns + validation
 - ✅ What's New feed with 5 post types (cafe, city, recipe, update, interview)
-- [ ] Real app icon and splash screen
+- ✅ App icon (golden ✦ star on dark brown — generated via scripts/generate-icon.js)
 
 ### Phase 2 — Features
 - ✅ User auth (Supabase — email/password, login/signup, admin role)
+- ✅ Distance feature (GPS-based distance, Haversine, auto miles/km, Nominatim geocoding)
 - Nomination approval pipeline (Google Places + Instagram validation)
 - Pro tier (Freemium — $3.99/mo)
 

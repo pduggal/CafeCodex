@@ -13,10 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { Colors } from '../constants/colors';
 import { supabase } from '../lib/supabase';
-import { useCafes } from '../context/CafeContext';
+import { WORLD_COUNTRIES } from '../data/world-countries';
 
 export default function NominateScreen() {
-  const { cafes, countries } = useCafes();
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [nominationData, setNominationData] = useState(null);
@@ -35,45 +34,35 @@ export default function NominateScreen() {
   const filterCountries = (query) => {
     if (!query || query.length < 1) return [];
     const lq = query.toLowerCase().trim();
-    return (countries || [])
-      .filter((c) => {
-        if (c.name.toLowerCase().includes(lq)) return true;
-        return (c.aliases || []).some((a) => a.toLowerCase().includes(lq));
-      })
+    return WORLD_COUNTRIES
+      .filter((c) => c.name.toLowerCase().includes(lq))
       .slice(0, 6)
-      .map((c) => ({ name: c.name, flag: c.flag || '🌍' }));
+      .map((c) => ({ name: c.name, flag: c.flag }));
   };
 
   const filterCities = (query, selectedCountry) => {
     if (!query || query.length < 1) return [];
     const lq = query.toLowerCase().trim();
-    const citySet = new Set();
-    const results = [];
     if (selectedCountry) {
-      (cafes || []).forEach((c) => {
-        if (c.country === selectedCountry && c.city && c.city.toLowerCase().includes(lq) && !citySet.has(c.city)) {
-          citySet.add(c.city);
-          results.push(c.city);
-        }
-      });
-      const cd = (countries || []).find((c) => c.name === selectedCountry);
+      const cd = WORLD_COUNTRIES.find((c) => c.name === selectedCountry);
       if (cd) {
-        [...(cd.cities || []), ...(cd.planned_cities || [])].forEach((city) => {
-          if (city.toLowerCase().includes(lq) && !citySet.has(city)) {
-            citySet.add(city);
-            results.push(city);
-          }
-        });
+        return cd.cities
+          .filter((city) => city.toLowerCase().includes(lq))
+          .slice(0, 6);
       }
-    } else {
-      (cafes || []).forEach((c) => {
-        if (c.city && c.city.toLowerCase().includes(lq) && !citySet.has(c.city)) {
-          citySet.add(c.city);
-          results.push(c.city);
-        }
-      });
     }
-    return results.slice(0, 6);
+    const results = [];
+    const seen = new Set();
+    for (const c of WORLD_COUNTRIES) {
+      for (const city of c.cities) {
+        if (city.toLowerCase().includes(lq) && !seen.has(city)) {
+          seen.add(city);
+          results.push(city);
+          if (results.length >= 6) return results;
+        }
+      }
+    }
+    return results;
   };
 
   const isValid = form.cafe_name && form.city && form.country &&
@@ -85,7 +74,7 @@ export default function NominateScreen() {
       return;
     }
     if (!countryConfirmed) {
-      const match = (countries || []).find((c) => c.name.toLowerCase() === form.country.trim().toLowerCase());
+      const match = WORLD_COUNTRIES.find((c) => c.name.toLowerCase() === form.country.trim().toLowerCase());
       if (match) {
         update('country', match.name);
         setCountryConfirmed(true);
@@ -215,67 +204,63 @@ export default function NominateScreen() {
 
         <Text style={styles.sectionLabel}>The Café</Text>
         <FormField label="Café name" required value={form.cafe_name} onChange={(v) => update('cafe_name', v)} placeholder="e.g. Onibus Coffee" />
-        <View style={{ zIndex: 3 }}>
-          <SearchableField
-            label="Country"
-            required
-            value={form.country}
-            onChangeText={(v) => {
-              update('country', v);
-              setCountryConfirmed(false);
-              setShowCountryDropdown(v.length >= 1);
-              if (form.city) update('city', '');
-            }}
-            onSelect={(item) => {
-              update('country', item.name);
-              setCountryConfirmed(true);
-              setShowCountryDropdown(false);
-              if (form.city) update('city', '');
-              setTimeout(() => cityRef.current?.focus(), 100);
-            }}
-            onClear={() => {
-              update('country', '');
-              setCountryConfirmed(false);
-              setShowCountryDropdown(false);
-              update('city', '');
-            }}
-            options={showCountryDropdown ? filterCountries(form.country) : []}
-            placeholder="e.g. Japan"
-            showDropdown={showCountryDropdown && filterCountries(form.country).length > 0}
-            renderItem={(item) => (
-              <>
-                <Text style={styles.dropdownFlag}>{item.flag}</Text>
-                <Text style={styles.dropdownText}>{item.name}</Text>
-              </>
-            )}
-          />
-        </View>
-        <View style={{ zIndex: 2 }}>
-          <SearchableField
-            label="City"
-            required
-            value={form.city}
-            inputRef={cityRef}
-            onChangeText={(v) => {
-              update('city', v);
-              setShowCityDropdown(v.length >= 1);
-            }}
-            onSelect={(city) => {
-              update('city', city);
-              setShowCityDropdown(false);
-            }}
-            onClear={() => {
-              update('city', '');
-              setShowCityDropdown(false);
-            }}
-            options={showCityDropdown ? filterCities(form.city, countryConfirmed ? form.country : null) : []}
-            placeholder="e.g. Tokyo"
-            showDropdown={showCityDropdown && filterCities(form.city, countryConfirmed ? form.country : null).length > 0}
-            renderItem={(city) => (
-              <Text style={styles.dropdownText}>{city}</Text>
-            )}
-          />
-        </View>
+        <SearchableField
+          label="Country"
+          required
+          value={form.country}
+          onChangeText={(v) => {
+            update('country', v);
+            setCountryConfirmed(false);
+            setShowCountryDropdown(v.length >= 1);
+            if (form.city) update('city', '');
+          }}
+          onSelect={(item) => {
+            update('country', item.name);
+            setCountryConfirmed(true);
+            setShowCountryDropdown(false);
+            if (form.city) update('city', '');
+            setTimeout(() => cityRef.current?.focus(), 100);
+          }}
+          onClear={() => {
+            update('country', '');
+            setCountryConfirmed(false);
+            setShowCountryDropdown(false);
+            update('city', '');
+          }}
+          options={showCountryDropdown ? filterCountries(form.country) : []}
+          placeholder="e.g. Japan"
+          showDropdown={showCountryDropdown && filterCountries(form.country).length > 0}
+          renderItem={(item) => (
+            <>
+              <Text style={styles.dropdownFlag}>{item.flag}</Text>
+              <Text style={styles.dropdownText}>{item.name}</Text>
+            </>
+          )}
+        />
+        <SearchableField
+          label="City"
+          required
+          value={form.city}
+          inputRef={cityRef}
+          onChangeText={(v) => {
+            update('city', v);
+            setShowCityDropdown(v.length >= 1);
+          }}
+          onSelect={(city) => {
+            update('city', city);
+            setShowCityDropdown(false);
+          }}
+          onClear={() => {
+            update('city', '');
+            setShowCityDropdown(false);
+          }}
+          options={showCityDropdown ? filterCities(form.city, countryConfirmed ? form.country : null) : []}
+          placeholder="e.g. Tokyo"
+          showDropdown={showCityDropdown && filterCities(form.city, countryConfirmed ? form.country : null).length > 0}
+          renderItem={(city) => (
+            <Text style={styles.dropdownText}>{city}</Text>
+          )}
+        />
         <FormField label="Neighborhood" value={form.neighborhood} onChange={(v) => update('neighborhood', v)} placeholder="e.g. Nakameguro" />
 
         <View style={styles.divider} />
@@ -378,7 +363,7 @@ const styles = StyleSheet.create({
   introHeadline: { color: Colors.primary, fontSize: 20, fontWeight: '800', lineHeight: 26, marginBottom: 8 },
   introSub: { color: Colors.textMuted, fontSize: 14, lineHeight: 22, marginBottom: 28 },
   sectionLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 14 },
-  formGroup: { marginBottom: 18, position: 'relative', zIndex: 1 },
+  formGroup: { marginBottom: 18 },
   formLabel: { color: Colors.primary, fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 7 },
   formReq: { color: Colors.textMuted, fontWeight: '400', textTransform: 'none', letterSpacing: 0, fontSize: 10 },
   formOpt: { color: Colors.textMuted, fontWeight: '400', textTransform: 'none', letterSpacing: 0, fontSize: 10 },
@@ -391,9 +376,8 @@ const styles = StyleSheet.create({
   clearBtn: { position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center' },
   clearBtnText: { color: Colors.textMuted, fontSize: 16 },
   dropdown: {
-    position: 'absolute', top: '100%', left: 0, right: 0,
-    backgroundColor: Colors.cardBackground, borderWidth: 1, borderColor: Colors.cardBorder,
-    borderRadius: 10, marginTop: 4, overflow: 'hidden', zIndex: 10, elevation: 10,
+    backgroundColor: Colors.cardBackground, borderWidth: 1, borderColor: Colors.primary,
+    borderRadius: 10, marginTop: 6, overflow: 'hidden',
   },
   dropdownItem: {
     flexDirection: 'row', alignItems: 'center', gap: 10,

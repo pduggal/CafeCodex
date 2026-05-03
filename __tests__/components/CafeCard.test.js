@@ -6,6 +6,7 @@ jest.mock('../../context/CafeContext', () => ({
     isSaved: () => false,
     toggleSaved: jest.fn(),
     isVisited: () => false,
+    userLocation: null,
   }),
 }));
 
