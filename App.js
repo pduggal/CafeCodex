@@ -7,6 +7,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import * as Font from 'expo-font';
 
 import { Colors } from './constants/colors';
 import { CafeProvider, useCafes } from './context/CafeContext';
@@ -152,6 +153,20 @@ function AppContent() {
 }
 
 export default function App() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    async function loadFonts() {
+      try {
+        await Font.loadAsync(Ionicons.font);
+      } catch (_) {}
+      setFontsLoaded(true);
+    }
+    loadFonts();
+  }, []);
+
+  if (!fontsLoaded) return null;
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>

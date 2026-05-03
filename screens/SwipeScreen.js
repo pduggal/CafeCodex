@@ -364,7 +364,7 @@ export default function SwipeScreen({ navigation }) {
           )}
         </View>
         <TouchableOpacity style={styles.filterPill} onPress={() => navigation.navigate('OnboardingHome', { forceShow: true })}>
-          <Text style={styles.filterLabel}>{filterLabel}</Text>
+          <Text style={styles.filterLabel} numberOfLines={1}>{filterLabel}</Text>
           <Text style={styles.filterChange}> · change</Text>
         </TouchableOpacity>
       </View>
@@ -553,19 +553,19 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12,
+    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, gap: 10,
   },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 },
   headerLogo: { color: Colors.primary, fontSize: 20, fontWeight: '800' },
   offlineBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, backgroundColor: Colors.cardBackground },
   offlineBadgeText: { color: Colors.textMuted, fontSize: 10, fontWeight: '600' },
   filterPill: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 6,
     borderRadius: 20, backgroundColor: Colors.cardBackground, borderWidth: 1, borderColor: Colors.cardBorder,
-    flexShrink: 1,
+    flexShrink: 1, maxWidth: 200,
   },
-  filterLabel: { color: Colors.cream, fontSize: 12, fontWeight: '600' },
-  filterChange: { color: Colors.textMuted, fontSize: 12 },
+  filterLabel: { color: Colors.cream, fontSize: 12, fontWeight: '600', flexShrink: 1 },
+  filterChange: { color: Colors.textMuted, fontSize: 11, flexShrink: 0 },
   subHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingBottom: 8,

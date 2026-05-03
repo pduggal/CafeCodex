@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   introHeadline: { color: Colors.primary, fontSize: 20, fontWeight: '800', lineHeight: 26, marginBottom: 8 },
   introSub: { color: Colors.textMuted, fontSize: 14, lineHeight: 22, marginBottom: 28 },
   sectionLabel: { color: Colors.textMuted, fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 14 },
-  formGroup: { marginBottom: 18 },
+  formGroup: { marginBottom: 18, position: 'relative', zIndex: 1 },
   formLabel: { color: Colors.primary, fontSize: 11, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 7 },
   formReq: { color: Colors.textMuted, fontWeight: '400', textTransform: 'none', letterSpacing: 0, fontSize: 10 },
   formOpt: { color: Colors.textMuted, fontWeight: '400', textTransform: 'none', letterSpacing: 0, fontSize: 10 },
@@ -391,8 +391,9 @@ const styles = StyleSheet.create({
   clearBtn: { position: 'absolute', right: 12, top: 0, bottom: 0, justifyContent: 'center' },
   clearBtnText: { color: Colors.textMuted, fontSize: 16 },
   dropdown: {
+    position: 'absolute', top: '100%', left: 0, right: 0,
     backgroundColor: Colors.cardBackground, borderWidth: 1, borderColor: Colors.cardBorder,
-    borderRadius: 10, marginTop: 4, overflow: 'hidden',
+    borderRadius: 10, marginTop: 4, overflow: 'hidden', zIndex: 10, elevation: 10,
   },
   dropdownItem: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
