@@ -80,13 +80,15 @@ CafeCodex/
 │   ├── CafeDetailScreen.js # Full detail: curator notes, must-try, rating, actions
 │   ├── MyListScreen.js     # 3 tabs: Want to Go, Been There, Saved
 │   ├── AuthorScreen.js     # Author story, photo, stats, World's Best list
-│   └── NominateScreen.js   # Nomination form + Supabase insert + Telegram notification
-├── __tests__/              # Jest test suite (57 tests across 8 suites)
-│   ├── components/         # CafeCard tests
+│   └── NominateScreen.js   # Nomination form + country/city dropdowns + Supabase insert + Telegram notification
+├── __tests__/              # Jest test suite (154 tests across 17 suites)
+│   ├── components/         # CafeCard, FeedCard tests
 │   ├── context/            # CafeContext tests (save/visit/favorite/cache fallback)
-│   ├── data/               # getVibeLabel tests
-│   ├── screens/            # SwipeScreen, AuthorScreen, NominateScreen, smoke tests
+│   ├── data/               # getVibeLabel, getCafePhoto, timeAgo tests
+│   ├── screens/            # Smoke tests + interaction tests (Feed, MyList, Nominate, Onboarding)
 │   └── webapp/             # index.html tests
+├── .maestro/               # Maestro E2E flow files (9 YAML flows for iOS Simulator)
+├── QA_TEST_PLAN.md         # 246 test cases across 3 streams (Android, iOS, Functional)
 └── scripts/
     └── seed-supabase.js    # Seeds Supabase from inline data
 ```
@@ -172,7 +174,7 @@ Auth Gate (no session → AuthStack, session → Tabs)
 |---|---|---|
 | `cafes` | SELECT only | Anon: read all cafes |
 | `countries` | SELECT only | Anon: read country list (visited, aliases, cities) |
-| `nominations` | INSERT only (no SELECT) | Anon: insert nominations, cannot read back |
+| `nominations` | INSERT only (no SELECT) | Anon + Authenticated: insert nominations, cannot read back |
 | `profiles` | SELECT/INSERT/UPDATE own row | Authenticated: read/write own profile only |
 | `posts` | SELECT active only | Anon: read active feed posts |
 
@@ -215,11 +217,12 @@ The `nominations` table has an INSERT policy but NO SELECT policy. This means:
 - Author page: real photo, story, stats, World's Best 2026 collapsible list
 - City filter, vibe filter, search
 - Shared utility: getVibeLabel() in data/cafes.js (used by SwipeScreen, CafeCard, CafeDetailScreen)
-- 57 tests across 8 suites (npm test)
+- 154 tests across 17 suites (npm test)
 
 ### Nominations
 - **Webapp**: Supabase insert (silently fails due to RLS but data not critical) + Web3Forms email (works in browser)
-- **App**: Supabase insert (works, RLS INSERT policy exists) + Telegram bot notification
+- **App**: Supabase insert (works, RLS INSERT policy for anon + authenticated) + Telegram bot notification
+- **Form validation**: Country/city searchable dropdowns with auto-complete from countries table, alias matching, planned city support
 - **Supabase RLS**: nominations table has INSERT policy for anon, but NO SELECT policy — inserts work but can't query back
 - **Telegram bot**: token `8700866491:AAG...` sends to chat_id `776680806` (Pallavi)
 - **Web3Forms** returns 403 from non-browser clients (React Native) — that's why the app uses Telegram instead
@@ -269,7 +272,7 @@ The `nominations` table has an INSERT policy but NO SELECT policy. This means:
 - When adding a new screen that navigates to CafeDetail, add it as a stack in App.js
 - When pushing changes, always push to BOTH main and gh-pages branches
 - After making changes, verify nothing was lost from previous enhancements
-- Run `npm test` before pushing — all 57 tests must pass
+- Run `npm test` before pushing — all 154 tests must pass
 - Do NOT touch the webapp (index.html) unless specifically asked — it's stable and deployed
 - Nomination inserts must NOT use `.select()` (Supabase RLS blocks it)
 
@@ -285,7 +288,9 @@ The `nominations` table has an INSERT policy but NO SELECT policy. This means:
 - ✅ Analytics (GoatCounter)
 - ✅ Native gesture handling (react-native-gesture-handler + reanimated)
 - ✅ Location search from live cafe data (not hardcoded city lists)
-- ✅ 57 tests, comprehensive README/PRD
+- ✅ 154 tests across 17 suites, QA test plan, Maestro E2E flows
+- ✅ Nomination form with country/city searchable dropdowns + validation
+- ✅ What's New feed with 5 post types (cafe, city, recipe, update, interview)
 - [ ] Real app icon and splash screen
 
 ### Phase 2 — Features
