@@ -1,0 +1,58 @@
+appId: host.exp.Exponent
+---
+
+# ── Author Flow ──
+# Tests: Author tab displays Pallavi's info, social links, World's Best list
+# Prereq: Must be logged in.
+
+- launchApp
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "Discover"
+    timeout: 15000
+
+# Tap Author tab
+- tapOn: "Author"
+
+# Verify author screen
+- extendedWaitUntil:
+    visible: "Pallavi Duggal"
+    timeout: 5000
+- assertVisible: "@honestcoffeestop"
+
+# Verify social links exist
+- assertVisible: "Instagram"
+- assertVisible: "TikTok"
+- assertVisible: "YouTube"
+
+# Verify letter section
+- assertVisible: "a letter from the author"
+
+# Scroll down to see story
+- scroll:
+    direction: "DOWN"
+
+# Scroll to World's Best section
+- scroll:
+    direction: "DOWN"
+
+# Tap World's Best to expand
+- tapOn:
+    text: "World's Best"
+    optional: true
+
+# Wait for list to expand
+- wait: 500
+
+# Check for top cafes (if expanded)
+- assertVisible:
+    text: "Onyx Coffee Lab"
+    optional: true
+- assertVisible:
+    text: "Tim Wendelboe"
+    optional: true
+
+# Scroll to bottom
+- scroll:
+    direction: "DOWN"

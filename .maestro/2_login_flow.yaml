@@ -1,0 +1,54 @@
+appId: host.exp.Exponent
+---
+
+# ── Login Flow ──
+# Tests: Login with valid credentials → lands on Discover tab
+# Prereq: Account must exist (run signup flow first or use existing account)
+
+- launchApp:
+    clearState: true
+
+# Should see Login screen
+- assertVisible: "Sign In"
+- assertVisible: "Cafe Codex"
+
+# Enter email
+- tapOn: "you@email.com"
+- inputText: "testuser_maestro@cafecodex.com"
+
+# Enter password
+- tapOn: "Your password"
+- inputText: "test1234"
+
+# Tap Sign In
+- tapOn:
+    id: "login-button"
+
+# Wait for auth + cafe data to load
+- extendedWaitUntil:
+    visible: "Cafe Codex"
+    timeout: 15000
+
+# Should land on Discover tab
+- assertVisible:
+    text: "What are you in the mood for?"
+    optional: true
+
+# ── Login Error Test ──
+
+- launchApp:
+    clearState: true
+
+# Try wrong password
+- tapOn: "you@email.com"
+- inputText: "testuser_maestro@cafecodex.com"
+- tapOn: "Your password"
+- inputText: "wrongpassword"
+- tapOn:
+    id: "login-button"
+
+# Should show error
+- extendedWaitUntil:
+    visible: "Wrong email or password"
+    timeout: 10000
+- assertVisible: "Wrong email or password"

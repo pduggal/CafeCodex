@@ -35,13 +35,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function fetchProfile(userId) {
-    const { data } = await supabase
-      .from('profiles')
-      .select('name, phone, role')
-      .eq('id', userId)
-      .single();
-    setProfile(data);
-    setLoading(false);
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('name, phone, role')
+        .eq('id', userId)
+        .single();
+      setProfile(data);
+    } catch (_) {
+      setProfile(null);
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function signUp({ name, email, password, phone }) {

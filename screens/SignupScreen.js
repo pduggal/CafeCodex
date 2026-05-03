@@ -33,7 +33,7 @@ export default function SignupScreen({ navigation }) {
     else if (!EMAIL_RE.test(email.trim())) e.email = 'Enter a valid email';
     if (!password) e.password = 'Password is required';
     else if (password.length < 6) e.password = 'At least 6 characters';
-    if (phone.trim() && !/^\d{10,}$/.test(phone.trim())) e.phone = 'Enter a valid phone number';
+    if (phone.trim() && !/^[\d\s\-+().]{7,}$/.test(phone.trim())) e.phone = 'Enter a valid phone number';
     return e;
   };
 

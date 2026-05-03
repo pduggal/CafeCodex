@@ -15,7 +15,6 @@ export function CafeProvider({ children }) {
 
   const [isOffline, setIsOffline] = useState(false);
 
-  const [selectedCity, setSelectedCity] = useState('All');
   const [selectedDrink, setSelectedDrink] = useState('coffee');
   const [selectedVibes, setSelectedVibes] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -46,7 +45,6 @@ export function CafeProvider({ children }) {
       }
     } catch (e) {
       clearTimeout(timeoutId);
-      console.log('Supabase cafes failed, loading cache', e);
       try {
         const cached = await AsyncStorage.getItem('cafes_cache');
         if (cached) {
@@ -71,7 +69,6 @@ export function CafeProvider({ children }) {
         AsyncStorage.setItem('countries_cache', JSON.stringify(data)).catch(() => {});
       }
     } catch (e) {
-      console.log('Supabase countries failed, loading cache', e);
       try {
         const cached = await AsyncStorage.getItem('countries_cache');
         if (cached) setCountries(JSON.parse(cached));
@@ -98,7 +95,6 @@ export function CafeProvider({ children }) {
       if (location) setSelectedLocation(JSON.parse(location));
       if (onboarded) setHasOnboarded(JSON.parse(onboarded));
     } catch (e) {
-      console.log('Error loading persisted data', e);
     }
   };
 
@@ -203,8 +199,6 @@ export function CafeProvider({ children }) {
     savedCafes,
     visitedCafes,
     favorites,
-    selectedCity,
-    setSelectedCity,
     selectedDrink,
     setSelectedDrink,
     selectedVibes,
@@ -226,7 +220,7 @@ export function CafeProvider({ children }) {
   }), [
     cafes, countries, loading, isOffline,
     savedCafes, visitedCafes, favorites,
-    selectedCity, selectedDrink, selectedVibes, selectedLocation,
+    selectedDrink, selectedVibes, selectedLocation,
     hasOnboarded, savePreferences, resetOnboarding,
     toggleSaved, toggleVisited, toggleFavorite, moveToVisited, moveToWishlist,
     isSaved, isVisited, isFavorite, cities,

@@ -9,7 +9,7 @@ export const VIBE_TAGS = [
   { id: 'collab_worthy', label: 'Collab-Worthy', emoji: '🤝' },
 ];
 
-export const COFFEE_PHOTOS = [
+const COFFEE_PHOTOS = [
   'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600&h=440&fit=crop&q=85&auto=format',
   'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=600&h=440&fit=crop&q=85&auto=format',
   'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=440&fit=crop&q=85&auto=format',
@@ -22,7 +22,7 @@ export const COFFEE_PHOTOS = [
   'https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=600&h=440&fit=crop&q=85&auto=format',
 ];
 
-export const MATCHA_PHOTOS = [
+const MATCHA_PHOTOS = [
   'https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=600&h=440&fit=crop&q=85&auto=format',
   'https://images.unsplash.com/photo-1627485937980-221c88ac04f9?w=600&h=440&fit=crop&q=85&auto=format',
   'https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=600&h=440&fit=crop&q=85&auto=format',

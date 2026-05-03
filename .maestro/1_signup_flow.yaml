@@ -1,0 +1,44 @@
+appId: host.exp.Exponent
+---
+
+# ── Signup Flow ──
+# Tests: Create account → auto-login → lands on Discover tab
+
+- launchApp:
+    clearState: true
+
+# Should see Login screen first
+- assertVisible: "Cafe Codex"
+- assertVisible: "Sign In"
+
+# Navigate to Signup
+- tapOn: "Create one"
+
+# Verify Signup screen
+- assertVisible: "Create Account"
+
+# Fill in Name
+- tapOn: "Your name"
+- inputText: "Test User"
+
+# Fill in Email (use unique timestamp to avoid duplicates)
+- tapOn: "you@email.com"
+- inputText: "testuser_maestro@cafecodex.com"
+
+# Fill in Password
+- tapOn: "Min 6 characters"
+- inputText: "test1234"
+
+# Submit
+- tapOn:
+    id: "signup-button"
+
+# Wait for auth + data load
+- extendedWaitUntil:
+    visible: "Cafe Codex"
+    timeout: 15000
+
+# Should land on Discover tab (Onboarding)
+- assertVisible:
+    text: "What are you in the mood for?"
+    optional: true

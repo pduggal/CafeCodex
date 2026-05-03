@@ -1,0 +1,51 @@
+appId: host.exp.Exponent
+---
+
+# ── My List Flow ──
+# Tests: Tab switching, saved/visited/favorites display
+# Prereq: Must be logged in. Should have some saved/visited cafes.
+
+- launchApp
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "Discover"
+    timeout: 15000
+
+# Tap My List tab
+- tapOn: "My List"
+
+# Verify My List screen
+- extendedWaitUntil:
+    visible: "My List"
+    timeout: 5000
+
+# Check Want to Go tab (default)
+- assertVisible: "Want to Go"
+- assertVisible: "Been There"
+- assertVisible: "Saved"
+
+# Switch to Been There tab
+- tapOn: "Been There"
+- wait: 500
+
+# Switch to Saved tab
+- tapOn: "Saved"
+- wait: 500
+
+# Switch back to Want to Go
+- tapOn: "Want to Go"
+- wait: 500
+
+# Test search (if cafes exist)
+- tapOn:
+    text: "Search cafes"
+    optional: true
+- inputText: "Seattle"
+  optional: true
+- wait: 1000
+
+# Clear search
+- tapOn:
+    text: "✕"
+    optional: true

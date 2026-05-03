@@ -16,8 +16,6 @@ jest.mock('../../context/CafeContext', () => ({
     savedCafes: [],
     visitedCafes: [],
     favorites: [],
-    selectedCity: 'All',
-    setSelectedCity: jest.fn(),
     selectedDrink: 'coffee',
     setSelectedDrink: jest.fn(),
     selectedVibes: [],

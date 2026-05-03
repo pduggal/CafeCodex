@@ -1,0 +1,94 @@
+appId: host.exp.Exponent
+---
+
+# ── Nomination Flow ──
+# Tests: Form validation, country dropdown, city dropdown, submit
+# Prereq: Must be logged in.
+
+- launchApp
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "Discover"
+    timeout: 15000
+
+# Tap Recommend tab
+- tapOn: "Recommend"
+
+# Verify nomination form
+- extendedWaitUntil:
+    visible: "Nominate a Cafe"
+    timeout: 5000
+- assertVisible: "Know a place that belongs in the Codex?"
+
+# Fill Cafe name
+- tapOn: "e.g. Onibus Coffee"
+- inputText: "Test Cafe Maestro"
+
+# Fill Country with dropdown
+- tapOn: "e.g. Japan"
+- inputText: "Jap"
+
+# Wait for country dropdown
+- extendedWaitUntil:
+    visible: "Japan"
+    timeout: 3000
+
+# Select Japan from dropdown
+- tapOn:
+    text: "Japan"
+    index: 0
+
+# City field should now be focused or ready
+- tapOn: "e.g. Tokyo"
+- inputText: "Tok"
+
+# Wait for city dropdown
+- extendedWaitUntil:
+    visible: "Tokyo"
+    timeout: 3000
+
+# Select Tokyo
+- tapOn:
+    text: "Tokyo"
+    index: 0
+
+# Scroll down to see more fields
+- scroll:
+    direction: "DOWN"
+
+# Fill What makes it honest
+- tapOn: "Why does this cafe belong in the Codex?"
+- inputText: "Amazing pour-over and beautiful interior"
+
+# Fill Must order
+- tapOn: "e.g. The ceremonial matcha bowl"
+- inputText: "V60 single origin"
+
+# Scroll down more
+- scroll:
+    direction: "DOWN"
+
+# Fill Your name
+- tapOn: "First name or nickname"
+- inputText: "Maestro Tester"
+
+# Tap Submit
+- tapOn: "Send to Pallavi"
+
+# Wait for success screen
+- extendedWaitUntil:
+    visible: "Nomination sent!"
+    timeout: 10000
+
+# Verify success screen elements
+- assertVisible: "Test Cafe Maestro"
+- assertVisible: "Tokyo"
+- assertVisible: "Maestro Tester"
+
+# Test "Nominate another"
+- tapOn: "Nominate another"
+
+# Should be back to empty form
+- assertVisible: "Nominate a Cafe"
+- assertVisible: "Know a place that belongs in the Codex?"

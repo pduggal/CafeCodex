@@ -1,0 +1,139 @@
+appId: host.exp.Exponent
+---
+
+# ── Full User Journey ──
+# End-to-end: Login → Onboarding → Swipe → Save → My List → Feed → Nominate → Author
+# Prereq: Account must exist (testuser_maestro@cafecodex.com / test1234)
+
+- launchApp:
+    clearState: true
+
+# ═══ 1. LOGIN ═══
+- assertVisible: "Sign In"
+- tapOn: "you@email.com"
+- inputText: "testuser_maestro@cafecodex.com"
+- tapOn: "Your password"
+- inputText: "test1234"
+- tapOn:
+    id: "login-button"
+
+# Wait for load
+- extendedWaitUntil:
+    visible: "What are you in the mood for?"
+    timeout: 15000
+
+# ═══ 2. ONBOARDING ═══
+# Select Coffee
+- tapOn: "Coffee"
+
+# Continue without location (optional field)
+- tapOn: "Find cafes"
+
+# Select a vibe
+- assertVisible: "What kind of place?"
+- tapOn: "Aesthetic"
+
+# Start swiping
+- tapOn: "Show me cafes"
+
+# Wait for swipe cards
+- extendedWaitUntil:
+    visible: "Cafe Codex"
+    timeout: 10000
+
+# ═══ 3. SWIPE & SAVE ═══
+# Swipe right to save first cafe
+- swipe:
+    direction: "RIGHT"
+    duration: 500
+- wait: 1000
+
+# Swipe left to mark second cafe visited
+- swipe:
+    direction: "LEFT"
+    duration: 500
+- wait: 1000
+
+# ═══ 4. MY LIST ═══
+- tapOn: "My List"
+- extendedWaitUntil:
+    visible: "My List"
+    timeout: 5000
+- assertVisible: "Want to Go"
+- assertVisible: "Been There"
+- assertVisible: "Saved"
+
+# Check Want to Go has our saved cafe
+- tapOn: "Want to Go"
+- wait: 500
+
+# Check Been There
+- tapOn: "Been There"
+- wait: 500
+
+# ═══ 5. FEED ═══
+- tapOn: "Feed"
+- extendedWaitUntil:
+    visible: "What's New"
+    timeout: 10000
+- assertVisible: "The latest from the codex"
+
+# ═══ 6. NOMINATION ═══
+- tapOn: "Recommend"
+- extendedWaitUntil:
+    visible: "Nominate a Cafe"
+    timeout: 5000
+
+# Fill form
+- tapOn: "e.g. Onibus Coffee"
+- inputText: "Journey Test Cafe"
+
+- tapOn: "e.g. Japan"
+- inputText: "United"
+- extendedWaitUntil:
+    visible: "United States"
+    timeout: 3000
+- tapOn: "United States"
+
+- tapOn: "e.g. Tokyo"
+- inputText: "Seattle"
+- extendedWaitUntil:
+    visible: "Seattle"
+    timeout: 3000
+- tapOn:
+    text: "Seattle"
+    index: 0
+
+- scroll:
+    direction: "DOWN"
+
+- tapOn: "Why does this cafe belong in the Codex?"
+- inputText: "E2E journey test"
+
+- tapOn: "e.g. The ceremonial matcha bowl"
+- inputText: "Cortado"
+
+- scroll:
+    direction: "DOWN"
+
+- tapOn: "First name or nickname"
+- inputText: "E2E Bot"
+
+- tapOn: "Send to Pallavi"
+
+- extendedWaitUntil:
+    visible: "Nomination sent!"
+    timeout: 10000
+
+- assertVisible: "Journey Test Cafe"
+
+# ═══ 7. AUTHOR ═══
+- tapOn: "Nominate another"
+- wait: 500
+- tapOn: "Author"
+- extendedWaitUntil:
+    visible: "Pallavi Duggal"
+    timeout: 5000
+- assertVisible: "@honestcoffeestop"
+
+# ═══ JOURNEY COMPLETE ═══

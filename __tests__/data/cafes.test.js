@@ -1,4 +1,4 @@
-const { VIBE_TAGS, getCafePhoto, getVibeLabel, timeAgo, COFFEE_PHOTOS, MATCHA_PHOTOS } = require('../../data/cafes');
+const { VIBE_TAGS, getCafePhoto, getVibeLabel, timeAgo } = require('../../data/cafes');
 
 const CANONICAL_VIBE_IDS = [
   'viral_aesthetic', 'matcha_specialist', 'specialty_coffee', 'pour_over',
@@ -33,22 +33,26 @@ describe('getCafePhoto', () => {
     expect(getCafePhoto(cafe)).toBe('https://example.com/photo.jpg');
   });
 
-  test('falls back to COFFEE_PHOTOS for coffee cafes', () => {
+  test('falls back to Unsplash URL for coffee cafes without photo_url', () => {
     const cafe = { id: '3', drink: 'coffee' };
-    const expected = COFFEE_PHOTOS[3 % COFFEE_PHOTOS.length];
-    expect(getCafePhoto(cafe)).toBe(expected);
+    const result = getCafePhoto(cafe);
+    expect(result).toContain('unsplash.com');
+    expect(typeof result).toBe('string');
   });
 
-  test('falls back to MATCHA_PHOTOS for matcha cafes', () => {
+  test('falls back to Unsplash URL for matcha cafes without photo_url', () => {
     const cafe = { id: '2', drink: 'matcha' };
-    const expected = MATCHA_PHOTOS[2 % MATCHA_PHOTOS.length];
-    expect(getCafePhoto(cafe)).toBe(expected);
+    const result = getCafePhoto(cafe);
+    expect(result).toContain('unsplash.com');
   });
 
-  test('uses MATCHA_PHOTOS when vibe_tags includes matcha_specialist', () => {
-    const cafe = { id: '7', vibe_tags: ['matcha_specialist'] };
-    const expected = MATCHA_PHOTOS[7 % MATCHA_PHOTOS.length];
-    expect(getCafePhoto(cafe)).toBe(expected);
+  test('uses matcha fallback when vibe_tags includes matcha_specialist', () => {
+    const coffeeCafe = { id: '7', drink: 'coffee', vibe_tags: [] };
+    const matchaCafe = { id: '7', vibe_tags: ['matcha_specialist'] };
+    const coffeePhoto = getCafePhoto(coffeeCafe);
+    const matchaPhoto = getCafePhoto(matchaCafe);
+    expect(matchaPhoto).toContain('unsplash.com');
+    expect(matchaPhoto).not.toBe(coffeePhoto);
   });
 });
 

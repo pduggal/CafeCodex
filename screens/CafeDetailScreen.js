@@ -15,8 +15,19 @@ import { getCafePhoto, getVibeLabel } from '../data/cafes';
 import { useCafes } from '../context/CafeContext';
 
 export default function CafeDetailScreen({ route, navigation }) {
-  const { cafe } = route.params;
+  const cafe = route.params?.cafe;
   const { isSaved, toggleSaved, isVisited, toggleVisited } = useCafes();
+
+  if (!cafe) {
+    return (
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ color: Colors.textMuted, fontSize: 16 }}>Cafe not found</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 16 }}>
+          <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '700' }}>← Go back</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
   const saved = isSaved(cafe.id);
   const visited = isVisited(cafe.id);
   const photo = getCafePhoto(cafe);

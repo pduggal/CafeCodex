@@ -1,0 +1,54 @@
+appId: host.exp.Exponent
+---
+
+# ── Swipe & Save Flow ──
+# Tests: Swipe right to save, swipe left for visited, tap for detail
+# Prereq: Must be on SwipeScreen (logged in, onboarding done)
+
+- launchApp
+
+# Wait for app to fully load
+- extendedWaitUntil:
+    visible: "Discover"
+    timeout: 15000
+
+# Tap Discover tab to ensure we're there
+- tapOn: "Discover"
+
+# Wait for cards to load
+- extendedWaitUntil:
+    visible: "Cafe Codex"
+    timeout: 10000
+
+# Swipe right to save a cafe
+- swipe:
+    direction: "RIGHT"
+    duration: 500
+
+# Wait for next card
+- wait: 1000
+
+# Swipe left to mark visited
+- swipe:
+    direction: "LEFT"
+    duration: 500
+
+# Wait for next card
+- wait: 1000
+
+# Tap card to open detail
+- tapOn:
+    point: "50%,40%"
+
+# Should open CafeDetail
+- extendedWaitUntil:
+    visible: "Google Maps"
+    timeout: 5000
+- assertVisible: "Apple Maps"
+
+# Go back
+- tapOn: "Back"
+  optional: true
+
+# Or use back gesture
+- back

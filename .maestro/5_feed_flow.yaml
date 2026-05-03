@@ -1,0 +1,55 @@
+appId: host.exp.Exponent
+---
+
+# ── Feed Flow ──
+# Tests: Feed tab loads, shows posts, pull-to-refresh
+# Prereq: Must be logged in. Posts must exist in Supabase.
+
+- launchApp
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "Discover"
+    timeout: 15000
+
+# Tap Feed tab
+- tapOn: "Feed"
+
+# Verify Feed screen
+- extendedWaitUntil:
+    visible: "What's New"
+    timeout: 10000
+- assertVisible: "The latest from the codex"
+
+# Check for post type badges (at least one should be visible)
+- assertVisible:
+    text: "FROM PALLAVI"
+    optional: true
+- assertVisible:
+    text: "JUST ADDED"
+    optional: true
+- assertVisible:
+    text: "SECRET RECIPE"
+    optional: true
+- assertVisible:
+    text: "INTERVIEW"
+    optional: true
+
+# Scroll down to see more posts
+- scroll:
+    direction: "DOWN"
+
+# Pull to refresh
+- scroll:
+    direction: "UP"
+
+- swipe:
+    start: "50%,20%"
+    end: "50%,80%"
+    duration: 500
+
+# Wait for refresh
+- wait: 2000
+
+# Verify still on feed
+- assertVisible: "What's New"

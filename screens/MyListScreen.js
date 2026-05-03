@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/colors';
-import { VIBE_TAGS, getCafePhoto } from '../data/cafes';
+import { getCafePhoto } from '../data/cafes';
 import { useCafes } from '../context/CafeContext';
 
 const TABS = [

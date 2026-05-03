@@ -1,0 +1,48 @@
+appId: host.exp.Exponent
+---
+
+# ── Onboarding Flow ──
+# Tests: Drink selection → Location search → Vibe selection → Start swiping
+# Prereq: Must be logged in (session exists)
+
+- launchApp
+
+# Wait for app to load
+- extendedWaitUntil:
+    visible: "What are you in the mood for?"
+    timeout: 15000
+
+# Step 1: Select Coffee
+- tapOn: "Coffee"
+- assertVisible: "Coffee"
+
+# Step 1: Search for location
+- tapOn: "Search city or country"
+- inputText: "Seattle"
+
+# Wait for dropdown results
+- extendedWaitUntil:
+    visible: "Seattle"
+    timeout: 5000
+
+# Select Seattle from dropdown
+- tapOn:
+    text: "In the Codex"
+    index: 0
+
+# Continue to step 2
+- tapOn: "Find cafes"
+
+# Step 2: Vibe selection
+- assertVisible: "What kind of place?"
+
+# Select a vibe
+- tapOn: "Aesthetic"
+
+# Start swiping
+- tapOn: "Show me cafes"
+
+# Should land on SwipeScreen
+- extendedWaitUntil:
+    visible: "Cafe Codex"
+    timeout: 10000
