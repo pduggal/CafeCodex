@@ -38,7 +38,7 @@ export default function MyListScreen({ navigation }) {
     if (activeTab === 'wishlist') ids = savedCafes;
     else if (activeTab === 'visited') ids = visitedCafes;
     else ids = favorites;
-    return cafes.filter((c) => ids.includes(c.id));
+    return cafes.filter((c) => ids.includes(String(c.id)));
   }, [cafes, savedCafes, visitedCafes, favorites, activeTab]);
 
   const filteredCafes = useMemo(() => {

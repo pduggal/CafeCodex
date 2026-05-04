@@ -127,9 +127,8 @@ export default function SwipeScreen({ navigation }) {
   }, []);
 
 
-  const commitSwipe = useCallback((direction) => {
-    if (!currentCafeRef.current) return;
-    const cafeId = currentCafeRef.current.id;
+  const commitSwipe = useCallback((direction, cafeId) => {
+    if (!cafeId) return;
     if (direction === 'right') {
       toggleSaved(cafeId);
     } else {
@@ -159,8 +158,8 @@ export default function SwipeScreen({ navigation }) {
   }, [navigation]);
 
   // Stable wrappers for runOnJS — gesture worklets can't call JS functions directly
-  const doCommitSwipe = useCallback((direction) => {
-    commitSwipeRef.current(direction);
+  const doCommitSwipe = useCallback((direction, cafeId) => {
+    commitSwipeRef.current(direction, cafeId);
   }, []);
 
   const doNavigate = useCallback(() => {
@@ -176,6 +175,11 @@ export default function SwipeScreen({ navigation }) {
       runOnJS(doNavigate)();
     });
 
+  const currentCafeIdShared = useSharedValue(currentCafe?.id ?? null);
+  useEffect(() => {
+    currentCafeIdShared.value = currentCafe?.id ?? null;
+  }, [currentCafe, currentCafeIdShared]);
+
   const panGesture = Gesture.Pan()
     .activeOffsetX([-10, 10])
     .failOffsetY([-15, 15])
@@ -186,6 +190,7 @@ export default function SwipeScreen({ navigation }) {
     .onEnd((event) => {
       'worklet';
       const { translationX, velocityX } = event;
+      const cafeId = currentCafeIdShared.value;
 
       if (translationX > SWIPE_THRESHOLD || velocityX > 700) {
         translateX.value = withTiming(
@@ -193,7 +198,7 @@ export default function SwipeScreen({ navigation }) {
           { duration: 250 },
           (finished) => {
             'worklet';
-            if (finished) runOnJS(doCommitSwipe)('right');
+            if (finished) runOnJS(doCommitSwipe)('right', cafeId);
           }
         );
       } else if (translationX < -SWIPE_THRESHOLD || velocityX < -700) {
@@ -202,7 +207,7 @@ export default function SwipeScreen({ navigation }) {
           { duration: 250 },
           (finished) => {
             'worklet';
-            if (finished) runOnJS(doCommitSwipe)('left');
+            if (finished) runOnJS(doCommitSwipe)('left', cafeId);
           }
         );
       } else {
@@ -250,13 +255,15 @@ export default function SwipeScreen({ navigation }) {
   }`;
 
   const triggerSwipe = useCallback((direction) => {
+    const cafeId = currentCafeRef.current?.id;
+    if (!cafeId) return;
     const target = direction === 'right' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5;
     translateX.value = withTiming(
       target,
       { duration: 250 },
       (finished) => {
         'worklet';
-        if (finished) runOnJS(doCommitSwipe)(direction);
+        if (finished) runOnJS(doCommitSwipe)(direction, cafeId);
       }
     );
   }, [translateX, doCommitSwipe]);
@@ -268,8 +275,8 @@ export default function SwipeScreen({ navigation }) {
 
   const renderCardContent = (cafe) => {
     const photo = getCafePhoto(cafe);
-    const isCafeSaved = savedCafes.includes(cafe.id);
-    const isCafeVisited = visitedCafes.includes(cafe.id);
+    const isCafeSaved = savedCafes.includes(String(cafe.id));
+    const isCafeVisited = visitedCafes.includes(String(cafe.id));
     const dist = getCafeDist(cafe);
 
     return (
@@ -342,8 +349,8 @@ export default function SwipeScreen({ navigation }) {
 
   const renderBrowseRow = ({ item: cafe }) => {
     const photo = getCafePhoto(cafe);
-    const isWish = savedCafes.includes(cafe.id);
-    const isBeen = visitedCafes.includes(cafe.id);
+    const isWish = savedCafes.includes(String(cafe.id));
+    const isBeen = visitedCafes.includes(String(cafe.id));
     const dist = getCafeDist(cafe);
     return (
       <TouchableOpacity

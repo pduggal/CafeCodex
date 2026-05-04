@@ -17,7 +17,7 @@ import { useCafes } from '../context/CafeContext';
 
 export default function CafeDetailScreen({ route, navigation }) {
   const cafe = route.params?.cafe;
-  const { isSaved, toggleSaved, isVisited, toggleVisited, userLocation } = useCafes();
+  const { isSaved, toggleSaved, isVisited, toggleVisited, isFavorite, toggleFavorite, userLocation } = useCafes();
 
   if (!cafe) {
     return (
@@ -29,7 +29,7 @@ export default function CafeDetailScreen({ route, navigation }) {
       </SafeAreaView>
     );
   }
-  const saved = isSaved(cafe.id);
+  const saved = isFavorite(cafe.id);
   const visited = isVisited(cafe.id);
   const photo = getCafePhoto(cafe);
   const dist = userLocation && cafe.coordinates
@@ -105,7 +105,7 @@ export default function CafeDetailScreen({ route, navigation }) {
           <View style={styles.actionRow}>
             <TouchableOpacity
               style={[styles.actionBtn, saved && styles.actionBtnActive]}
-              onPress={() => toggleSaved(cafe.id)}
+              onPress={() => toggleFavorite(cafe.id)}
             >
               <Ionicons
                 name={saved ? 'heart' : 'heart-outline'}
