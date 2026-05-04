@@ -53,12 +53,14 @@ export default function SwipeScreen({ navigation }) {
       if (selectedDrink && cafe.drink && cafe.drink !== selectedDrink) return false;
       if (selectedLocation && selectedLocation.type === 'city' && cafe.city !== selectedLocation.city) return false;
       if (selectedVibes.length > 0) {
-        for (const v of selectedVibes) {
-          if (v === 'trending' && !cafe.trending) return false;
-          if (v === 'picks' && !cafe.curator_pick) return false;
-          if (v === 'aesthetic' && !(cafe.vibe_tags || []).includes('viral_aesthetic')) return false;
-          if (v === 'hidden' && !(cafe.vibe_tags || []).includes('hidden_gem')) return false;
-        }
+        const matchesAny = selectedVibes.some((v) => {
+          if (v === 'trending') return cafe.trending;
+          if (v === 'picks') return cafe.curator_pick;
+          if (v === 'aesthetic') return (cafe.vibe_tags || []).includes('viral_aesthetic');
+          if (v === 'hidden') return (cafe.vibe_tags || []).includes('hidden_gem');
+          return false;
+        });
+        if (!matchesAny) return false;
       }
       return true;
     });
