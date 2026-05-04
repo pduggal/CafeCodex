@@ -39,7 +39,7 @@ export default function AuthorScreen() {
         <View style={styles.hero}>
           <View style={styles.photoRing}>
             <Image
-              source={require('../assets/author.jpg')}
+              source={require('../assets/author.png')}
               style={styles.photoImage}
             />
           </View>

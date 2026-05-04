@@ -22,7 +22,7 @@ describe('AuthorScreen', () => {
       path.join(__dirname, '../../screens/AuthorScreen.js'),
       'utf-8'
     );
-    expect(src).toContain("require('../assets/author.jpg')");
+    expect(src).toContain("require('../assets/author.png')");
     expect(src).not.toMatch(/style={styles\.photoPlaceholder}/);
   });
 

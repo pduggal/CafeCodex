@@ -145,74 +145,79 @@ export function CafeProvider({ children }) {
 
   // Saved and visited are mutually exclusive — saving removes from visited and vice versa
   const toggleSaved = useCallback((cafeId) => {
+    const cid = String(cafeId);
     setSavedCafes((prev) => {
-      const updated = prev.includes(cafeId)
-        ? prev.filter((id) => id !== cafeId)
-        : [...prev, cafeId];
+      const updated = prev.includes(cid)
+        ? prev.filter((id) => id !== cid)
+        : [...prev, cid];
       AsyncStorage.setItem('savedCafes', JSON.stringify(updated)).catch(() => {});
       return updated;
     });
     setVisitedCafes((prev) => {
-      const updated = prev.filter((id) => id !== cafeId);
+      const updated = prev.filter((id) => id !== cid);
       AsyncStorage.setItem('visitedCafes', JSON.stringify(updated)).catch(() => {});
       return updated;
     });
   }, []);
 
   const toggleVisited = useCallback((cafeId) => {
+    const cid = String(cafeId);
     setVisitedCafes((prev) => {
-      const updated = prev.includes(cafeId)
-        ? prev.filter((id) => id !== cafeId)
-        : [...prev, cafeId];
+      const updated = prev.includes(cid)
+        ? prev.filter((id) => id !== cid)
+        : [...prev, cid];
       AsyncStorage.setItem('visitedCafes', JSON.stringify(updated)).catch(() => {});
       return updated;
     });
     setSavedCafes((prev) => {
-      const updated = prev.filter((id) => id !== cafeId);
+      const updated = prev.filter((id) => id !== cid);
       AsyncStorage.setItem('savedCafes', JSON.stringify(updated)).catch(() => {});
       return updated;
     });
   }, []);
 
   const toggleFavorite = useCallback((cafeId) => {
+    const cid = String(cafeId);
     setFavorites((prev) => {
-      const updated = prev.includes(cafeId)
-        ? prev.filter((id) => id !== cafeId)
-        : [...prev, cafeId];
+      const updated = prev.includes(cid)
+        ? prev.filter((id) => id !== cid)
+        : [...prev, cid];
       AsyncStorage.setItem('favorites', JSON.stringify(updated)).catch(() => {});
       return updated;
     });
   }, []);
 
   const moveToVisited = useCallback((cafeId) => {
+    const cid = String(cafeId);
     setSavedCafes((prev) => {
-      const updated = prev.filter((id) => id !== cafeId);
+      const updated = prev.filter((id) => id !== cid);
       AsyncStorage.setItem('savedCafes', JSON.stringify(updated)).catch(() => {});
       return updated;
     });
     setVisitedCafes((prev) => {
-      const updated = prev.includes(cafeId) ? prev : [...prev, cafeId];
+      const updated = prev.includes(cid) ? prev : [...prev, cid];
       AsyncStorage.setItem('visitedCafes', JSON.stringify(updated)).catch(() => {});
       return updated;
     });
   }, []);
 
   const moveToWishlist = useCallback((cafeId) => {
+    const cid = String(cafeId);
     setVisitedCafes((prev) => {
-      const updated = prev.filter((id) => id !== cafeId);
+      const updated = prev.filter((id) => id !== cid);
       AsyncStorage.setItem('visitedCafes', JSON.stringify(updated)).catch(() => {});
       return updated;
     });
     setSavedCafes((prev) => {
-      const updated = prev.includes(cafeId) ? prev : [...prev, cafeId];
+      const updated = prev.includes(cid) ? prev : [...prev, cid];
       AsyncStorage.setItem('savedCafes', JSON.stringify(updated)).catch(() => {});
       return updated;
     });
   }, []);
 
-  const isSaved = useCallback((cafeId) => savedCafes.includes(cafeId), [savedCafes]);
-  const isVisited = useCallback((cafeId) => visitedCafes.includes(cafeId), [visitedCafes]);
-  const isFavorite = useCallback((cafeId) => favorites.includes(cafeId), [favorites]);
+  const isSaved = useCallback((cafeId) => savedCafes.includes(String(cafeId)), [savedCafes]);
+  const isVisited = useCallback((cafeId) => visitedCafes.includes(String(cafeId)), [visitedCafes]);
+  const isFavorite = useCallback((cafeId) => favorites.includes(String(cafeId)), [favorites]);
 
   const cities = useMemo(() => ['All', ...new Set(cafes.map((c) => c.city))], [cafes]);
 
