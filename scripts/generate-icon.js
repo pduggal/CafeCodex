@@ -10,102 +10,66 @@ const BG = '#1A0F0A';
 const BG_LIGHT = '#2A1A12';
 const GOLD = '#C9973A';
 const GOLD_LIGHT = '#D4A94E';
-const GOLD_DARK = '#A87B2A';
+const GOLD_DARK = '#8B6914';
 const CREAM = '#FDF6EC';
-
-function star(cx, cy, outerR, innerR, points = 4) {
-  const pts = [];
-  for (let i = 0; i < points * 2; i++) {
-    const angle = (Math.PI * i) / points - Math.PI / 2;
-    const r = i % 2 === 0 ? outerR : innerR;
-    pts.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`);
-  }
-  return pts.join(' ');
-}
-
-function fourPointStar(cx, cy, longR, shortR, waist) {
-  const top = `${cx},${cy - longR}`;
-  const right = `${cx + shortR},${cy}`;
-  const bottom = `${cx},${cy + longR}`;
-  const left = `${cx - shortR},${cy}`;
-
-  const trI = `${cx + waist},${cy - waist}`;
-  const brI = `${cx + waist},${cy + waist}`;
-  const blI = `${cx - waist},${cy + waist}`;
-  const tlI = `${cx - waist},${cy - waist}`;
-
-  return `M ${top}
-    Q ${cx + waist * 0.6},${cy - waist * 0.6} ${right}
-    Q ${cx + waist * 0.6},${cy + waist * 0.6} ${bottom}
-    Q ${cx - waist * 0.6},${cy + waist * 0.6} ${left}
-    Q ${cx - waist * 0.6},${cy - waist * 0.6} ${top}
-    Z`;
-}
-
-const mainStar = fourPointStar(cx, cy, 360, 280, 85);
-const innerStar = fourPointStar(cx, cy, 280, 220, 70);
-
-const smallDotCount = 24;
-const smallDots = Array.from({ length: smallDotCount }, (_, i) => {
-  const angle = (2 * Math.PI * i) / smallDotCount;
-  const r = 420;
-  const x = cx + r * Math.cos(angle);
-  const y = cy + r * Math.sin(angle);
-  const dotR = i % 3 === 0 ? 6 : 3.5;
-  return `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${GOLD}" opacity="${i % 3 === 0 ? 0.7 : 0.35}"/>`;
-}).join('\n    ');
 
 const svg = `<svg width="${SIZE}" height="${SIZE}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="70%">
+    <radialGradient id="bg" cx="50%" cy="38%" r="72%">
       <stop offset="0%" stop-color="${BG_LIGHT}"/>
       <stop offset="100%" stop-color="${BG}"/>
     </radialGradient>
-    <radialGradient id="starGlow" cx="50%" cy="40%" r="50%">
+    <linearGradient id="goldGrad" x1="30%" y1="0%" x2="70%" y2="100%">
       <stop offset="0%" stop-color="${GOLD_LIGHT}"/>
-      <stop offset="60%" stop-color="${GOLD}"/>
+      <stop offset="50%" stop-color="${GOLD}"/>
       <stop offset="100%" stop-color="${GOLD_DARK}"/>
-    </radialGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="18" result="blur"/>
+    </linearGradient>
+    <filter id="glow" x="-15%" y="-15%" width="130%" height="130%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
       <feComposite in="SourceGraphic" in2="blur" operator="over"/>
     </filter>
-    <filter id="outerGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="35"/>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="25"/>
     </filter>
-    <linearGradient id="sheen" x1="30%" y1="0%" x2="70%" y2="100%">
-      <stop offset="0%" stop-color="${CREAM}" stop-opacity="0.25"/>
-      <stop offset="50%" stop-color="${CREAM}" stop-opacity="0"/>
-      <stop offset="100%" stop-color="${CREAM}" stop-opacity="0.08"/>
-    </linearGradient>
   </defs>
 
-  <!-- Background -->
+  <!-- Background with rounded corners -->
   <rect width="${SIZE}" height="${SIZE}" fill="url(#bg)" rx="220"/>
 
-  <!-- Outer decorative ring -->
-  <circle cx="${cx}" cy="${cy}" r="445" fill="none" stroke="${GOLD}" stroke-width="1.5" opacity="0.2"/>
-  <circle cx="${cx}" cy="${cy}" r="435" fill="none" stroke="${GOLD}" stroke-width="0.8" opacity="0.12"/>
+  <!-- Subtle outer ring -->
+  <circle cx="${cx}" cy="${cy}" r="440" fill="none" stroke="${GOLD}" stroke-width="1" opacity="0.15"/>
 
-  <!-- Decorative dots around ring -->
-  ${smallDots}
+  <!-- Serif C letterform -->
+  <g filter="url(#glow)">
+    <!-- Glow behind the C -->
+    <text x="${cx}" y="${cy + 55}" text-anchor="middle" dominant-baseline="central"
+      font-family="Georgia, 'Times New Roman', serif" font-size="620" font-weight="bold"
+      fill="${GOLD}" opacity="0.08" filter="url(#softGlow)">C</text>
 
-  <!-- Inner ring -->
-  <circle cx="${cx}" cy="${cy}" r="395" fill="none" stroke="${GOLD}" stroke-width="2" opacity="0.3"/>
+    <!-- Main C -->
+    <text x="${cx}" y="${cy + 55}" text-anchor="middle" dominant-baseline="central"
+      font-family="Georgia, 'Times New Roman', serif" font-size="620" font-weight="bold"
+      fill="url(#goldGrad)">C</text>
+  </g>
 
-  <!-- Star glow (behind) -->
-  <path d="${mainStar}" fill="${GOLD}" opacity="0.15" filter="url(#outerGlow)"/>
+  <!-- Four-point star accent (✦) at the opening of the C -->
+  <g transform="translate(${cx + 175}, ${cy + 55})">
+    <!-- Star glow -->
+    <path d="M 0,-42 Q 8,-8 42,0 Q 8,8 0,42 Q -8,8 -42,0 Q -8,-8 0,-42 Z"
+      fill="${GOLD}" opacity="0.15" filter="url(#softGlow)"/>
+    <!-- Star -->
+    <path d="M 0,-42 Q 8,-8 42,0 Q 8,8 0,42 Q -8,8 -42,0 Q -8,-8 0,-42 Z"
+      fill="${GOLD_LIGHT}"/>
+  </g>
 
-  <!-- Main four-pointed star -->
-  <path d="${mainStar}" fill="url(#starGlow)" filter="url(#glow)"/>
+  <!-- Small decorative star top-right -->
+  <g transform="translate(${cx + 260}, ${cy - 175})">
+    <path d="M 0,-12 Q 2.5,-2.5 12,0 Q 2.5,2.5 0,12 Q -2.5,2.5 -12,0 Q -2.5,-2.5 0,-12 Z"
+      fill="${GOLD}" opacity="0.5"/>
+  </g>
 
-  <!-- Sheen overlay on star -->
-  <path d="${mainStar}" fill="url(#sheen)"/>
-
-  <!-- Center circle accent -->
-  <circle cx="${cx}" cy="${cy}" r="38" fill="${BG}" opacity="0.5"/>
-  <circle cx="${cx}" cy="${cy}" r="28" fill="${GOLD}" opacity="0.12"/>
-  <circle cx="${cx}" cy="${cy}" r="6" fill="${GOLD_LIGHT}" opacity="0.6"/>
+  <!-- Tiny accent dot -->
+  <circle cx="${cx + 290}" cy="${cy - 130}" r="3" fill="${GOLD}" opacity="0.35"/>
 </svg>`;
 
 async function main() {
@@ -116,14 +80,12 @@ async function main() {
     .resize(SIZE, SIZE)
     .png()
     .toFile(iconPath);
-
   console.log(`✓ Icon generated: ${iconPath}`);
 
   await sharp(Buffer.from(svg))
     .resize(SIZE, SIZE)
     .png()
     .toFile(adaptivePath);
-
   console.log(`✓ Adaptive icon generated: ${adaptivePath}`);
 }
 
