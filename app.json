@@ -20,16 +20,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1A0F0A"
       },
-      "package": "com.honestcoffeestop.cafecodex",
-      "config": {
-        "googleMaps": {
-          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
-        }
-      }
+      "package": "com.honestcoffeestop.cafecodex"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": []
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "61e5cf7e-1286-40c9-b166-19d60d4969cd"
+      }
+    }
   }
 }
