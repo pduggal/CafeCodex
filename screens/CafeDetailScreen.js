@@ -74,6 +74,11 @@ export default function CafeDetailScreen({ route, navigation }) {
               <Text style={styles.curatorBadgeText}>✦ Pallavi's Pick</Text>
             </View>
           )}
+          {!cafe.curator_pick && cafe.recommended_by && (
+            <View style={styles.memberBadge}>
+              <Text style={styles.memberBadgeText}>♡ Member Pick</Text>
+            </View>
+          )}
           {cafe.is_active === false && (
             <View style={styles.closedBadge}>
               <Text style={styles.closedBadgeText}>⚠ Permanently Closed</Text>
@@ -157,9 +162,15 @@ export default function CafeDetailScreen({ route, navigation }) {
             </View>
           )}
 
+          {cafe.recommended_by && (
+            <View style={styles.recommendedRow}>
+              <Text style={styles.recommendedText}>♡ Recommended by {cafe.recommended_by}</Text>
+            </View>
+          )}
+
           {cafe.curator_notes && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>✦ Pallavi's Notes</Text>
+              <Text style={styles.sectionTitle}>{cafe.recommended_by ? '✦ Notes' : '✦ Pallavi\'s Notes'}</Text>
               <View style={styles.noteCard}>
                 {cafe.curator_notes.what_to_order && (
                   <>
@@ -236,6 +247,13 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20,
   },
   curatorBadgeText: { color: Colors.background, fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
+  memberBadge: {
+    position: 'absolute', bottom: 14, left: 16,
+    backgroundColor: Colors.cream, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20,
+  },
+  memberBadgeText: { color: Colors.background, fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
+  recommendedRow: { marginBottom: 16 },
+  recommendedText: { color: Colors.textMuted, fontSize: 13, fontWeight: '600', fontStyle: 'italic' },
   closedBadge: {
     position: 'absolute', top: 14, left: 16,
     backgroundColor: 'rgba(0,0,0,0.75)', borderWidth: 1, borderColor: '#ff6b6b',

@@ -82,4 +82,23 @@ describe('CafeCard', () => {
     const { getByText } = render(<CafeCard cafe={cafe} onPress={() => {}} />);
     expect(getByText('★★★★')).toBeTruthy();
   });
+
+  test('shows Member Pick badge when recommended_by is set', () => {
+    const cafe = { ...baseCafe, recommended_by: 'Mairu' };
+    const { getByText, queryByText } = render(<CafeCard cafe={cafe} onPress={() => {}} />);
+    expect(getByText(/Member Pick/)).toBeTruthy();
+    expect(queryByText(/Pallavi's Pick/)).toBeNull();
+  });
+
+  test('shows Pallavi Pick over Member Pick when curator_pick is true', () => {
+    const cafe = { ...baseCafe, curator_pick: true, recommended_by: 'Mairu' };
+    const { getByText, queryByText } = render(<CafeCard cafe={cafe} onPress={() => {}} />);
+    expect(getByText(/Pallavi's Pick/)).toBeTruthy();
+    expect(queryByText(/Member Pick/)).toBeNull();
+  });
+
+  test('shows no pick badge when neither curator_pick nor recommended_by', () => {
+    const { queryByText } = render(<CafeCard cafe={baseCafe} onPress={() => {}} />);
+    expect(queryByText(/Pick/)).toBeNull();
+  });
 });

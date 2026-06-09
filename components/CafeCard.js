@@ -32,6 +32,11 @@ function CafeCard({ cafe, onPress }) {
               <Text style={styles.curatorBadgeText}>✦ Pallavi's Pick</Text>
             </View>
           )}
+          {!cafe.curator_pick && cafe.recommended_by && (
+            <View style={styles.memberBadge}>
+              <Text style={styles.memberBadgeText}>♡ Member Pick</Text>
+            </View>
+          )}
           {cafe.trending && (
             <View style={styles.trendingBadge}>
               <Text style={styles.trendingBadgeText}>🔥 Trending</Text>
@@ -141,6 +146,19 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   curatorBadgeText: {
+    color: Colors.background,
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  memberBadge: {
+    backgroundColor: Colors.cream,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    marginRight: 6,
+  },
+  memberBadgeText: {
     color: Colors.background,
     fontSize: 10,
     fontWeight: '700',

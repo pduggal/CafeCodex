@@ -289,7 +289,12 @@ export default function SwipeScreen({ navigation }) {
               <Text style={styles.cardPickText}>✦ Pallavi's Pick</Text>
             </View>
           )}
-          {cafe.trending && !cafe.curator_pick && (
+          {!cafe.curator_pick && cafe.recommended_by && (
+            <View style={styles.cardMemberBadge}>
+              <Text style={styles.cardMemberText}>♡ Member Pick</Text>
+            </View>
+          )}
+          {cafe.trending && !cafe.curator_pick && !cafe.recommended_by && (
             <View style={styles.cardTrendBadge}>
               <Text style={styles.cardTrendText}>🔥 Trending</Text>
             </View>
@@ -371,6 +376,7 @@ export default function SwipeScreen({ navigation }) {
           <View style={styles.browseRating}>
             <Text style={styles.browseStars}>{'★'.repeat(cafe.curator_rating || 0)}</Text>
             {cafe.curator_pick && <View style={styles.browsePickDot} />}
+            {!cafe.curator_pick && cafe.recommended_by && <View style={styles.browseMemberDot} />}
           </View>
         </View>
         <View style={styles.browseActions}>
@@ -655,6 +661,8 @@ const styles = StyleSheet.create({
   },
   cardPickBadge: { position: 'absolute', top: 14, left: 14, backgroundColor: Colors.primary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
   cardPickText: { color: Colors.background, fontSize: 11, fontWeight: '700' },
+  cardMemberBadge: { position: 'absolute', top: 14, left: 14, backgroundColor: Colors.cream, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  cardMemberText: { color: Colors.background, fontSize: 11, fontWeight: '700' },
   cardTrendBadge: {
     position: 'absolute', top: 14, left: 14, backgroundColor: 'rgba(26,15,10,0.85)',
     borderWidth: 1, borderColor: Colors.primary, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20,
@@ -758,6 +766,7 @@ const styles = StyleSheet.create({
   browseRating: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 4 },
   browseStars: { color: Colors.primary, fontSize: 11 },
   browsePickDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.primary },
+  browseMemberDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.cream },
   browseActions: { flexDirection: 'column', alignItems: 'center', gap: 6 },
   browseSaveBtn: {
     width: 36, height: 36, borderRadius: 18, borderWidth: 1.5, borderColor: Colors.cardBorder,

@@ -67,7 +67,7 @@ function FeedCard({ post, onPress }) {
           </Text>
         ) : null}
 
-        {post.type === 'interview' && meta.url ? (
+        {(post.type === 'interview' || post.type === 'recipe') && meta.url ? (
           <TouchableOpacity
             style={styles.cta}
             onPress={() => Linking.openURL(meta.url)}
@@ -76,6 +76,12 @@ function FeedCard({ post, onPress }) {
               {meta.platform === 'youtube' ? '▶ Watch Now' : '📷 Watch Now'} →
             </Text>
           </TouchableOpacity>
+        ) : null}
+
+        {post.type === 'interview' && !meta.url && meta.coming_soon ? (
+          <View style={[styles.cta, styles.ctaDisabled]}>
+            <Text style={styles.ctaComingSoon}>▶ Coming Soon</Text>
+          </View>
         ) : null}
 
         {(post.type === 'cafe' || post.type === 'city') && onPress ? (
@@ -172,6 +178,15 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  ctaDisabled: {
+    backgroundColor: 'rgba(201,151,58,0.06)',
+    borderColor: 'rgba(201,151,58,0.15)',
+  },
+  ctaComingSoon: {
+    color: Colors.textMuted,
     fontSize: 13,
     fontWeight: '700',
   },
