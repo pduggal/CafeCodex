@@ -7,10 +7,12 @@ import {
   TouchableOpacity,
   Linking,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../constants/colors';
+import { useAuth } from '../context/AuthContext';
 
 const WORLD_BEST = [
   { rank: 1, name: 'Onyx Coffee Lab', loc: 'Rogers, Arkansas, USA', flag: '\u{1F1FA}\u{1F1F8}', known: 'Multi-award-winning roaster known for sourcing the world’s rarest lots', top3: true },
@@ -27,6 +29,31 @@ const WORLD_BEST = [
 
 export default function AuthorScreen() {
   const [worldBestOpen, setWorldBestOpen] = useState(false);
+  const { signOut, deleteAccount, user } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all your data. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const { error } = await deleteAccount();
+            if (error) {
+              Alert.alert('Error', error.message || 'Failed to delete account. Please try again.');
+            }
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -194,6 +221,21 @@ export default function AuthorScreen() {
               </TouchableOpacity>
             </View>
           )}
+        </View>
+
+        {/* ── Account ── */}
+        <View style={styles.accountSection}>
+          {user && (
+            <Text style={styles.accountEmail}>{user.email}</Text>
+          )}
+          <TouchableOpacity style={styles.signOutBtn} onPress={handleSignOut}>
+            <Ionicons name="log-out-outline" size={16} color={Colors.primary} />
+            <Text style={styles.signOutText}>Sign Out</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.deleteBtn} onPress={handleDeleteAccount}>
+            <Ionicons name="trash-outline" size={14} color="#ff6b6b" />
+            <Text style={styles.deleteText}>Delete Account</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={{ height: 40 }} />
@@ -486,5 +528,43 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     fontSize: 10,
     letterSpacing: 0.3,
+  },
+  accountSection: {
+    marginHorizontal: 26,
+    marginTop: 28,
+    alignItems: 'center',
+    gap: 12,
+  },
+  accountEmail: {
+    color: Colors.textMuted,
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  signOutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: Colors.cardBackground,
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  signOutText: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 8,
+  },
+  deleteText: {
+    color: '#ff6b6b',
+    fontSize: 12,
+    fontWeight: '500',
   },
 });

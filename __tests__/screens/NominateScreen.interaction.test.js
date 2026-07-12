@@ -112,10 +112,14 @@ describe('NominateScreen — Form Validation & Submit', () => {
   beforeEach(() => {
     Alert.alert.mockClear();
     global.fetch = jest.fn(() => Promise.resolve({ ok: true }));
+    process.env.EXPO_PUBLIC_TELEGRAM_BOT_TOKEN = 'test-token';
+    process.env.EXPO_PUBLIC_TELEGRAM_CHAT_ID = '123456';
   });
 
   afterEach(() => {
     delete global.fetch;
+    delete process.env.EXPO_PUBLIC_TELEGRAM_BOT_TOKEN;
+    delete process.env.EXPO_PUBLIC_TELEGRAM_CHAT_ID;
   });
 
   test('submit button disabled when required fields empty', () => {

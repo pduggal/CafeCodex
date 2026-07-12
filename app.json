@@ -13,7 +13,11 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.honestcoffeestop.cafecodex"
+      "bundleIdentifier": "com.honestcoffeestop.cafecodex",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Café Codex uses your location to show how far you are from each café. For example, you'll see \"2.3 mi\" next to a café so you know how close it is."
+      }
     },
     "android": {
       "adaptiveIcon": {

@@ -104,10 +104,13 @@ export default function NominateScreen() {
     const n = form;
     const msg = `☕ *New Café Codex Nomination*\n\n☕ *Café:* ${n.cafe_name.trim()}\n📍 *City:* ${n.city.trim()}, ${n.country.trim()}\n🏘 *Neighborhood:* ${n.neighborhood.trim() || '—'}\n\n✨ *What makes it special:* ${n.what_makes_it_special.trim()}\n🥤 *Must order:* ${n.must_order.trim()}\n⏰ *Best time:* ${n.best_time.trim() || '—'}\n\n🙋 *Nominated by:* ${n.your_name.trim()}\n📸 *Instagram:* ${n.instagram_handle.trim() ? '@' + n.instagram_handle.trim().replace(/^@/, '') : '—'}`;
     try {
-      const res = await fetch('https://api.telegram.org/bot8700866491:AAGrVpFUTbez0b97siu1eAyADUTD980qVB0/sendMessage', {
+      const token = process.env.EXPO_PUBLIC_TELEGRAM_BOT_TOKEN;
+      const chatId = process.env.EXPO_PUBLIC_TELEGRAM_CHAT_ID;
+      if (!token || !chatId) throw new Error('Telegram not configured');
+      const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: 776680806, text: msg, parse_mode: 'Markdown' }),
+        body: JSON.stringify({ chat_id: Number(chatId), text: msg, parse_mode: 'Markdown' }),
       });
       if (res.ok) sent = true;
     } catch (_) {}

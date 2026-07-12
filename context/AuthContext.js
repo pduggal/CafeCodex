@@ -77,10 +77,21 @@ export function AuthProvider({ children }) {
     return { error };
   }
 
+  async function deleteAccount() {
+    const userId = user?.id;
+    if (!userId) return { error: { message: 'No user logged in' } };
+    const { error: profileError } = await supabase.from('profiles').delete().eq('id', userId);
+    if (profileError) return { error: profileError };
+    const { error: authError } = await supabase.rpc('delete_own_account');
+    if (authError) return { error: authError };
+    await supabase.auth.signOut();
+    return { error: null };
+  }
+
   const isAdmin = profile?.role === 'admin';
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, loading, isAdmin, signUp, signIn, signOut, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );
