@@ -8,17 +8,41 @@ jest.mock('react-native-safe-area-context', () => ({
   },
 }));
 
+// Override the global reanimated mock so withTiming actually invokes its
+// completion callback — needed to exercise the swipe-commit path
+// (triggerSwipe -> doCommitSwipe -> toggleSaved/toggleVisited).
+jest.mock('react-native-reanimated', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: { View, Text: require('react-native').Text, createAnimatedComponent: (comp) => comp },
+    useSharedValue: (init) => ({ value: init }),
+    useAnimatedStyle: () => ({}),
+    withTiming: (val, _config, callback) => {
+      if (callback) callback(true);
+      return val;
+    },
+    withSpring: (val) => val,
+    interpolate: () => 0,
+    runOnJS: (fn) => fn,
+    Extrapolation: { CLAMP: 'clamp' },
+  };
+});
+
 const mockToggleSaved = jest.fn();
 const mockToggleVisited = jest.fn();
 const mockNavigate = jest.fn();
+let mockUserLocation = null;
 
 const MOCK_CAFES = [
-  { id: '1', name: 'Cafe Alpha', city: 'Seattle', neighborhood: 'Capitol Hill', drink: 'coffee', vibe_tags: ['specialty_coffee'], curator_pick: false, is_active: true },
-  { id: '2', name: 'Cafe Beta', city: 'Seattle', neighborhood: 'Fremont', drink: 'coffee', vibe_tags: ['cozy_quiet'], curator_pick: true, is_active: true },
+  { id: '1', name: 'Cafe Alpha', city: 'Seattle', neighborhood: 'Capitol Hill', drink: 'coffee', vibe_tags: ['specialty_coffee'], curator_pick: false, is_active: true, coordinates: { lat: 47.62, lng: -122.32 } },
+  { id: '2', name: 'Cafe Beta', city: 'Seattle', neighborhood: 'Fremont', drink: 'coffee', vibe_tags: ['cozy_quiet'], curator_pick: true, is_active: true, coordinates: { lat: 47.65, lng: -122.35 } },
   { id: '3', name: 'Cafe Gamma', city: 'Portland', neighborhood: 'Pearl', drink: 'coffee', vibe_tags: ['hidden_gem'], curator_pick: false, is_active: true },
   { id: '4', name: 'Matcha Den', city: 'Seattle', neighborhood: 'Ballard', drink: 'matcha', vibe_tags: ['matcha_specialist'], curator_pick: false, is_active: true },
-  { id: '5', name: 'Cafe Delta', city: 'NYC', neighborhood: 'Brooklyn', drink: 'coffee', vibe_tags: ['viral_aesthetic'], curator_pick: false, is_active: true },
+  { id: '5', name: 'Cafe Delta', city: 'NYC', neighborhood: 'Brooklyn', drink: 'coffee', vibe_tags: ['viral_aesthetic'], curator_pick: false, is_active: true, coordinates: { lat: 40.7, lng: -74.0 } },
 ];
+
+const COFFEE_IDS = ['1', '2', '3', '5'];
 
 jest.mock('../../context/CafeContext', () => ({
   useCafes: () => ({
@@ -45,7 +69,7 @@ jest.mock('../../context/CafeContext', () => ({
     isSaved: () => false,
     isVisited: () => false,
     isFavorite: () => false,
-    userLocation: null,
+    userLocation: mockUserLocation,
     cities: ['All', 'Seattle', 'Portland', 'NYC'],
   }),
 }));
@@ -59,6 +83,10 @@ const navigation = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+});
+
+afterEach(() => {
+  mockUserLocation = null;
 });
 
 describe('SwipeScreen', () => {
@@ -170,5 +198,72 @@ describe('SwipeScreen', () => {
       <SwipeScreen navigation={navigation} route={{ params: {} }} />
     );
     expect(getByText('Near Me')).toBeTruthy();
+  });
+
+  test('Near Me sorts the browse list by distance, closest first', () => {
+    mockUserLocation = { latitude: 47.60, longitude: -122.33 };
+    const { getByText, getAllByText } = render(
+      <SwipeScreen navigation={navigation} route={{ params: {} }} />
+    );
+    fireEvent.press(getByText('List'));
+    fireEvent.press(getByText('Near Me'));
+
+    const names = getAllByText(/^Cafe (Alpha|Beta|Gamma|Delta)$/).map((el) => el.props.children);
+    expect(names).toEqual(['Cafe Alpha', 'Cafe Beta', 'Cafe Delta', 'Cafe Gamma']);
+  });
+
+  test('Near Me pill is a no-op without a userLocation', () => {
+    const { getByText, getAllByText } = render(
+      <SwipeScreen navigation={navigation} route={{ params: {} }} />
+    );
+    fireEvent.press(getByText('List'));
+    fireEvent.press(getByText('Near Me'));
+
+    const names = getAllByText(/^Cafe (Alpha|Beta|Gamma|Delta)$/).map((el) => el.props.children);
+    expect(names).toEqual(['Cafe Alpha', 'Cafe Beta', 'Cafe Gamma', 'Cafe Delta']);
+  });
+
+  test('reshuffle button renders and does not crash the deck', () => {
+    const { getByText } = render(
+      <SwipeScreen navigation={navigation} route={{ params: {} }} />
+    );
+    fireEvent.press(getByText('shuffle-outline'));
+    expect(getByText('Café Codex')).toBeTruthy();
+  });
+
+  test('browse row Save button calls toggleSaved with that cafe id', () => {
+    const { getByText, getAllByText } = render(
+      <SwipeScreen navigation={navigation} route={{ params: {} }} />
+    );
+    fireEvent.press(getByText('List'));
+    fireEvent.press(getAllByText('🤍')[0]);
+    expect(mockToggleSaved).toHaveBeenCalledWith('1');
+  });
+
+  test('browse row Been button calls toggleVisited with that cafe id', () => {
+    const { getByText, getAllByText } = render(
+      <SwipeScreen navigation={navigation} route={{ params: {} }} />
+    );
+    fireEvent.press(getByText('List'));
+    fireEvent.press(getAllByText('✓')[0]);
+    expect(mockToggleVisited).toHaveBeenCalledWith('1');
+  });
+
+  test('pressing "Want to go" commits a swipe-right and calls toggleSaved', () => {
+    const { getByText } = render(
+      <SwipeScreen navigation={navigation} route={{ params: {} }} />
+    );
+    fireEvent.press(getByText('Want to go'));
+    expect(mockToggleSaved).toHaveBeenCalledTimes(1);
+    expect(COFFEE_IDS).toContain(mockToggleSaved.mock.calls[0][0]);
+  });
+
+  test('pressing "Been there" commits a swipe-left and calls toggleVisited', () => {
+    const { getByText } = render(
+      <SwipeScreen navigation={navigation} route={{ params: {} }} />
+    );
+    fireEvent.press(getByText('Been there'));
+    expect(mockToggleVisited).toHaveBeenCalledTimes(1);
+    expect(COFFEE_IDS).toContain(mockToggleVisited.mock.calls[0][0]);
   });
 });
