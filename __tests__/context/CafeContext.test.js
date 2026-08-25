@@ -6,6 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 jest.mock('expo-location', () => ({
   requestForegroundPermissionsAsync: jest.fn().mockResolvedValue({ status: 'denied' }),
   getCurrentPositionAsync: jest.fn(),
+  getLastKnownPositionAsync: jest.fn().mockResolvedValue(null),
+  Accuracy: { Low: 1 },
 }));
 
 import { CafeProvider, useCafes } from '../../context/CafeContext';
@@ -177,5 +179,209 @@ describe('CafeProvider', () => {
 
     await waitFor(() => expect(ctx?.cafes?.length).toBeGreaterThan(0));
     expect(ctx.cafes[0].name).toBe('Cached Cafe');
+  });
+
+  test('toggleVisited removes a previously visited cafe', async () => {
+    let ctx;
+    render(
+      <CafeProvider>
+        <TestConsumer onContext={(c) => { ctx = c; }} />
+      </CafeProvider>
+    );
+    await waitFor(() => expect(ctx).toBeDefined());
+
+    await act(async () => { await ctx.toggleVisited('cafe-8'); });
+    expect(ctx.isVisited('cafe-8')).toBe(true);
+
+    await act(async () => { await ctx.toggleVisited('cafe-8'); });
+    expect(ctx.isVisited('cafe-8')).toBe(false);
+  });
+
+  test('savePreferences updates state and persists all fields to AsyncStorage', async () => {
+    let ctx;
+    render(
+      <CafeProvider>
+        <TestConsumer onContext={(c) => { ctx = c; }} />
+      </CafeProvider>
+    );
+    await waitFor(() => expect(ctx).toBeDefined());
+
+    act(() => {
+      ctx.savePreferences('matcha', ['hidden_gem'], { type: 'city', city: 'Tokyo' });
+    });
+
+    await waitFor(() => expect(ctx.selectedDrink).toBe('matcha'));
+    expect(ctx.selectedVibes).toEqual(['hidden_gem']);
+    expect(ctx.selectedLocation).toEqual({ type: 'city', city: 'Tokyo' });
+    expect(ctx.hasOnboarded).toBe(true);
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith('selectedDrink', JSON.stringify('matcha'));
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith('selectedVibes', JSON.stringify(['hidden_gem']));
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith('selectedLocation', JSON.stringify({ type: 'city', city: 'Tokyo' }));
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith('hasOnboarded', JSON.stringify(true));
+  });
+
+  test('resetOnboarding clears hasOnboarded and persists false', async () => {
+    let ctx;
+    render(
+      <CafeProvider>
+        <TestConsumer onContext={(c) => { ctx = c; }} />
+      </CafeProvider>
+    );
+    await waitFor(() => expect(ctx).toBeDefined());
+
+    act(() => { ctx.savePreferences('coffee', [], null); });
+    await waitFor(() => expect(ctx.hasOnboarded).toBe(true));
+
+    act(() => { ctx.resetOnboarding(); });
+    await waitFor(() => expect(ctx.hasOnboarded).toBe(false));
+    expect(AsyncStorage.setItem).toHaveBeenCalledWith('hasOnboarded', JSON.stringify(false));
+  });
+
+  describe('location permission handling', () => {
+    test('does not set userLocation when permission is denied', async () => {
+      let ctx;
+      render(
+        <CafeProvider>
+          <TestConsumer onContext={(c) => { ctx = c; }} />
+        </CafeProvider>
+      );
+      await waitFor(() => expect(ctx).toBeDefined());
+      expect(ctx.userLocation).toBeNull();
+    });
+
+    test('sets userLocation from getCurrentPositionAsync when granted and no last-known position exists', async () => {
+      const Location = require('expo-location');
+      Location.requestForegroundPermissionsAsync.mockResolvedValueOnce({ status: 'granted' });
+      Location.getLastKnownPositionAsync.mockResolvedValueOnce(null);
+      Location.getCurrentPositionAsync.mockResolvedValueOnce({ coords: { latitude: 47.6, longitude: -122.3 } });
+
+      let ctx;
+      render(
+        <CafeProvider>
+          <TestConsumer onContext={(c) => { ctx = c; }} />
+        </CafeProvider>
+      );
+
+      await waitFor(() => expect(ctx?.userLocation).toEqual({ latitude: 47.6, longitude: -122.3 }));
+    });
+
+    test('uses last-known position without calling getCurrentPositionAsync when available', async () => {
+      const Location = require('expo-location');
+      Location.requestForegroundPermissionsAsync.mockResolvedValueOnce({ status: 'granted' });
+      Location.getLastKnownPositionAsync.mockResolvedValueOnce({ coords: { latitude: 1, longitude: 2 } });
+
+      let ctx;
+      render(
+        <CafeProvider>
+          <TestConsumer onContext={(c) => { ctx = c; }} />
+        </CafeProvider>
+      );
+
+      await waitFor(() => expect(ctx?.userLocation).toEqual({ latitude: 1, longitude: 2 }));
+      expect(Location.getCurrentPositionAsync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('fetchCafes / fetchCountries success and failure paths', () => {
+    test('fetchCafes stores successful results and caches them', async () => {
+      const { publicSupabase } = require('../../lib/supabase');
+      const freshCafes = [{ id: '1', name: 'Fresh Cafe', city: 'Test' }];
+      publicSupabase.from.mockImplementation((table) => ({
+        select: jest.fn(() => ({
+          order: jest.fn(() => Promise.resolve(
+            table === 'cafes' ? { data: freshCafes, error: null } : { data: [], error: null }
+          )),
+        })),
+        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      }));
+
+      let ctx;
+      render(
+        <CafeProvider>
+          <TestConsumer onContext={(c) => { ctx = c; }} />
+        </CafeProvider>
+      );
+
+      await waitFor(() => expect(ctx?.cafes?.length).toBeGreaterThan(0));
+      expect(ctx.cafes[0].name).toBe('Fresh Cafe');
+      expect(ctx.isOffline).toBe(false);
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('cafes_cache', JSON.stringify(freshCafes));
+    });
+
+    test('fetchCafes leaves cafes empty when both fetch and cache fail', async () => {
+      const { publicSupabase } = require('../../lib/supabase');
+      publicSupabase.from.mockImplementation(() => ({
+        select: jest.fn(() => ({
+          order: jest.fn(() => Promise.reject(new Error('network error'))),
+        })),
+        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      }));
+      AsyncStorage.getItem.mockImplementation(() => Promise.resolve(null));
+
+      let ctx;
+      render(
+        <CafeProvider>
+          <TestConsumer onContext={(c) => { ctx = c; }} />
+        </CafeProvider>
+      );
+
+      await waitFor(() => expect(ctx?.loading).toBe(false));
+      expect(ctx.cafes).toEqual([]);
+      expect(ctx.isOffline).toBe(false);
+    });
+
+    test('fetchCountries stores successful results and caches them', async () => {
+      const { publicSupabase } = require('../../lib/supabase');
+      const freshCountries = [{ name: 'Japan' }];
+      publicSupabase.from.mockImplementation((table) => ({
+        select: jest.fn(() => ({
+          order: jest.fn(() => Promise.resolve(
+            table === 'countries' ? { data: freshCountries, error: null } : { data: [], error: null }
+          )),
+        })),
+        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      }));
+
+      let ctx;
+      render(
+        <CafeProvider>
+          <TestConsumer onContext={(c) => { ctx = c; }} />
+        </CafeProvider>
+      );
+
+      await waitFor(() => expect(ctx?.countries?.length).toBeGreaterThan(0));
+      expect(ctx.countries[0].name).toBe('Japan');
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('countries_cache', JSON.stringify(freshCountries));
+    });
+
+    test('fetchCountries falls back to AsyncStorage cache on failure', async () => {
+      const { publicSupabase } = require('../../lib/supabase');
+      publicSupabase.from.mockImplementation((table) => ({
+        select: jest.fn(() => ({
+          order: jest.fn(() => (
+            table === 'countries'
+              ? Promise.reject(new Error('network error'))
+              : Promise.resolve({ data: [], error: null })
+          )),
+        })),
+        insert: jest.fn(() => Promise.resolve({ data: null, error: null })),
+      }));
+
+      const cachedCountries = [{ name: 'Italy' }];
+      AsyncStorage.getItem.mockImplementation((key) => {
+        if (key === 'countries_cache') return Promise.resolve(JSON.stringify(cachedCountries));
+        return Promise.resolve(null);
+      });
+
+      let ctx;
+      render(
+        <CafeProvider>
+          <TestConsumer onContext={(c) => { ctx = c; }} />
+        </CafeProvider>
+      );
+
+      await waitFor(() => expect(ctx?.countries?.length).toBeGreaterThan(0));
+      expect(ctx.countries[0].name).toBe('Italy');
+    });
   });
 });

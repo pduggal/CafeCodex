@@ -1,5 +1,6 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { Alert } from 'react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import AuthorScreen from '../../screens/AuthorScreen';
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -8,6 +9,19 @@ jest.mock('react-native-safe-area-context', () => ({
     return <View {...props}>{children}</View>;
   },
 }));
+
+const mockSignOut = jest.fn(() => Promise.resolve());
+const mockDeleteAccount = jest.fn(() => Promise.resolve({ error: null }));
+
+jest.mock('../../context/AuthContext', () => ({
+  useAuth: () => ({
+    signOut: mockSignOut,
+    deleteAccount: mockDeleteAccount,
+    user: { email: 'pallavi@test.com' },
+  }),
+}));
+
+jest.spyOn(Alert, 'alert');
 
 describe('AuthorScreen', () => {
   test('renders without crash', () => {
@@ -49,5 +63,60 @@ describe('AuthorScreen', () => {
       try { getByText(String(i)); ranks.push(i); } catch {}
     }
     expect(ranks.length).toBe(10);
+  });
+});
+
+describe('AuthorScreen — account actions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('shows the logged-in user email', () => {
+    const { getByText } = render(<AuthorScreen />);
+    expect(getByText('pallavi@test.com')).toBeTruthy();
+  });
+
+  test('pressing Sign Out calls signOut', async () => {
+    const { getByText } = render(<AuthorScreen />);
+    await act(async () => { fireEvent.press(getByText('Sign Out')); });
+    expect(mockSignOut).toHaveBeenCalled();
+  });
+
+  test('pressing Delete Account shows a confirmation alert', () => {
+    const { getByText } = render(<AuthorScreen />);
+    fireEvent.press(getByText('Delete Account'));
+    expect(Alert.alert).toHaveBeenCalledWith(
+      'Delete Account',
+      'This will permanently delete your account and all your data. This action cannot be undone.',
+      expect.any(Array)
+    );
+  });
+
+  test('confirming the delete alert calls deleteAccount', async () => {
+    const { getByText } = render(<AuthorScreen />);
+    fireEvent.press(getByText('Delete Account'));
+    const buttons = Alert.alert.mock.calls[Alert.alert.mock.calls.length - 1][2];
+    const deleteBtn = buttons.find((b) => b.text === 'Delete');
+    await act(async () => { await deleteBtn.onPress(); });
+    expect(mockDeleteAccount).toHaveBeenCalled();
+  });
+
+  test('shows an error alert when deleteAccount fails', async () => {
+    mockDeleteAccount.mockResolvedValueOnce({ error: { message: 'Boom' } });
+    const { getByText } = render(<AuthorScreen />);
+    fireEvent.press(getByText('Delete Account'));
+    const buttons = Alert.alert.mock.calls[Alert.alert.mock.calls.length - 1][2];
+    const deleteBtn = buttons.find((b) => b.text === 'Delete');
+    await act(async () => { await deleteBtn.onPress(); });
+    expect(Alert.alert).toHaveBeenCalledWith('Error', 'Boom');
+  });
+
+  test('cancel button does not call deleteAccount', () => {
+    const { getByText } = render(<AuthorScreen />);
+    fireEvent.press(getByText('Delete Account'));
+    const buttons = Alert.alert.mock.calls[Alert.alert.mock.calls.length - 1][2];
+    const cancelBtn = buttons.find((b) => b.text === 'Cancel');
+    expect(cancelBtn.onPress).toBeUndefined();
+    expect(mockDeleteAccount).not.toHaveBeenCalled();
   });
 });
