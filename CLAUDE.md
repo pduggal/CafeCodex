@@ -2,7 +2,7 @@
 
 > This file is the single source of truth for this project. Read this first before making any changes.
 > Keep this file updated every time a meaningful change is made.
-> Last updated: July 11, 2026
+> Last updated: October 25, 2026
 
 ---
 
@@ -266,6 +266,9 @@ All colors defined in `constants/colors.js`. Import from there — never hardcod
 ```js
 { id: uuid (FK → auth.users), name: text, phone: text, role: 'user'|'admin', created_at: timestamptz }
 ```
+
+### Keep-alive
+Free-tier projects pause after 7 days without traffic (this one paused 2026-10-25). `.github/workflows/supabase-keepalive.yml` reads one row from `cafes` every 3 days using the public anon key. If the project is paused anyway, restore it from the Supabase dashboard (90-day window) and re-run the workflow from the Actions tab.
 
 ### Key RLS gotcha
 The `nominations` table has an INSERT policy but NO SELECT policy. This means:
